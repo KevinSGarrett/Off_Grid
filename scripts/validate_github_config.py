@@ -18,6 +18,7 @@ REQUIRED_CI_JOB_NAMES = {
     "Repository Policy",
     "Backend Test Matrix",
     "Backend Static Quality",
+    "Dependency and Secret Scan",
     "Golden Regression",
     "Frontend Typecheck and Build",
     "Docker Readiness",

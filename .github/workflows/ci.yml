@@ -76,6 +76,44 @@ jobs:
       - name: Mypy focused application boundary
         run: mypy --ignore-missing-imports --follow-imports=skip apps/api/app/main.py apps/api/app/core apps/api/app/resilience.py apps/api/app/observability
 
+  dependency-secret-scan:
+    name: Dependency and Secret Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Audit Python runtime dependencies
+        shell: bash
+        run: |
+          python -m venv .audit-venv
+          .audit-venv/bin/python -m pip install --disable-pip-version-check --upgrade "pip==26.1.2"
+          .audit-venv/bin/python -m pip install --disable-pip-version-check . "pip-audit==2.10.1"
+          .audit-venv/bin/python -m pip uninstall -y offgrid-commercial-intelligence
+          .audit-venv/bin/python -m pip_audit --local --strict --progress-spinner off
+      - name: Audit frontend production dependencies
+        working-directory: apps/web
+        run: npm audit --omit=dev --audit-level=high
+      - name: Scan Git history for secrets
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+
   golden-regression:
     name: Golden Regression
     runs-on: ubuntu-latest
