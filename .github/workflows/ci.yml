@@ -94,10 +94,13 @@ jobs:
           cache: pip
       - name: Install backend and dev dependencies
         run: python -m pip install -e ".[dev]"
+      - name: Record static-analysis tool versions
+        run: |
+          ruff --version
+          mypy --version
       - name: Ruff focused application/control-plane lint
         run: ruff check apps/api/app/main.py apps/api/app/core apps/api/app/resilience.py apps/api/app/observability scripts/validate_github_config.py scripts/validate_git_privacy.py
-      - name: Mypy focused application boundary (advisory until clean Wave 17 type gate)
-        continue-on-error: true
+      - name: Mypy focused application boundary
         run: mypy --ignore-missing-imports --follow-imports=skip apps/api/app/main.py apps/api/app/core apps/api/app/resilience.py apps/api/app/observability
 
   golden-regression:

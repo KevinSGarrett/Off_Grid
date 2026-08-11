@@ -65,6 +65,8 @@ def test_ci_uses_read_only_default_permissions_and_safe_pr_trigger() -> None:
     assert "name: Repository Policy" in text
     assert "name: Backend Test Matrix" in text
     assert "name: Frontend Typecheck and Build" in text
+    assert "name: Record static-analysis tool versions" in text
+    assert "continue-on-error: true" not in text
 
 
 def test_public_ci_does_not_depend_on_ignored_continuity_or_private_source_artifacts() -> None:
