@@ -1,28 +1,29 @@
 # Security and private-data policy
 
-## Repository visibility
+## Repository boundary
 
-The intended GitHub repository is **PRIVATE**. The local cumulative wave pack is broader than the Git repository and may contain private source continuity material.
+This GitHub repository is intentionally **PUBLIC**. Only the sanitized runnable application, public-safe tests, configuration, prompts, and minimized demo seed belong here. The canonical local workspace is broader and may contain licensed source documents, private project controls, and credentials that must never cross the publication boundary.
 
-## Never commit
+CI validates the tracked-file boundary with `scripts/validate_git_privacy.py --require-git`. The Docker context and built image are separate security boundaries and must also exclude protected material.
+
+## Never publish
 
 - raw ConstructConnect PDFs or other licensed source exports;
-- original project-design chat logs;
-- unmasked contact-directory exports;
-- `.env` files, API keys, AWS credentials, tokens, private keys, or session material;
-- generated local databases/logs containing source PII.
+- original project-design chats, local Jira/control data, or private research continuity;
+- unmasked contact-directory exports or unnecessary PII;
+- `.env`, API keys, AWS credentials, tokens, private keys, passwords, or session material;
+- generated databases or logs containing private source data.
 
-`.gitignore` and `scripts/validate_git_privacy.py` enforce the primary path boundary. CI runs the same policy against `git ls-files` so ignored files cannot become silently tracked later.
+Do not place sensitive material in a public GitHub issue. Report a security concern privately to the repository owner with the minimum sanitized reproduction necessary.
 
-## Reporting a security issue
+## Runtime boundaries
 
-Do not place secrets, licensed source material, or unnecessary PII in a GitHub issue. Contact the repository owner privately and provide only the minimum sanitized reproduction needed.
-
-## Application safety boundaries
-
-- Employer-facing demo mode is read-only and hides raw private source material.
+- Employer demo mode is read-only and hides raw private source material.
+- Hosted access must fail closed when access control is required but no password is configured.
+- Health may remain unauthenticated for container/load-balancer probes; application and UI routes require the configured Basic access control.
 - External-system writes remain off/dry-run unless an explicitly authorized live path passes deterministic gates.
-- OpenAI is a controlled reasoning layer, not a source of deterministic truth and not a direct CRM writer.
-- Optional provider outages do not make the deterministic core unavailable.
+- OpenAI is optional, server-side, budgeted, and not a source of deterministic truth or a direct CRM writer.
+- Provider outages must not make the deterministic core unavailable.
+- No AWS deployment or billable infrastructure is claimed by the public release.
 
-See `docs/SECURITY_AND_PRIVACY.md`, `docs/GITHUB_WORKFLOW.md`, and `project/privacy_policy.yaml` for the broader application policy.
+If a credential may have entered Git history, revoke it first, then privately coordinate history remediation and a clean privacy revalidation.
