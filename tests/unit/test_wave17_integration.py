@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import re
 import shutil
@@ -24,6 +25,15 @@ def _sha(path: Path) -> str:
     h = hashlib.sha256()
     h.update(path.read_bytes())
     return h.hexdigest()
+
+
+def _load_wave17_verifier():
+    path = ROOT / "scripts/verify_wave17_integration.py"
+    spec = importlib.util.spec_from_file_location("wave17_verifier", path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def _seed_client() -> tuple[TestClient, str, str]:
@@ -86,8 +96,26 @@ def test_wave17_reset_is_byte_for_byte_deterministic(tmp_path: Path) -> None:
     assert _sha(target) == _sha(SEED)
 
 
+def test_wave17_seed_verifier_releases_temporary_sqlite_file(tmp_path: Path) -> None:
+    verifier = _load_wave17_verifier()
+    temporary_seed = tmp_path / "offgrid-seed.db"
+    shutil.copyfile(SEED, temporary_seed)
+    verifier.SEED = temporary_seed
+
+    assert verifier.seed_checks()["status"] == "PASS"
+    temporary_seed.unlink()
+    assert not temporary_seed.exists()
+
+
+def test_wave17_tool_versions_resolve_platform_command_shims() -> None:
+    verifier = _load_wave17_verifier()
+
+    assert verifier.command_version(["node", "--version"])
+    assert verifier.command_version(["npm", "--version"])
+
+
 def test_wave17_dockerfile_uses_locked_python_and_fail_closed_frontend_install() -> None:
-    text = (ROOT / "Dockerfile").read_text()
+    text = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     assert "COPY requirements.lock" in text
     assert "pip install --no-cache-dir -r requirements.lock" in text
     assert "package-lock.json is required" in text
@@ -97,14 +125,14 @@ def test_wave17_dockerfile_uses_locked_python_and_fail_closed_frontend_install()
 
 
 def test_wave17_openai_is_optional_runtime_extra() -> None:
-    text = (ROOT / "pyproject.toml").read_text()
+    text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     main_dependencies = text.split("[project.optional-dependencies]", 1)[0]
     assert '"openai>=2,<3"' not in main_dependencies
     assert 'ai = [' in text and '"openai>=2,<3"' in text
 
 
 def test_wave17_entrypoint_restores_seed_and_fails_closed_when_missing() -> None:
-    text = (ROOT / "docker/entrypoint.sh").read_text()
+    text = (ROOT / "docker/entrypoint.sh").read_text(encoding="utf-8")
     assert "DEMO_RESET_ON_START" in text
     assert "DEMO_SEED_DB" in text
     assert "FATAL: demo mode requires deployment seed" in text
@@ -112,7 +140,7 @@ def test_wave17_entrypoint_restores_seed_and_fails_closed_when_missing() -> None
 
 
 def test_wave17_aws_runtime_resets_to_seed_and_keeps_safe_modes() -> None:
-    text = (ROOT / "infra/aws/service.yaml").read_text()
+    text = (ROOT / "infra/aws/service.yaml").read_text(encoding="utf-8")
     for pair in (
         ("DEMO_RESET_ON_START", "'true'"),
         ("OPENAI_ENABLED", "'false'"),
@@ -124,7 +152,7 @@ def test_wave17_aws_runtime_resets_to_seed_and_keeps_safe_modes() -> None:
 
 
 def test_wave17_release_proof_records_real_blockers_instead_of_fabricating_success() -> None:
-    proof = json.loads((ROOT / "release/WAVE_17_RELEASE_PROOF.json").read_text())
+    proof = json.loads((ROOT / "release/WAVE_17_RELEASE_PROOF.json").read_text(encoding="utf-8"))
     assert proof["seed"]["status"] == "PASS"
     assert proof["seed_privacy"]["status"] == "PASS"
     assert proof["deterministic_reset"]["status"] == "PASS"
