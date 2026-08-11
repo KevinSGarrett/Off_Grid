@@ -6,8 +6,8 @@ from app.observability.logging import configure_structured_logging, get_logger, 
 __all__ = [
     "bind_pipeline_run",
     "bind_request",
-    "current_context",
     "configure_structured_logging",
+    "current_context",
     "get_logger",
     "sanitize_for_log",
 ]

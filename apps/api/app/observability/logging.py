@@ -3,17 +3,20 @@ from __future__ import annotations
 import json
 import logging
 import re
-from datetime import datetime, timezone
-from typing import Any, Mapping
+from collections.abc import Mapping
+from datetime import UTC, datetime
+from typing import Any
 
 from app.observability.context import current_context
 
 OBSERVABILITY_VERSION = "observability-1.0"
-_SENSITIVE_KEY = re.compile(r"(?:api[_-]?key|authorization|password|secret|token|cookie|credential)", re.I)
-_EMAIL = re.compile(r"\b([A-Z0-9._%+-]{1,64})@([A-Z0-9.-]+\.[A-Z]{2,})\b", re.I)
+_SENSITIVE_KEY = re.compile(
+    r"(?:api[_-]?key|authorization|password|secret|token|cookie|credential)", re.IGNORECASE
+)
+_EMAIL = re.compile(r"\b([A-Z0-9._%+-]{1,64})@([A-Z0-9.-]+\.[A-Z]{2,})\b", re.IGNORECASE)
 # Deliberately conservative: mask long telephone-looking strings without rewriting timestamps/IDs.
 _PHONE = re.compile(r"(?<!\w)(?:\+?1[ .-]?)?\(?\d{3}\)?[ .-]\d{3}[ .-]\d{4}(?!\w)")
-_PRIVATE_PATH = re.compile(r"(?:/mnt/data|data/private|private://)[^\s\"']*", re.I)
+_PRIVATE_PATH = re.compile(r"(?:/mnt/data|data/private|private://)[^\s\"']*", re.IGNORECASE)
 
 
 def _mask_email(value: str) -> str:
@@ -52,7 +55,7 @@ class JsonLogFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         context = current_context()
         payload: dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "event": sanitize_for_log(record.getMessage()),
@@ -65,11 +68,15 @@ class JsonLogFormatter(logging.Formatter):
             payload["fields"] = sanitize_for_log(safe_extra)
         if record.exc_info:
             # Exception *types* are useful; raw tracebacks may contain filesystem/source values.
-            payload["exception_type"] = record.exc_info[0].__name__ if record.exc_info[0] else "Exception"
+            payload["exception_type"] = (
+                record.exc_info[0].__name__ if record.exc_info[0] else "Exception"
+            )
         return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
 
 
-def configure_structured_logging(*, level: str = "INFO", stream: Any | None = None) -> logging.Logger:
+def configure_structured_logging(
+    *, level: str = "INFO", stream: Any | None = None
+) -> logging.Logger:
     logger = logging.getLogger("offgrid")
     logger.setLevel(getattr(logging, level.upper(), logging.INFO))
     logger.propagate = False
@@ -77,10 +84,10 @@ def configure_structured_logging(*, level: str = "INFO", stream: Any | None = No
     for handler in list(logger.handlers):
         if getattr(handler, "_offgrid_structured", False):
             logger.removeHandler(handler)
-    handler = logging.StreamHandler(stream)
-    handler._offgrid_structured = True  # type: ignore[attr-defined]
-    handler.setFormatter(JsonLogFormatter())
-    logger.addHandler(handler)
+    stream_handler: Any = logging.StreamHandler(stream)
+    stream_handler._offgrid_structured = True
+    stream_handler.setFormatter(JsonLogFormatter())
+    logger.addHandler(stream_handler)
     return logger
 
 

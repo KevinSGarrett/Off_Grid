@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import pytest
 
+from app.core.settings import Settings
+from app.domain.states import IntegrationMode
 from app.resilience import RetryPolicy, retry_call
 
 
@@ -43,3 +45,15 @@ def test_retry_call_stops_on_non_retryable_failure() -> None:
             sleeper=lambda _delay: None,
         )
     assert attempts == 1
+
+
+def test_settings_instances_read_environment_at_construction(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APOLLO_MODE", "dry_run")
+    monkeypatch.setenv("OPENAI_DAILY_BUDGET", "3.25")
+    monkeypatch.setenv("LOG_LEVEL", "warning")
+
+    current = Settings()
+
+    assert current.apollo_mode is IntegrationMode.DRY_RUN
+    assert str(current.openai_daily_budget) == "3.25"
+    assert current.log_level == "WARNING"

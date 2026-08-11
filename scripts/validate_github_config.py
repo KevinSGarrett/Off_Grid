@@ -4,10 +4,10 @@
 This is intentionally dependency-light and checks the repository contracts we can validate locally
 without a GitHub remote. It does not pretend to prove that a future remote ruleset is enabled.
 """
+
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -49,13 +49,20 @@ def validate() -> list[str]:
     all_job_names: set[str] = set()
     for workflow in workflows:
         raw = workflow.read_text(encoding="utf-8")
-        require("pull_request_target" not in raw, f"Unsafe pull_request_target trigger in {workflow}", errors)
+        require(
+            "pull_request_target" not in raw,
+            f"Unsafe pull_request_target trigger in {workflow}",
+            errors,
+        )
         require("write-all" not in raw, f"Overbroad write-all permission in {workflow}", errors)
-        require(re.search(r"(?m)^permissions:\s*\n\s+contents:\s*read\s*$", raw) is not None,
-                f"{workflow} must declare top-level contents: read permissions", errors)
+        require(
+            re.search(r"(?m)^permissions:\s*\n\s+contents:\s*read\s*$", raw) is not None,
+            f"{workflow} must declare top-level contents: read permissions",
+            errors,
+        )
         try:
             data = load_yaml(workflow) or {}
-        except Exception as exc:  # pragma: no cover - defensive diagnostics
+        except (OSError, yaml.YAMLError) as exc:  # pragma: no cover - defensive diagnostics
             errors.append(f"Invalid workflow YAML {workflow}: {exc}")
             continue
         jobs = data.get("jobs", {}) if isinstance(data, dict) else {}
@@ -75,17 +82,26 @@ def validate() -> list[str]:
     require(not missing_jobs, f"Missing required CI jobs: {sorted(missing_jobs)}", errors)
 
     dependabot = load_yaml(ROOT / ".github" / "dependabot.yml")
-    require(isinstance(dependabot, dict) and dependabot.get("version") == 2,
-            "dependabot.yml must use version: 2", errors)
+    require(
+        isinstance(dependabot, dict) and dependabot.get("version") == 2,
+        "dependabot.yml must use version: 2",
+        errors,
+    )
     updates = dependabot.get("updates", []) if isinstance(dependabot, dict) else []
     ecosystems = {item.get("package-ecosystem") for item in updates if isinstance(item, dict)}
-    require(REQUIRED_ECOSYSTEMS <= ecosystems,
-            f"Dependabot ecosystems missing: {sorted(REQUIRED_ECOSYSTEMS - ecosystems)}", errors)
+    require(
+        REQUIRED_ECOSYSTEMS <= ecosystems,
+        f"Dependabot ecosystems missing: {sorted(REQUIRED_ECOSYSTEMS - ecosystems)}",
+        errors,
+    )
 
     codeowners = (ROOT / ".github" / "CODEOWNERS").read_text(encoding="utf-8")
     require("@KevinSGarrett" in codeowners, "CODEOWNERS lacks repository owner", errors)
-    require(re.search(r"(?m)^/\.github/\s+@KevinSGarrett\s*$", codeowners) is not None,
-            "CODEOWNERS must explicitly protect .github/", errors)
+    require(
+        re.search(r"(?m)^/\.github/\s+@KevinSGarrett\s*$", codeowners) is not None,
+        "CODEOWNERS must explicitly protect .github/",
+        errors,
+    )
 
     pr_template = ROOT / ".github" / "pull_request_template.md"
     require(pr_template.exists(), "PR template missing", errors)

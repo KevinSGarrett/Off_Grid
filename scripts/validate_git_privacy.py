@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fail if Git tracks files that belong only in private cumulative continuity packs."""
+
 from __future__ import annotations
 
 import argparse

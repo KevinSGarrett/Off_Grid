@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Iterator
 
 _request_id: ContextVar[str | None] = ContextVar("offgrid_request_id", default=None)
 _pipeline_run_id: ContextVar[str | None] = ContextVar("offgrid_pipeline_run_id", default=None)

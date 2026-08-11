@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, TypeVar
-
-T = TypeVar("T")
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,7 +18,7 @@ class RetryPolicy:
             raise ValueError("retry delays must be non-negative")
 
 
-def retry_call(
+def retry_call[T](
     operation: Callable[[], T],
     *,
     policy: RetryPolicy,
