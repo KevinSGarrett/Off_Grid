@@ -1,36 +1,32 @@
 # Contributing
 
-This repository is a private interview-project codebase with real licensed construction-source data in the local cumulative pack. Contributions must preserve the evidence/trust and external-write boundaries that make the system credible.
+This public repository is the sanitized application boundary for an interview/demo project. A broader local workspace may contain licensed construction-source material; none of that private continuity material belongs in GitHub issues, commits, pull requests, logs, screenshots, or container images.
 
 ## Workflow
 
-1. Start from an up-to-date `main`.
-2. Use a short-lived branch: `wave/<n>-<slug>`, `feat/<slug>`, `fix/<slug>`, `docs/<slug>`, or `chore/<slug>`.
-3. Make one coherent change. Do not combine an architecture rewrite, UI redesign, and unrelated cleanup in one PR.
-4. Run `make test`, `make github-check`, and `make privacy-check`.
-5. Open a pull request using the repository template.
-6. Merge only after required CI checks pass. Prefer squash merge to keep the interview-project history concise.
+1. Start from an up-to-date `main` and use a short-lived branch.
+2. Make one coherent change and preserve the evidence/trust boundaries.
+3. Run `python scripts/run_public_test_matrix.py` (or `make test`).
+4. Run `python scripts/validate_github_config.py` and `python scripts/validate_git_privacy.py --require-git`.
+5. For frontend changes, run `npm --prefix apps/web ci`, typecheck, and build.
+6. For release-boundary changes, build the Docker image and verify health, access control, reset, and image privacy.
+7. Open a pull request and merge only after every required check passes.
 
-## Source / evidence rules
+The canonical private workspace may additionally run `make test-private` with the protected Stafford and EE Reed PDFs. Public CI uses the tracked public-safe matrix and sanitized demo seed.
 
-- Supplied employer material and preserved source evidence outrank assumptions.
-- Do not change a golden expectation merely to make a failing implementation pass.
+## Truth rules
+
+- Supplied evidence outranks assumptions; do not change a golden expectation merely to make a regression green.
 - `INFERRED` is not `EXPLICIT`; `ROLE_RELEVANT` is not `AUTHORITY_VERIFIED`.
 - Do not invent a project value, product specification, contact authority, rental partner, demo, outcome, or KPI.
-- Any intentional change to a locked decision or architecture boundary must be documented in `project/DECISION_LOG.md` and, when architectural, an ADR.
+- Keep Lead readiness and Deal readiness separate.
+- Any intentional change to a locked decision or architecture boundary requires explicit, reviewable evidence.
 
-## Privacy and secrets
+## Never commit
 
-Never commit:
+- `context/private_source_documents/` or raw ConstructConnect exports;
+- original chat logs, local Jira/control packs, or private research continuity;
+- `.env`, credentials, access tokens, private keys, or session material;
+- unmasked contact exports or runtime databases containing source PII.
 
-- `context/private_source_documents/`;
-- `context/original_chat_logs/`;
-- `data/private/`;
-- `.env` or credentials;
-- raw ConstructConnect exports or unnecessary contact PII.
-
-The local cumulative pack may contain private continuity material even though the Git repository must not. Run `make privacy-check` before push.
-
-## External writes
-
-Live writes to Off Grid systems, prospect outreach, and billable AWS provisioning are not normal development actions. Preserve existing feature flags, deterministic readiness gates, idempotency controls, and explicit authorization requirements.
+External employer-system writes, prospect outreach, and billable cloud provisioning require separate explicit authorization. Preserve off/dry-run defaults, deterministic readiness gates, and idempotency controls.
