@@ -65,8 +65,24 @@ def test_ci_uses_read_only_default_permissions_and_safe_pr_trigger() -> None:
     assert "name: Repository Policy" in text
     assert "name: Backend Test Matrix" in text
     assert "name: Frontend Typecheck and Build" in text
+    assert "name: Dependency and Secret Scan" in text
     assert "name: Record static-analysis tool versions" in text
     assert "continue-on-error: true" not in text
+
+
+def test_ci_runs_pinned_dependency_and_history_secret_scans() -> None:
+    text = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+
+    assert '"pip==26.1.2"' in text
+    assert '"pip-audit==2.10.1"' in text
+    assert "python -m pip_audit --local --strict --progress-spinner off" in text
+    assert "npm audit --omit=dev --audit-level=high" in text
+    assert (
+        "gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e"
+        in text
+    )
+    assert 'GITLEAKS_ENABLE_COMMENTS: "false"' in text
+    assert 'GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"' in text
 
 
 def test_public_ci_does_not_depend_on_ignored_continuity_or_private_source_artifacts() -> None:
