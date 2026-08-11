@@ -21,7 +21,6 @@ REQUIRED_CI_JOB_NAMES = {
     "Golden Regression",
     "Frontend Typecheck and Build",
     "Docker Readiness",
-    "Pack Protocol",
 }
 REQUIRED_ECOSYSTEMS = {"pip", "npm", "github-actions"}
 REQUIRED_PRIVATE_IGNORES = {
@@ -103,30 +102,8 @@ def validate() -> list[str]:
     for required in REQUIRED_PRIVATE_IGNORES:
         require(required in gitignore, f".gitignore missing private path: {required}", errors)
 
-    for rel in (
-        "project/github/labels.yaml",
-        "project/github/milestones.yaml",
-        "project/github/issue_backlog.yaml",
-        "project/github/ruleset_recommendation.yaml",
-        "docs/GITHUB_WORKFLOW.md",
-        "docs/GITHUB_REPOSITORY_SETUP.md",
-        "docs/CI_CD.md",
-        "docs/RELEASE_PROCESS.md",
-        "CONTRIBUTING.md",
-        "SECURITY.md",
-    ):
+    for rel in ("CONTRIBUTING.md", "SECURITY.md"):
         require((ROOT / rel).exists(), f"Required Wave 15 artifact missing: {rel}", errors)
-
-    labels = load_yaml(ROOT / "project" / "github" / "labels.yaml")
-    label_names = {x.get("name") for x in labels.get("labels", []) if isinstance(x, dict)}
-    for required_label in ("priority:P0", "status:blocked", "type:data-quality", "security"):
-        require(required_label in label_names, f"Missing label definition: {required_label}", errors)
-
-    backlog = load_yaml(ROOT / "project" / "github" / "issue_backlog.yaml")
-    issues = backlog.get("issues", []) if isinstance(backlog, dict) else []
-    require(len(issues) >= 8, "GitHub issue backlog is unexpectedly small", errors)
-    require(any(item.get("priority") == "P0" for item in issues if isinstance(item, dict)),
-            "GitHub backlog has no P0 issue", errors)
 
     return errors
 

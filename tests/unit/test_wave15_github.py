@@ -50,6 +50,13 @@ def test_public_repository_excludes_local_control_and_design_reference_material(
     assert "/template/" in gitignore
 
 
+def test_public_repository_includes_only_the_sanitized_deployment_seed() -> None:
+    gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+
+    assert "/data/demo_seed/*" in gitignore
+    assert "!/data/demo_seed/offgrid_demo_seed.db" in gitignore
+
+
 def test_ci_uses_read_only_default_permissions_and_safe_pr_trigger() -> None:
     text = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
     assert "permissions:\n  contents: read" in text
@@ -58,7 +65,21 @@ def test_ci_uses_read_only_default_permissions_and_safe_pr_trigger() -> None:
     assert "name: Repository Policy" in text
     assert "name: Backend Test Matrix" in text
     assert "name: Frontend Typecheck and Build" in text
-    assert "name: Pack Protocol" in text
+
+
+def test_public_ci_does_not_depend_on_ignored_continuity_or_private_source_artifacts() -> None:
+    text = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+
+    for forbidden in (
+        "scripts/run_wave",
+        "scripts/build_wave",
+        "scripts/verify_wave",
+        "tests/golden\n",
+        "context/private_source_documents",
+        "research/WAVE_",
+        "release/WAVE_",
+    ):
+        assert forbidden not in text
 
 
 def test_dependabot_covers_python_web_and_actions() -> None:
@@ -66,31 +87,6 @@ def test_dependabot_covers_python_web_and_actions() -> None:
     assert data["version"] == 2
     ecosystems = {item["package-ecosystem"] for item in data["updates"]}
     assert ecosystems == {"pip", "npm", "github-actions"}
-
-
-def test_ruleset_recommendation_has_stable_required_checks() -> None:
-    data = yaml.safe_load(
-        (ROOT / "project" / "github" / "ruleset_recommendation.yaml").read_text(encoding="utf-8")
-    )
-    assert data["repository_visibility"] == "private"
-    assert data["rules"]["require_pull_request"] is True
-    assert data["rules"]["block_force_pushes"] is True
-    checks = set(data["rules"]["required_status_checks"])
-    assert "Repository Policy" in checks
-    assert "Backend Test Matrix" in checks
-    assert "Golden Regression" in checks
-    assert "Frontend Typecheck and Build" in checks
-
-
-def test_issue_backlog_is_priority_and_acceptance_driven() -> None:
-    data = yaml.safe_load(
-        (ROOT / "project" / "github" / "issue_backlog.yaml").read_text(encoding="utf-8")
-    )
-    issues = data["issues"]
-    assert len(issues) >= 8
-    assert any(item["priority"] == "P0" for item in issues)
-    assert all(item["acceptance"].strip() for item in issues)
-    assert all(item["key"].startswith("GH-") for item in issues)
 
 
 def test_codeowners_protects_github_control_plane() -> None:

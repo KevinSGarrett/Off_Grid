@@ -1,0 +1,39 @@
+name: Data quality / evidence issue
+description: Record a source, parser, entity, contact, or provenance problem.
+title: "data: "
+labels: ["type:data-quality", "status:triage"]
+body:
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - parser reconciliation
+        - provenance/evidence
+        - project/entity resolution
+        - contact resolution
+        - confidence/trust
+        - duplicate/idempotency
+        - source conflict
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: observation
+    attributes:
+      label: Observation
+      description: Describe the issue without pasting private source material or unnecessary PII.
+    validations:
+      required: true
+  - type: textarea
+    id: source_ref
+    attributes:
+      label: Safe source reference
+      description: Internal evidence ID, document hash, page number, or sanitized fixture reference.
+  - type: textarea
+    id: impact
+    attributes:
+      label: Commercial / pipeline impact
+      description: Explain what decision or workflow state could be wrong if this is ignored.
+    validations:
+      required: true

@@ -16,7 +16,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app/apps/api \
     RUNTIME_DB_PATH=/app/data/private/offgrid.db \
     DEMO_SEED_DB=/app/data/demo_seed/offgrid_demo_seed.db \
-    DEMO_RESET_ON_START=true
+    DEMO_RESET_ON_START=true \
+    SERVE_WEB=true
 WORKDIR /app
 COPY requirements.lock ./requirements.lock
 RUN python -m pip install --no-cache-dir -r requirements.lock

@@ -43,7 +43,6 @@ service_account*.json
 /instructions/
 /jira/
 /project/
-/prompts/
 /research/
 /release/
 /template/
@@ -56,10 +55,7 @@ context/original_chat_logs/
 # Internal/private documentation and repository administration prepared for the
 # original private project. Publish only a separately reviewed, sanitized set.
 /docs/
-/.github/CODEOWNERS
 /.github/README.md
-/.github/ISSUE_TEMPLATE/
-/.github/pull_request_template.md
 /START_HERE.md
 /PROJECT_STATUS.md
 /CURRENT_TASK.md
@@ -67,7 +63,7 @@ context/original_chat_logs/
 # Private, licensed, raw, uploaded, exported, or derivative data
 /data/private/
 /data/raw/
-/data/demo_seed/
+/data/demo_seed/*
 /inbox/
 /archive/
 /exports/
@@ -171,6 +167,7 @@ run/
 *.db
 *.db-shm
 *.db-wal
+!/data/demo_seed/offgrid_demo_seed.db
 
 # Cloud, infrastructure, and local deployment state
 .aws/

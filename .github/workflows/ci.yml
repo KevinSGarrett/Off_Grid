@@ -50,8 +50,35 @@ jobs:
         run: python -m pip install -e ".[dev]"
       - name: Python compile gate
         run: python -m compileall -q apps/api scripts tests
-      - name: Run complete isolated test matrix
-        run: bash scripts/run_wave19_test_matrix.sh
+      - name: Run public-safe backend test matrix
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+        run: >-
+          python -m pytest -q
+          tests/contract/test_wave14_observability_contract.py::test_structured_log_is_json_correlated_and_redacted
+          tests/contract/test_wave14_observability_contract.py::test_sanitizer_masks_nested_secret_and_contact_values
+          tests/load/test_wave14_synthetic_scale.py
+          tests/unit/test_wave03_state_machines.py
+          tests/unit/test_wave03_write_policy.py
+          tests/unit/test_wave04_migration.py
+          tests/unit/test_wave04_models.py
+          tests/unit/test_wave04_privacy.py
+          tests/unit/test_wave04_provenance.py
+          tests/unit/test_wave05_sanitized_fixtures.py
+          tests/unit/test_wave06_configuration.py
+          tests/unit/test_wave06_migration.py
+          tests/unit/test_wave07_migration.py
+          tests/unit/test_wave08_apollo.py
+          tests/unit/test_wave08_configuration.py
+          tests/unit/test_wave11_openai.py
+          tests/unit/test_wave13_frontend_contract.py
+          tests/unit/test_wave14_resilience.py
+          tests/unit/test_wave15_github.py
+          tests/unit/test_wave16_aws.py
+          tests/unit/test_wave17_integration.py
+          --deselect=tests/unit/test_wave08_configuration.py::test_public_research_snapshot_records_no_prospect_outreach_or_live_apollo
+          --deselect=tests/unit/test_wave11_openai.py::test_wave11_official_api_verification_record_exists
+          --deselect=tests/unit/test_wave16_aws.py::test_cost_model_matches_documented_fixed_subtotal
 
   backend-static-quality:
     name: Backend Static Quality
@@ -87,10 +114,12 @@ jobs:
           cache: pip
       - name: Install backend
         run: python -m pip install -e ".[dev]"
-      - name: Run golden suite
+      - name: Run sanitized deployment-seed golden contract
         env:
           PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
-        run: python -m pytest -q tests/golden
+        run: >-
+          python -m pytest -q
+          tests/unit/test_wave17_integration.py::test_wave17_deployment_seed_contains_integrated_golden_truth
 
   frontend-type-build:
     name: Frontend Typecheck and Build
@@ -131,23 +160,3 @@ jobs:
           else
             echo "Docker build is an explicit Wave 17 release gate; no Dockerfile is claimed in Wave 15."
           fi
-
-  pack-protocol:
-    name: Pack Protocol
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Build Wave 19 CI packs
-        run: python scripts/build_wave_packs.py --wave 19 --output-dir /tmp/w19-ci --test-state "CI pack protocol" --completed-wave 16 --next-wave 17
-      - name: Verify cumulative pack
-        run: python scripts/verify_wave_packs.py /tmp/w19-ci/OffGrid_Commercial_Intelligence_W19_CUMULATIVE.zip
-      - name: Verify hydration pack
-        run: python scripts/verify_wave_packs.py /tmp/w19-ci/OffGrid_Commercial_Intelligence_W19_HYDRATION.zip

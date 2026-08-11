@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 import sqlalchemy as sa
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
@@ -29,6 +30,8 @@ def _sha(path: Path) -> str:
 
 def _load_wave17_verifier():
     path = ROOT / "scripts/verify_wave17_integration.py"
+    if not path.exists():
+        pytest.skip("internal release verifier is intentionally absent from the public repository")
     spec = importlib.util.spec_from_file_location("wave17_verifier", path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
@@ -122,6 +125,7 @@ def test_wave17_dockerfile_uses_locked_python_and_fail_closed_frontend_install()
     assert "npm ci --no-audit --no-fund" in text
     assert "npm install --no-audit" not in text
     assert "data/demo_seed/offgrid_demo_seed.db" in text
+    assert "SERVE_WEB=true" in text
 
 
 def test_wave17_openai_is_optional_runtime_extra() -> None:
@@ -152,7 +156,10 @@ def test_wave17_aws_runtime_resets_to_seed_and_keeps_safe_modes() -> None:
 
 
 def test_wave17_release_proof_records_real_blockers_instead_of_fabricating_success() -> None:
-    proof = json.loads((ROOT / "release/WAVE_17_RELEASE_PROOF.json").read_text(encoding="utf-8"))
+    proof_path = ROOT / "release/WAVE_17_RELEASE_PROOF.json"
+    if not proof_path.exists():
+        pytest.skip("internal release proof is intentionally absent from the public repository")
+    proof = json.loads(proof_path.read_text(encoding="utf-8"))
     assert proof["seed"]["status"] == "PASS"
     assert proof["seed_privacy"]["status"] == "PASS"
     assert proof["deterministic_reset"]["status"] == "PASS"
