@@ -103,6 +103,9 @@ Resources:
                   - ecs:RegisterTaskDefinition
                   - ecs:DeregisterTaskDefinition
                   - ecs:DescribeTaskDefinition
+                  - ecs:ListServiceDeployments
+                  - ecs:DescribeServiceDeployments
+                  - ecs:DescribeServiceRevisions
                   - ecs:TagResource
                   - ecs:UntagResource
                   - ecs:DescribeClusters
