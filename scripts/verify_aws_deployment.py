@@ -20,7 +20,7 @@ from typing import Any
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 CHICAGO = ZoneInfo("America/Chicago")
 EXPECTED_ACCOUNT = "257851647752"
 EXPECTED_REGION = "us-east-1"

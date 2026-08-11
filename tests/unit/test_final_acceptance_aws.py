@@ -22,6 +22,7 @@ def _verifier():
 
 def test_aws_stack_output_parser_ignores_malformed_rows() -> None:
     verifier = _verifier()
+    assert verifier.ROOT == ROOT
     assert verifier.stack_outputs(
         {
             "Outputs": [
