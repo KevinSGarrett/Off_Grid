@@ -305,10 +305,24 @@ The username may be any non-empty value; the password is the value supplied thro
 
 Requirements: Python 3.12, Node.js 22, npm, and Docker.
 
+Windows PowerShell:
+
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 .\.venv\Scripts\python.exe scripts\run_public_test_matrix.py
+
+npm --prefix apps/web ci --no-audit --no-fund
+npm --prefix apps/web run typecheck
+npm --prefix apps/web run build
+```
+
+Linux or macOS:
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -e ".[dev]"
+.venv/bin/python scripts/run_public_test_matrix.py
 
 npm --prefix apps/web ci --no-audit --no-fund
 npm --prefix apps/web run typecheck
