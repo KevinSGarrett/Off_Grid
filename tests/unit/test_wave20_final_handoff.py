@@ -25,14 +25,14 @@ def test_wave20_required_terminal_artifacts_exist():
         p=ROOT/rel
         assert p.exists() and p.stat().st_size>80, rel
 
-def test_wave20_preserves_release_block_and_sequential_state():
+def test_wave20_preserves_current_release_candidate_state():
     control=json.loads((ROOT/"research/WAVE_20_FINAL_CONTROL.json").read_text())
     proof=json.loads((ROOT/"release/WAVE_17_RELEASE_PROOF.json").read_text())
-    assert proof["release_exit_gate"]=="BLOCKED"
-    assert control["application_release_status"]=="BLOCKED"
-    assert control["sequential_last_completed_wave"]==16
-    assert control["active_prerequisite_wave"]==17
-    assert control["wave18_status"]=="AUTHORED_VERIFIED_FORMAL_ACCEPTANCE_GATED"
+    assert proof["release_exit_gate"]=="PASS"
+    assert control["application_release_status"]=="RELEASE_CANDIDATE"
+    assert control["sequential_last_completed_wave"]==20
+    assert control["active_prerequisite_issue"]=="OGCI-TASK-035"
+    assert control["wave18_status"]=="VERIFIED_RELEASE_CANDIDATE"
     assert control["no_wave_21"] is True
 
 def test_wave20_truth_snapshot_is_stable():
@@ -47,7 +47,7 @@ def test_wave20_truth_snapshot_is_stable():
     assert t["deal_ready"] is False
     assert t["primary_kpi_demo_value"]=="N/A"
 
-def test_wave20_verifier_passes_for_blocked_snapshot():
+def test_wave20_verifier_passes_for_current_snapshot():
     p=subprocess.run([sys.executable,"scripts/verify_wave20_final.py"],cwd=ROOT,text=True,capture_output=True)
     assert p.returncode==0, p.stdout+p.stderr
 
@@ -64,8 +64,8 @@ def test_final_handoff_builder_is_privacy_safe(tmp_path):
         assert not any("EE-Reed-Construction-Houston-HQ" in n for n in names)
         assert not any("Stafford-Technology-Campus-Phases-3-4" in n for n in names)
         manifest=json.loads(z.read("FINAL_HANDOFF_MANIFEST.json"))
-        assert manifest["application_release_status"]=="BLOCKED"
-        assert manifest["active_prerequisite_wave"]==17
+        assert manifest["application_release_status"]=="RELEASE_CANDIDATE"
+        assert manifest["active_prerequisite_issue"]=="OGCI-TASK-035"
 
 def test_wave_pack_builder_supports_blocked_active_wave_override():
     text=(ROOT/"scripts/build_wave_packs.py").read_text()
