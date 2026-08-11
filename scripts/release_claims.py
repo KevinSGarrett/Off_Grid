@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 CURRENT_CLAIM_SOURCES = {
+    "engineering/README.md": "README.md",
     "operator/FINAL_READINESS_REPORT.md": "release/FINAL_READINESS_REPORT.md",
     "operator/FINAL_GAP_REPORT.md": "release/FINAL_GAP_REPORT.md",
     "operator/CLEAN_ROOM_VERIFICATION.md": "release/CLEAN_ROOM_VERIFICATION.md",
@@ -13,6 +14,16 @@ CURRENT_CLAIM_SOURCES = {
 }
 
 CURRENT_CLAIM_RULES = {
+    "engineering/README.md": {
+        "required": (
+            "Windows PowerShell",
+            "py -3.12 -m venv .venv",
+            ".\\.venv\\Scripts\\python.exe scripts\\run_public_test_matrix.py",
+            "python3.12 -m venv .venv",
+            ".venv/bin/python scripts/run_public_test_matrix.py",
+        ),
+        "forbidden": ("\npython -m venv .venv",),
+    },
     "operator/FINAL_READINESS_REPORT.md": {
         "required": (
             "RELEASE CANDIDATE",
@@ -40,8 +51,11 @@ CURRENT_CLAIM_RULES = {
             "At the Wave 17 clean-room baseline",
             "complete `221`-test collection",
             "historical clean-room result remains tied to commit",
+            "On Windows PowerShell",
+            "py -3.12 -m venv .venv",
+            "python3.12 -m venv .venv",
         ),
-        "forbidden": (),
+        "forbidden": ("\npython -m venv .venv",),
     },
     "operator/WAVE_20_REQUIREMENT_COVERAGE.md": {
         "required": (

@@ -37,19 +37,36 @@ The container resets its writable runtime database from the sanitized seed at st
 
 Requirements: Python 3.12, Node.js 22, npm, and Docker for the image gate.
 
-```bash
-python -m venv .venv
-# Activate .venv using your shell's normal command.
-python -m pip install -e ".[dev]"
-python scripts/run_public_test_matrix.py
+Use an explicit Python 3.12 launcher so another installed Python version cannot silently create an unsupported environment.
 
+Windows PowerShell:
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\python.exe scripts\run_public_test_matrix.py
+.\.venv\Scripts\python.exe scripts\validate_git_privacy.py --require-git
+.\.venv\Scripts\python.exe scripts\validate_github_config.py
+.\.venv\Scripts\python.exe scripts\validate_aws_infra.py
+```
+
+Bash:
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -e ".[dev]"
+.venv/bin/python scripts/run_public_test_matrix.py
+.venv/bin/python scripts/validate_git_privacy.py --require-git
+.venv/bin/python scripts/validate_github_config.py
+.venv/bin/python scripts/validate_aws_infra.py
+```
+
+The frontend commands are the same in either shell:
+
+```text
 npm --prefix apps/web ci --no-audit --no-fund
 npm --prefix apps/web run typecheck
 npm --prefix apps/web run build
-
-python scripts/validate_git_privacy.py --require-git
-python scripts/validate_github_config.py
-python scripts/validate_aws_infra.py
 ```
 
 `make test` runs the same public-safe Python matrix as CI. `make test-private` is reserved for the canonical private workspace, where the licensed Stafford and EE Reed source PDFs are available. Their tests remain visible in the repository, but their source documents are intentionally not published.
