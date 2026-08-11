@@ -21,7 +21,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 RUN apk add --no-cache libstdc++
 COPY requirements.lock ./requirements.lock
-RUN python -m pip install --no-cache-dir -r requirements.lock
+RUN python -m pip install --no-cache-dir --upgrade "pip==26.1.2" \
+    && python -m pip install --no-cache-dir -r requirements.lock
 COPY apps/api ./apps/api
 COPY config ./config
 COPY prompts ./prompts
