@@ -28,7 +28,7 @@ ai = [
 dev = [
   "pytest>=8,<10",
   "ruff>=0.12,<1",
-  "mypy>=1.17,<2"
+  "mypy>=1.17,<3"
 ]
 
 [tool.setuptools]
