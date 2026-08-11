@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="420" viewBox="0 0 1440 420" role="img" aria-labelledby="title desc">
+  <title id="title">Two connected commercial motions</title>
+  <desc id="desc">A contractor demand path and a rental house fleet path share project demand but retain separate evidence and readiness states.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1"><stop stop-color="#f7fbf8"/><stop offset="1" stop-color="#eef8f1"/></linearGradient>
+    <linearGradient id="green" x1="0" x2="1"><stop stop-color="#08733d"/><stop offset="1" stop-color="#18b960"/></linearGradient>
+  </defs>
+  <rect width="1440" height="420" rx="28" fill="url(#bg)" stroke="#d5e7db"/>
+  <g font-family="Inter,Segoe UI,Arial,sans-serif">
+    <text x="70" y="58" fill="#16482f" font-size="15" font-weight="800" letter-spacing="1.8">ONE PROJECT · TWO COMMERCIAL MOTIONS</text>
+    <text x="70" y="90" fill="#587366" font-size="16">Connected by project demand. Separated by evidence, ownership, and buying authority.</text>
+
+    <g transform="translate(70 125)">
+      <rect width="1300" height="112" rx="20" fill="#ffffff" stroke="#cde2d4"/>
+      <rect width="230" height="112" rx="20" fill="#08251a"/>
+      <text x="28" y="42" fill="#72ec93" font-size="13" font-weight="700">PRIMARY MOTION</text>
+      <text x="28" y="72" fill="#ffffff" font-size="20" font-weight="800">Contractor demand</text>
+      <text x="28" y="94" fill="#8cae9a" font-size="12">highest-probability path</text>
+      <g transform="translate(275 25)" text-anchor="middle">
+        <g><circle cx="45" cy="30" r="26" fill="#e5f7eb" stroke="#63c985"/><text x="45" y="35" fill="#08733d" font-size="13" font-weight="800">SITE</text><text x="45" y="72" fill="#273d32" font-size="13" font-weight="700">Project</text></g>
+        <path d="M82 30h74" stroke="#76a98c" stroke-width="2"/><path d="m156 24 12 6-12 6z" fill="#08733d"/>
+        <g transform="translate(165)"><circle cx="45" cy="30" r="26" fill="#e5f7eb" stroke="#63c985"/><text x="45" y="35" fill="#08733d" font-size="13" font-weight="800">GC</text><text x="45" y="72" fill="#273d32" font-size="13" font-weight="700">Contractor</text></g>
+        <path d="M247 30h74" stroke="#76a98c" stroke-width="2"/><path d="m321 24 12 6-12 6z" fill="#08733d"/>
+        <g transform="translate(330)"><circle cx="45" cy="30" r="26" fill="#e5f7eb" stroke="#63c985"/><text x="45" y="35" fill="#08733d" font-size="13" font-weight="800">WHO</text><text x="45" y="72" fill="#273d32" font-size="13" font-weight="700">Site authority</text></g>
+        <path d="M412 30h74" stroke="#76a98c" stroke-width="2"/><path d="m486 24 12 6-12 6z" fill="#08733d"/>
+        <g transform="translate(495)"><circle cx="45" cy="30" r="26" fill="#e5f7eb" stroke="#63c985"/><text x="45" y="35" fill="#08733d" font-size="13" font-weight="800">NEED</text><text x="45" y="72" fill="#273d32" font-size="13" font-weight="700">Light / power</text></g>
+        <path d="M577 30h74" stroke="#76a98c" stroke-width="2"/><path d="m651 24 12 6-12 6z" fill="#08733d"/>
+        <g transform="translate(660)"><circle cx="45" cy="30" r="26" fill="url(#green)"/><text x="45" y="35" fill="#ffffff" font-size="13" font-weight="800">DEMO</text><text x="45" y="72" fill="#273d32" font-size="13" font-weight="700">Site request</text></g>
+      </g>
+    </g>
+
+    <g transform="translate(70 255)">
+      <rect width="1300" height="112" rx="20" fill="#ffffff" stroke="#d9e1dc"/>
+      <rect width="230" height="112" rx="20" fill="#1c2621"/>
+      <text x="28" y="42" fill="#bdc9c1" font-size="13" font-weight="700">SECONDARY MOTION</text>
+      <text x="28" y="72" fill="#ffffff" font-size="22" font-weight="800">Rental / fleet</text>
+      <text x="28" y="94" fill="#96a59c" font-size="12">partner identity required</text>
+      <g transform="translate(275 25)" text-anchor="middle">
+        <g><circle cx="45" cy="30" r="26" fill="#f0f3f1" stroke="#abb9b0"/><text x="45" y="35" fill="#51645a" font-size="13" font-weight="800">PULL</text><text x="45" y="72" fill="#273d32" font-size="13" font-weight="700">Demand</text></g>
+        <path d="M82 30h74" stroke="#a8b8af" stroke-width="2"/><path d="m156 24 12 6-12 6z" fill="#71837a"/>
+        <g transform="translate(165)"><circle cx="45" cy="30" r="26" fill="#fff5dc" stroke="#efb94a"/><text x="45" y="35" fill="#a46400" font-size="12" font-weight="800">?</text><text x="45" y="72" fill="#a46400" font-size="13" font-weight="800">UNRESOLVED</text></g>
+        <path d="M247 30h74" stroke="#a8b8af" stroke-width="2" stroke-dasharray="5 5"/><path d="m321 24 12 6-12 6z" fill="#71837a"/>
+        <g transform="translate(330)"><circle cx="45" cy="30" r="26" fill="#f0f3f1" stroke="#abb9b0"/><text x="45" y="35" fill="#51645a" font-size="12" font-weight="800">BRANCH</text><text x="45" y="72" fill="#273d32" font-size="13" font-weight="700">Fleet buyer</text></g>
+        <path d="M412 30h74" stroke="#a8b8af" stroke-width="2" stroke-dasharray="5 5"/><path d="m486 24 12 6-12 6z" fill="#71837a"/>
+        <g transform="translate(495)"><circle cx="45" cy="30" r="26" fill="#f0f3f1" stroke="#abb9b0"/><text x="45" y="35" fill="#51645a" font-size="12" font-weight="800">FLEET</text><text x="45" y="72" fill="#273d32" font-size="13" font-weight="700">Opportunity</text></g>
+        <path d="M577 30h74" stroke="#a8b8af" stroke-width="2" stroke-dasharray="5 5"/><path d="m651 24 12 6-12 6z" fill="#71837a"/>
+        <g transform="translate(660)"><circle cx="45" cy="30" r="26" fill="#f0f3f1" stroke="#abb9b0"/><text x="45" y="35" fill="#51645a" font-size="12" font-weight="800">SALE</text><text x="45" y="72" fill="#273d32" font-size="13" font-weight="700">Demo / channel</text></g>
+      </g>
+    </g>
+  </g>
+</svg>

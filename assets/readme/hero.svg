@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="520" viewBox="0 0 1440 520" role="img" aria-labelledby="title desc">
+  <title id="title">Off Grid Commercial Intelligence Engine</title>
+  <desc id="desc">A dark green technical hero graphic describing the evidence-aware construction-to-commercial workflow.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06120d"/>
+      <stop offset="0.52" stop-color="#0a2118"/>
+      <stop offset="1" stop-color="#103f2a"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#67f56f"/>
+      <stop offset="1" stop-color="#00b85a"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffd56a"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+    <pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse">
+      <path d="M42 0H0V42" fill="none" stroke="#65e98b" stroke-opacity=".075"/>
+    </pattern>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1440" height="520" rx="32" fill="url(#bg)"/>
+  <rect width="1440" height="520" rx="32" fill="url(#grid)"/>
+  <circle cx="1280" cy="90" r="220" fill="#19d86c" opacity=".08"/>
+  <circle cx="1110" cy="455" r="290" fill="#19d86c" opacity=".055"/>
+
+  <g transform="translate(70 58)">
+    <path d="M52 0 98 26v53l-46 26L6 79V26Z" fill="none" stroke="url(#green)" stroke-width="10"/>
+    <path d="M52 23 76 37v29L52 80 28 66V37Z" fill="#16d267" opacity=".2"/>
+    <circle cx="52" cy="52" r="11" fill="#67f56f" filter="url(#glow)"/>
+    <text x="125" y="47" fill="#f7fff9" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="44" font-weight="800" letter-spacing="2">OFF GRID</text>
+    <text x="127" y="77" fill="#92b5a2" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="600" letter-spacing="2.4">COMMERCIAL INTELLIGENCE ENGINE</text>
+  </g>
+
+  <g transform="translate(76 202)" font-family="Inter,Segoe UI,Arial,sans-serif">
+    <text x="0" y="0" fill="#ffffff" font-size="58" font-weight="800" letter-spacing="-2.4">Construction data in.</text>
+    <text x="0" y="68" fill="url(#green)" font-size="58" font-weight="800" letter-spacing="-2.4">Qualified commercial action out.</text>
+    <text x="0" y="122" fill="#b6cbbf" font-size="20">Evidence-aware qualification · conservative identity resolution · explainable next action</text>
+  </g>
+
+  <g transform="translate(76 382)" font-family="Inter,Segoe UI,Arial,sans-serif">
+    <g>
+      <rect width="222" height="70" rx="15" fill="#0e2d20" stroke="#2a6c4b"/>
+      <circle cx="34" cy="35" r="16" fill="#133d2a" stroke="#53e27b"/>
+      <path d="m26 35 5 5 11-12" fill="none" stroke="#65f087" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="60" y="30" fill="#eaffef" font-size="15" font-weight="700">EVIDENCE-GROUNDED</text>
+      <text x="60" y="50" fill="#83a792" font-size="12">claims retain provenance</text>
+    </g>
+    <g transform="translate(238)">
+      <rect width="222" height="70" rx="15" fill="#0e2d20" stroke="#2a6c4b"/>
+      <circle cx="34" cy="35" r="16" fill="#133d2a" stroke="#53e27b"/>
+      <path d="M27 42V29l7-5 7 5v13M24 42h20" fill="none" stroke="#65f087" stroke-width="2.3" stroke-linecap="round"/>
+      <text x="60" y="30" fill="#eaffef" font-size="15" font-weight="700">CRM-SAFE BY DESIGN</text>
+      <text x="60" y="50" fill="#83a792" font-size="12">lead-ready ≠ deal-ready</text>
+    </g>
+    <g transform="translate(476)">
+      <rect width="222" height="70" rx="15" fill="#0e2d20" stroke="#2a6c4b"/>
+      <circle cx="34" cy="35" r="16" fill="#133d2a" stroke="#53e27b"/>
+      <path d="M27 29h14v12H27zM31 25h6M31 45h6" fill="none" stroke="#65f087" stroke-width="2.2" stroke-linecap="round"/>
+      <text x="60" y="30" fill="#eaffef" font-size="15" font-weight="700">DETERMINISTIC CORE</text>
+      <text x="60" y="50" fill="#83a792" font-size="12">works without AI access</text>
+    </g>
+  </g>
+
+  <g transform="translate(1015 180)" font-family="Inter,Segoe UI,Arial,sans-serif">
+    <rect width="350" height="250" rx="24" fill="#07140f" fill-opacity=".78" stroke="#2b684a"/>
+    <text x="28" y="42" fill="#86a995" font-size="13" font-weight="700" letter-spacing="1.6">DECISION STATE</text>
+    <text x="28" y="86" fill="#ffffff" font-size="26" font-weight="800">PURSUE / VERIFY</text>
+    <line x1="28" y1="106" x2="322" y2="106" stroke="#224934"/>
+    <text x="28" y="140" fill="#9eb9aa" font-size="14">Commercial fit</text>
+    <text x="295" y="140" fill="#6cf18a" font-size="15" font-weight="800" text-anchor="end">STRONG</text>
+    <rect x="28" y="152" width="294" height="8" rx="4" fill="#173728"/>
+    <rect x="28" y="152" width="235" height="8" rx="4" fill="url(#green)"/>
+    <text x="28" y="190" fill="#9eb9aa" font-size="14">Data confidence</text>
+    <text x="295" y="190" fill="#ffc857" font-size="15" font-weight="800" text-anchor="end">VERIFY</text>
+    <rect x="28" y="202" width="294" height="8" rx="4" fill="#173728"/>
+    <rect x="28" y="202" width="203" height="8" rx="4" fill="url(#gold)"/>
+    <text x="28" y="232" fill="#789986" font-size="12">Separate signals. Explainable action.</text>
+  </g>
+</svg>
