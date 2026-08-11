@@ -115,8 +115,12 @@ def test_openai_key_is_a_dedicated_server_side_secret() -> None:
 def test_cost_model_matches_documented_fixed_subtotal() -> None:
     data = json.loads((ROOT / "research" / "WAVE_16_AWS_COST_MODEL.json").read_text())
     assert data["configuration"] == {"vCPU": 0.25, "memory_gb": 0.5, "min_tasks": 1, "max_tasks": 1}
-    assert data["monthly_estimate"]["fixed_subtotal_before_alb_lcu_ipv4_data_transfer"] == 25.89
-    assert data["monthly_estimate"]["budget_guardrail_usd"] == 50
+    assert data["assumptions"]["secrets_manager_secrets"] == 2
+    assert data["assumptions"]["observed_public_ipv4_total"] == 7
+    assert data["monthly_estimate"]["fixed_subtotal_before_alb_lcu_data_transfer"] == 51.84
+    assert data["monthly_estimate"]["openai_application_guard_usd_per_day"] == 2.0
+    assert data["monthly_estimate"]["budget_template_default_usd"] == 50
+    assert data["monthly_estimate"]["deployed_budget_resource_present"] is False
 
 
 def test_basic_access_gate_protects_app_but_exempts_health() -> None:
