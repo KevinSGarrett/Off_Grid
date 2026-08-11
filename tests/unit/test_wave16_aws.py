@@ -41,7 +41,8 @@ def test_aws_demo_modes_are_fail_closed() -> None:
     for pair in (
         ("DEMO_MODE", "'true'"),
         ("REQUIRE_ACCESS_CONTROL", "'true'"),
-        ("OPENAI_ENABLED", "'false'"),
+        ("OPENAI_ENABLED", "'true'"),
+        ("OPENAI_RESEARCH_ENABLED", "'false'"),
         ("OPENAI_RAW_DOCUMENTS", "'false'"),
         ("APOLLO_MODE", "'off'"),
         ("PIPEDRIVE_MODE", "'dry_run'"),
@@ -98,6 +99,17 @@ def test_deploy_workflow_fails_closed_on_missing_foundation_outputs() -> None:
     text = (ROOT / ".github" / "workflows" / "deploy-aws-demo.yml").read_text()
     assert '[[ -n "$value" && "$value" != "None" ]]' in text
     assert "Foundation output $1 is missing" in text
+    assert "OpenAISecretArn" in text
+    assert "openai_secret_arn" in text
+
+
+def test_openai_key_is_a_dedicated_server_side_secret() -> None:
+    foundation = (ROOT / "infra" / "aws" / "foundation.yaml").read_text()
+    service = (ROOT / "infra" / "aws" / "service.yaml").read_text()
+    assert "offgrid-commercial-intelligence/demo/openai-api-key" in foundation
+    assert "OpenAIApiKeySecret" in foundation
+    assert "Name: OPENAI_API_KEY" in service
+    assert "ValueFrom: !Ref OpenAISecretArn" in service
 
 
 def test_cost_model_matches_documented_fixed_subtotal() -> None:

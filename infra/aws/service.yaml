@@ -13,6 +13,8 @@ Parameters:
     Type: String
   AccessSecretArn:
     Type: String
+  OpenAISecretArn:
+    Type: String
   LogGroupName:
     Type: String
   ServiceName:
@@ -60,7 +62,19 @@ Resources:
           - Name: LOG_LEVEL
             Value: INFO
           - Name: OPENAI_ENABLED
-            Value: 'false'
+            Value: 'true'
+          - Name: OPENAI_MODEL_FAST
+            Value: gpt-5.6-luna
+          - Name: OPENAI_MODEL_REASONING
+            Value: gpt-5.6-terra
+          - Name: OPENAI_MODEL_RESEARCH
+            Value: gpt-5.6-terra
+          - Name: OPENAI_DAILY_BUDGET
+            Value: '2.00'
+          - Name: OPENAI_MAX_RETRIES
+            Value: '2'
+          - Name: OPENAI_TIMEOUT_SECONDS
+            Value: '45'
           - Name: OPENAI_RESEARCH_ENABLED
             Value: 'false'
           - Name: OPENAI_RAW_DOCUMENTS
@@ -76,6 +90,8 @@ Resources:
         Secrets:
           - Name: APP_ACCESS_PASSWORD
             ValueFrom: !Ref AccessSecretArn
+          - Name: OPENAI_API_KEY
+            ValueFrom: !Ref OpenAISecretArn
       ScalingTarget:
         AutoScalingMetric: AVERAGE_CPU
         AutoScalingTargetValue: 60

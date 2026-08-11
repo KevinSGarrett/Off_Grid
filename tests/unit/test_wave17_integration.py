@@ -138,11 +138,13 @@ def test_readme_selects_python_312_explicitly_for_windows_and_bash() -> None:
     assert "\npython -m venv .venv" not in text
 
 
-def test_wave17_openai_is_optional_runtime_extra() -> None:
+def test_wave17_openai_is_optional_project_extra_but_pinned_in_deploy_lock() -> None:
     text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    lock = (ROOT / "requirements.lock").read_text(encoding="utf-8")
     main_dependencies = text.split("[project.optional-dependencies]", 1)[0]
     assert '"openai>=2,<3"' not in main_dependencies
     assert 'ai = [' in text and '"openai>=2,<3"' in text
+    assert "openai==2.54.0" in lock
 
 
 def test_wave17_entrypoint_restores_seed_and_fails_closed_when_missing() -> None:
@@ -157,7 +159,7 @@ def test_wave17_aws_runtime_resets_to_seed_and_keeps_safe_modes() -> None:
     text = (ROOT / "infra/aws/service.yaml").read_text(encoding="utf-8")
     for pair in (
         ("DEMO_RESET_ON_START", "'true'"),
-        ("OPENAI_ENABLED", "'false'"),
+        ("OPENAI_ENABLED", "'true'"),
         ("APOLLO_MODE", "'off'"),
         ("PIPEDRIVE_MODE", "'dry_run'"),
     ):

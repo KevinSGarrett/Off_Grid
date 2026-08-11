@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
   Non-service foundation for the Off Grid Commercial Intelligence interview demo.
-  Creates ECR, ECS roles, a generated access secret, log group, cluster, and optional cost budget.
+  Creates ECR, ECS roles, access/provider secrets, log group, cluster, and optional cost budget.
 
 Parameters:
   BudgetEmail:
@@ -61,6 +61,22 @@ Resources:
         - Key: Purpose
           Value: Interview
 
+  OpenAIApiKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: offgrid-commercial-intelligence/demo/openai-api-key
+      Description: Server-only OpenAI API key for the bounded Commercial Analyst capability.
+      GenerateSecretString:
+        PasswordLength: 32
+        ExcludePunctuation: true
+      Tags:
+        - Key: Project
+          Value: OffGridCommercialIntelligence
+        - Key: Environment
+          Value: demo
+        - Key: Purpose
+          Value: Interview
+
   DemoLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -100,14 +116,16 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       Policies:
-        - PolicyName: ReadDemoAccessSecret
+        - PolicyName: ReadDemoRuntimeSecrets
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
                   - secretsmanager:GetSecretValue
-                Resource: !Ref DemoAccessSecret
+                Resource:
+                  - !Ref DemoAccessSecret
+                  - !Ref OpenAIApiKeySecret
       Tags:
         - Key: Project
           Value: OffGridCommercialIntelligence
@@ -185,5 +203,7 @@ Outputs:
     Value: !GetAtt ExpressInfrastructureRole.Arn
   AccessSecretArn:
     Value: !Ref DemoAccessSecret
+  OpenAISecretArn:
+    Value: !Ref OpenAIApiKeySecret
   LogGroupName:
     Value: !Ref DemoLogGroup

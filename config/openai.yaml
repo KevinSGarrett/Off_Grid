@@ -18,7 +18,7 @@ openai:
     max_retries: 2
     timeout_seconds: 45
     daily_budget_usd: 2.00
-    max_output_tokens: 1800
+    max_output_tokens: 3000
     max_tool_rounds: 3
   models:
     fast:
