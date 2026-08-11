@@ -82,7 +82,8 @@ def test_github_oidc_role_is_repository_environment_scoped() -> None:
     assert "Url: https://token.actions.githubusercontent.com" in text
     assert "ClientIdList:" in text and "sts.amazonaws.com" in text
     assert "token.actions.githubusercontent.com:aud: sts.amazonaws.com" in text
-    assert "repo:${GitHubOwner}/${GitHubRepository}:environment:${DeploymentEnvironment}" in text
+    assert "GitHubOwnerId:" in text and "GitHubRepositoryId:" in text
+    assert "repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepository}@${GitHubRepositoryId}:environment:${DeploymentEnvironment}" in text
     assert "iam:PassRole" in text
     assert "offgrid-commercial-intelligence-demo-execution" in text
 

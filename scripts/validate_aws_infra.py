@@ -112,7 +112,12 @@ def main() -> int:
 
     role = ores.get("GitHubDeployRole", {}).get("Properties", {})
     trust = str(role.get("AssumeRolePolicyDocument", {}))
-    if "token.actions.githubusercontent.com:sub" not in trust or "environment:${DeploymentEnvironment}" not in trust:
+    if (
+        "token.actions.githubusercontent.com:sub" not in trust
+        or "GitHubOwnerId" not in trust
+        or "GitHubRepositoryId" not in trust
+        or "environment:${DeploymentEnvironment}" not in trust
+    ):
         errors.append("GitHub OIDC trust is not restricted to repository environment")
 
     workflow = (ROOT / ".github/workflows/deploy-aws-demo.yml").read_text()

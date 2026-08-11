@@ -6,8 +6,14 @@ Description: >-
 Parameters:
   GitHubOwner:
     Type: String
+  GitHubOwnerId:
+    Type: String
+    Description: Immutable numeric GitHub owner ID used in OIDC subjects.
   GitHubRepository:
     Type: String
+  GitHubRepositoryId:
+    Type: String
+    Description: Immutable numeric GitHub repository ID used in OIDC subjects.
   DeploymentEnvironment:
     Type: String
     Default: aws-demo
@@ -44,7 +50,7 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOwner}/${GitHubRepository}:environment:${DeploymentEnvironment}
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepository}@${GitHubRepositoryId}:environment:${DeploymentEnvironment}
       Policies:
         - PolicyName: DeployInterviewDemo
           PolicyDocument:
