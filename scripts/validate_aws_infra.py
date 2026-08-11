@@ -114,11 +114,14 @@ def main() -> int:
         'confirm_deploy }}" == "DEPLOY"',
         "aws-actions/configure-aws-credentials@v6.2.3",
         "aws-actions/amazon-ecr-login@v2",
+        "python scripts/run_public_test_matrix.py",
     ):
         if needle not in workflow:
             errors.append(f"deployment workflow missing {needle!r}")
     if re.search(r"on:\s*\n\s*(push|pull_request):", workflow):
         errors.append("AWS deployment workflow must not auto-run on push/PR")
+    if "run_wave16_test_matrix.sh" in workflow:
+        errors.append("AWS deployment workflow references a private-only test script")
 
     dockerignore = (ROOT / ".dockerignore").read_text()
     for private in ("context/private_source_documents", "context/original_chat_logs", "data/private"):

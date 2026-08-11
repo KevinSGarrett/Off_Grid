@@ -71,6 +71,8 @@ def test_deploy_workflow_is_manual_oidc_and_acknowledged() -> None:
     assert 'confirm_deploy }}" == "DEPLOY"' in text
     assert "aws-actions/configure-aws-credentials@v6.2.3" in text
     assert "aws-actions/amazon-ecr-login@v2" in text
+    assert "python scripts/run_public_test_matrix.py" in text
+    assert "run_wave16_test_matrix.sh" not in text
     assert "on:\n  push:" not in text
 
 

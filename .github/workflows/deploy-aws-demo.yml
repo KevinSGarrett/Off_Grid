@@ -57,8 +57,8 @@ jobs:
           cache: pip
       - name: Install backend verification dependencies
         run: python -m pip install -e '.[dev]'
-      - name: Run Wave 16 release matrix
-        run: bash scripts/run_wave16_test_matrix.sh
+      - name: Run public release matrix
+        run: python scripts/run_public_test_matrix.py
       - name: Validate AWS templates and deployment policy
         run: python scripts/validate_aws_infra.py
       - name: Configure AWS credentials using OIDC
