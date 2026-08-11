@@ -351,6 +351,20 @@ function Frame({ d }: { d: DashboardData }) {
   const [guideIndex, setGuideIndex] = useState(0);
   const [navOpen, setNavOpen] = useState(false);
   useEffect(() => { const handler = () => setView(parseView()); window.addEventListener("hashchange", handler); return () => window.removeEventListener("hashchange", handler); }, []);
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 821px)");
+    const closeOnDesktop = (event: MediaQueryListEvent) => { if (event.matches) setNavOpen(false); };
+    if (desktop.matches) setNavOpen(false);
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, []);
+  useEffect(() => {
+    if (!navOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setNavOpen(false); };
+    document.addEventListener("keydown", closeOnEscape);
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", closeOnEscape); document.body.style.overflow = ""; };
+  }, [navOpen]);
   useEffect(() => { window.scrollTo({ top: 0 }); document.title = `${view === "guided" ? "Guided CEO Review" : nav.find((item) => item.key === view)?.label || "Off Grid"} · Off Grid`; }, [view]);
   function navigate(next: ViewKey) { setView(next); setNavOpen(false); setEvidence(null); window.history.replaceState(null, "", `#/${next}`); }
   function startGuide() { setGuideIndex(0); setGuideOpen(true); navigate(guided[0].view); }
