@@ -1,12 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
-  GitHub OIDC deployment role for an already-created GitHub OIDC provider. The role is scoped to
-  one repository and the aws-demo GitHub environment. This stack is a one-time operator bootstrap.
+  GitHub OIDC provider and deployment role scoped to one repository and the aws-demo GitHub
+  environment. This stack is a one-time operator bootstrap.
 
 Parameters:
-  GitHubOidcProviderArn:
-    Type: String
-    Description: ARN of the IAM OIDC provider for token.actions.githubusercontent.com.
   GitHubOwner:
     Type: String
   GitHubRepository:
@@ -19,6 +16,20 @@ Parameters:
     Default: us-east-1
 
 Resources:
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      Tags:
+        - Key: Project
+          Value: OffGridCommercialIntelligence
+        - Key: Environment
+          Value: demo
+        - Key: Purpose
+          Value: GitHubActionsOIDC
+
   GitHubDeployRole:
     Type: AWS::IAM::Role
     Properties:
@@ -28,7 +39,7 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Ref GitHubOidcProviderArn
+              Federated: !Ref GitHubOidcProvider
             Action: sts:AssumeRoleWithWebIdentity
             Condition:
               StringEquals:
@@ -97,5 +108,7 @@ Resources:
           Value: Interview
 
 Outputs:
+  OidcProviderArn:
+    Value: !Ref GitHubOidcProvider
   RoleArn:
     Value: !GetAtt GitHubDeployRole.Arn

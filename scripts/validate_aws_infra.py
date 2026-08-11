@@ -101,6 +101,15 @@ def main() -> int:
         if tag_map.get(key) != value:
             errors.append(f"missing required service tag {key}={value}")
 
+    provider = ores.get("GitHubOidcProvider", {})
+    if provider.get("Type") != "AWS::IAM::OIDCProvider":
+        errors.append("GitHub OIDC provider must be managed by the deployment-role stack")
+    provider_props = provider.get("Properties", {})
+    if provider_props.get("Url") != "https://token.actions.githubusercontent.com":
+        errors.append("GitHub OIDC provider URL is missing or incorrect")
+    if "sts.amazonaws.com" not in provider_props.get("ClientIdList", []):
+        errors.append("GitHub OIDC provider must trust the AWS STS audience")
+
     role = ores.get("GitHubDeployRole", {}).get("Properties", {})
     trust = str(role.get("AssumeRolePolicyDocument", {}))
     if "token.actions.githubusercontent.com:sub" not in trust or "environment:${DeploymentEnvironment}" not in trust:

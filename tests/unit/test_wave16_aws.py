@@ -78,6 +78,9 @@ def test_deploy_workflow_is_manual_oidc_and_acknowledged() -> None:
 
 def test_github_oidc_role_is_repository_environment_scoped() -> None:
     text = (ROOT / "infra" / "aws" / "github-deploy-role.yaml").read_text()
+    assert "Type: AWS::IAM::OIDCProvider" in text
+    assert "Url: https://token.actions.githubusercontent.com" in text
+    assert "ClientIdList:" in text and "sts.amazonaws.com" in text
     assert "token.actions.githubusercontent.com:aud: sts.amazonaws.com" in text
     assert "repo:${GitHubOwner}/${GitHubRepository}:environment:${DeploymentEnvironment}" in text
     assert "iam:PassRole" in text
