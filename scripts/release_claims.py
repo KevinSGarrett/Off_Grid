@@ -27,7 +27,7 @@ CURRENT_CLAIM_RULES = {
     "operator/FINAL_READINESS_REPORT.md": {
         "required": (
             "RELEASE CANDIDATE",
-            "Canonical Python suite: `224 passed`",
+            "Canonical Python suite: `226 passed`",
             "all seven required checks passed",
             "OGCI-TASK-035",
         ),
@@ -38,11 +38,12 @@ CURRENT_CLAIM_RULES = {
             "Canonical Python suite: `221 passed`",
             "Canonical Python suite: `222 passed`",
             "Canonical Python suite: `223 passed`",
+            "Canonical Python suite: `224 passed`",
         ),
     },
     "operator/FINAL_GAP_REPORT.md": {
         "required": (
-            "| Python regression | PASS | 224 canonical tests",
+            "| Python regression | PASS | 226 canonical tests",
             "Seven strict protected checks green",
             "RELEASE CANDIDATE",
             "OGCI-TASK-035",
@@ -54,6 +55,7 @@ CURRENT_CLAIM_RULES = {
             "221 canonical tests",
             "222 canonical tests",
             "223 canonical tests",
+            "224 canonical tests",
         ),
     },
     "operator/CLEAN_ROOM_VERIFICATION.md": {
