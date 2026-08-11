@@ -3,10 +3,13 @@ WAVE ?= 4
 OUTPUT_DIR ?= /mnt/data
 PREVIOUS_PACK ?=
 
-.PHONY: test test-monolithic architecture-check schema-check github-check privacy-check migrate api-dev web-dev demo-seed reset-demo wave17-proof pack verify-pack
+.PHONY: test test-private test-monolithic architecture-check schema-check github-check privacy-check migrate api-dev web-dev demo-seed reset-demo wave17-proof pack verify-pack
 
 test:
-	bash scripts/run_wave19_test_matrix.sh
+	$(PYTHON) scripts/run_public_test_matrix.py
+
+test-private:
+	$(PYTHON) -m pytest -q
 
 test-monolithic:
 	$(PYTHON) -m pytest -q

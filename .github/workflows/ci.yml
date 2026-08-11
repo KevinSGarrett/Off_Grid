@@ -51,35 +51,7 @@ jobs:
       - name: Python compile gate
         run: python -m compileall -q apps/api scripts tests
       - name: Run public-safe backend test matrix
-        env:
-          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
-        run: >-
-          python -m pytest -q
-          tests/contract/test_wave14_observability_contract.py::test_structured_log_is_json_correlated_and_redacted
-          tests/contract/test_wave14_observability_contract.py::test_sanitizer_masks_nested_secret_and_contact_values
-          tests/load/test_wave14_synthetic_scale.py
-          tests/unit/test_wave03_state_machines.py
-          tests/unit/test_wave03_write_policy.py
-          tests/unit/test_wave04_migration.py
-          tests/unit/test_wave04_models.py
-          tests/unit/test_wave04_privacy.py
-          tests/unit/test_wave04_provenance.py
-          tests/unit/test_wave05_sanitized_fixtures.py
-          tests/unit/test_wave05_ingestion.py::test_later_material_project_change_creates_history_and_pipeline_event
-          tests/unit/test_wave06_configuration.py
-          tests/unit/test_wave06_migration.py
-          tests/unit/test_wave07_migration.py
-          tests/unit/test_wave08_apollo.py
-          tests/unit/test_wave08_configuration.py
-          tests/unit/test_wave11_openai.py
-          tests/unit/test_wave13_frontend_contract.py
-          tests/unit/test_wave14_resilience.py
-          tests/unit/test_wave15_github.py
-          tests/unit/test_wave16_aws.py
-          tests/unit/test_wave17_integration.py
-          --deselect=tests/unit/test_wave08_configuration.py::test_public_research_snapshot_records_no_prospect_outreach_or_live_apollo
-          --deselect=tests/unit/test_wave11_openai.py::test_wave11_official_api_verification_record_exists
-          --deselect=tests/unit/test_wave16_aws.py::test_cost_model_matches_documented_fixed_subtotal
+        run: python scripts/run_public_test_matrix.py
 
   backend-static-quality:
     name: Backend Static Quality
