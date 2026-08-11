@@ -9,7 +9,7 @@ RUN npm ci --no-audit --no-fund
 COPY apps/web ./
 RUN npm run build
 
-FROM python:3.12-slim AS runtime
+FROM python:3.12-alpine AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -19,6 +19,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DEMO_RESET_ON_START=true \
     SERVE_WEB=true
 WORKDIR /app
+RUN apk add --no-cache libstdc++
 COPY requirements.lock ./requirements.lock
 RUN python -m pip install --no-cache-dir -r requirements.lock
 COPY apps/api ./apps/api
@@ -27,7 +28,7 @@ COPY prompts ./prompts
 COPY data/demo_seed/offgrid_demo_seed.db ./data/demo_seed/offgrid_demo_seed.db
 COPY --from=web-build /src/apps/web/dist ./apps/web/dist
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN useradd --create-home --uid 10001 appuser \
+RUN adduser -D -u 10001 appuser \
     && mkdir -p /app/data/private \
     && chown -R appuser:appuser /app /entrypoint.sh \
     && chmod 0555 /entrypoint.sh

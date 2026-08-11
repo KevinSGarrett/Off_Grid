@@ -10,6 +10,7 @@
 !.env.example
 .envrc
 .direnv/
+.venv-*/
 .npmrc
 .pypirc
 .netrc
