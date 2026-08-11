@@ -27,7 +27,7 @@ CURRENT_CLAIM_RULES = {
     "operator/FINAL_READINESS_REPORT.md": {
         "required": (
             "RELEASE CANDIDATE",
-            "Canonical Python suite: `221 passed`",
+            "Canonical Python suite: `222 passed`",
             "all seven required checks passed",
             "OGCI-TASK-035",
         ),
@@ -35,27 +35,36 @@ CURRENT_CLAIM_RULES = {
             "Canonical Python suite: `217 passed`",
             "Canonical Python suite: `218 passed`",
             "Canonical Python suite: `220 passed`",
+            "Canonical Python suite: `221 passed`",
         ),
     },
     "operator/FINAL_GAP_REPORT.md": {
         "required": (
-            "| Python regression | PASS | 221 canonical tests",
+            "| Python regression | PASS | 222 canonical tests",
             "Seven strict protected checks green",
             "RELEASE CANDIDATE",
             "OGCI-TASK-035",
         ),
-        "forbidden": ("217 canonical tests", "218 canonical tests", "220 canonical tests"),
+        "forbidden": (
+            "217 canonical tests",
+            "218 canonical tests",
+            "220 canonical tests",
+            "221 canonical tests",
+        ),
     },
     "operator/CLEAN_ROOM_VERIFICATION.md": {
         "required": (
             "At the Wave 17 clean-room baseline",
-            "complete `221`-test collection",
+            "complete `222`-test collection",
             "historical clean-room result remains tied to commit",
             "On Windows PowerShell",
             "py -3.12 -m venv .venv",
             "python3.12 -m venv .venv",
         ),
-        "forbidden": ("\npython -m venv .venv",),
+        "forbidden": (
+            "\npython -m venv .venv",
+            "complete `221`-test collection",
+        ),
     },
     "operator/WAVE_20_REQUIREMENT_COVERAGE.md": {
         "required": (
