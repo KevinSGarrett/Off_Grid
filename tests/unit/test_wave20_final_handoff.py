@@ -6,6 +6,8 @@ import sys
 import zipfile
 from pathlib import Path
 
+from scripts.release_claims import load_current_claim_entries, validate_current_claims
+
 ROOT=Path(__file__).resolve().parents[2]
 
 def test_wave20_required_terminal_artifacts_exist():
@@ -35,6 +37,16 @@ def test_wave20_preserves_current_release_candidate_state():
     assert control["wave18_status"]=="VERIFIED_RELEASE_CANDIDATE"
     assert control["no_wave_21"] is True
 
+def test_current_handoff_claims_match_the_release_candidate():
+    assert validate_current_claims(load_current_claim_entries(ROOT)) == []
+
+def test_current_handoff_claims_reject_resolved_environment_blockers():
+    entries=load_current_claim_entries(ROOT)
+    name="operator/WAVE_20_REQUIREMENT_COVERAGE.md"
+    entries[name]+=b"\n| Container build/run proof | **BLOCKED: Docker unavailable** | stale |\n"
+    errors=validate_current_claims(entries)
+    assert any("stale current claim" in error and "BLOCKED: Docker" in error for error in errors)
+
 def test_wave20_truth_snapshot_is_stable():
     t=json.loads((ROOT/"research/WAVE_20_FINAL_CONTROL.json").read_text())["commercial_truth"]
     assert t["stafford_project_id"]=="1007341663"
@@ -48,12 +60,12 @@ def test_wave20_truth_snapshot_is_stable():
     assert t["primary_kpi_demo_value"]=="N/A"
 
 def test_wave20_verifier_passes_for_current_snapshot():
-    p=subprocess.run([sys.executable,"scripts/verify_wave20_final.py"],cwd=ROOT,text=True,capture_output=True)
+    p=subprocess.run([sys.executable,"scripts/verify_wave20_final.py"],cwd=ROOT,text=True,capture_output=True,check=False)
     assert p.returncode==0, p.stdout+p.stderr
 
 def test_final_handoff_builder_is_privacy_safe(tmp_path):
     out=tmp_path/"handoff.zip"
-    p=subprocess.run([sys.executable,"scripts/build_final_handoff_pack.py","--output",str(out)],cwd=ROOT,text=True,capture_output=True)
+    p=subprocess.run([sys.executable,"scripts/build_final_handoff_pack.py","--output",str(out)],cwd=ROOT,text=True,capture_output=True,check=False)
     assert p.returncode==0, p.stdout+p.stderr
     assert out.exists()
     with zipfile.ZipFile(out) as z:

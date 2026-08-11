@@ -38,6 +38,7 @@ TEST_NODES = (
     "tests/unit/test_wave15_github.py",
     "tests/unit/test_wave16_aws.py",
     "tests/unit/test_wave17_integration.py",
+    "tests/unit/test_release_claims.py",
 )
 DESELECTED_PRIVATE_EVIDENCE_NODES = (
     "tests/unit/test_wave08_configuration.py::test_public_research_snapshot_records_no_prospect_outreach_or_live_apollo",
