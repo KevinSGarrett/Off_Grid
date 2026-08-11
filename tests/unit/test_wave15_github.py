@@ -84,6 +84,17 @@ def test_public_ci_does_not_depend_on_ignored_continuity_or_private_source_artif
         assert forbidden not in text
 
 
+def test_workflows_use_current_node_runtime_actions() -> None:
+    workflows = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((ROOT / ".github" / "workflows").glob("*.yml"))
+    )
+
+    assert "actions/checkout@v4" not in workflows
+    assert "actions/setup-python@v5" not in workflows
+    assert "actions/setup-node@v4" not in workflows
+
+
 def test_dependabot_covers_python_web_and_actions() -> None:
     data = yaml.safe_load((ROOT / ".github" / "dependabot.yml").read_text(encoding="utf-8"))
     assert data["version"] == 2
