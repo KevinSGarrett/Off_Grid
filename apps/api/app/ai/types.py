@@ -69,7 +69,9 @@ class GroundingReport:
 
     @property
     def is_valid(self) -> bool:
-        return self.status is GroundingStatus.VALID
+        # CONFLICTED is a truthful, evidence-backed state, not an unsupported claim. Preserve the
+        # conflict in the report while allowing the caller to receive the grounded answer.
+        return self.status is not GroundingStatus.UNSUPPORTED
 
 
 @dataclass(frozen=True, slots=True)

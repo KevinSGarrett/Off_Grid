@@ -80,7 +80,8 @@ def main() -> int:
     expected_env = {
         "DEMO_MODE": "true",
         "REQUIRE_ACCESS_CONTROL": "true",
-        "OPENAI_ENABLED": "false",
+        "OPENAI_ENABLED": "true",
+        "OPENAI_RESEARCH_ENABLED": "false",
         "OPENAI_RAW_DOCUMENTS": "false",
         "APOLLO_MODE": "off",
         "PIPEDRIVE_MODE": "dry_run",
@@ -94,6 +95,15 @@ def main() -> int:
     secrets = primary.get("Secrets", [])
     if not any(s.get("Name") == "APP_ACCESS_PASSWORD" for s in secrets):
         errors.append("APP_ACCESS_PASSWORD must come through ECS secret injection")
+    if not any(s.get("Name") == "OPENAI_API_KEY" for s in secrets):
+        errors.append("OPENAI_API_KEY must come through ECS secret injection")
+
+    openai_secret = fres.get("OpenAIApiKeySecret", {}).get("Properties", {})
+    if openai_secret.get("Name") != "offgrid-commercial-intelligence/demo/openai-api-key":
+        errors.append("dedicated OpenAI Secrets Manager entry is missing")
+    execution_policy = str(fres.get("TaskExecutionRole", {}).get("Properties", {}).get("Policies", []))
+    if "OpenAIApiKeySecret" not in execution_policy:
+        errors.append("task execution role cannot read the OpenAI secret")
 
     tags = props.get("Tags", [])
     tag_map = {t["Key"]: t["Value"] for t in tags}
@@ -150,6 +160,9 @@ def main() -> int:
         errors.append("AWS deployment workflow references a private-only test script")
     if "Foundation output $1 is missing" not in workflow:
         errors.append("AWS deployment workflow does not fail closed on missing foundation outputs")
+    for needle in ("OpenAISecretArn", "openai_secret_arn"):
+        if needle not in workflow:
+            errors.append(f"deployment workflow missing OpenAI secret wiring {needle!r}")
 
     dockerignore = (ROOT / ".dockerignore").read_text()
     for private in ("context/private_source_documents", "context/original_chat_logs", "data/private"):
@@ -168,7 +181,7 @@ def main() -> int:
         return 1
     print("AWS INFRA VALIDATION: PASS")
     print("- ECS Express Mode / 256 CPU / 512 MiB / one task")
-    print("- generated Secrets Manager access password")
+    print("- Secrets Manager access password and server-only OpenAI key")
     print("- read-only fail-closed integration modes")
     print("- OIDC/manual protected GitHub deployment")
     print("- private source files excluded from Docker context")

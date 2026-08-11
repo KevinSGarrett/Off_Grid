@@ -89,6 +89,7 @@ def test_openai_config_safe_defaults_and_verified_model_routes() -> None:
     assert cfg.research_enabled is False
     assert cfg.raw_documents is False
     assert cfg.store_responses is False
+    assert cfg.max_output_tokens == 3000
     assert cfg.model_routes["fast"].model_id == "gpt-5.6-luna"
     assert cfg.model_routes["reasoning"].model_id == "gpt-5.6-terra"
     assert cfg.model_routes["research"].model_id == "gpt-5.6-terra"
@@ -98,7 +99,7 @@ def test_strict_structured_output_contract_uses_responses_json_schema() -> None:
     fmt = strict_response_format(SemanticProjectAnalysis, name="semantic-project-analysis-1.0")
     assert fmt["type"] == "json_schema"
     assert fmt["strict"] is True
-    assert fmt["name"] == "semantic-project-analysis-1.0"
+    assert fmt["name"] == "semantic-project-analysis-1_0"
     schema = fmt["schema"]
     assert schema["additionalProperties"] is False
     assert set(schema["required"]) == {
@@ -164,6 +165,25 @@ def test_unknown_claim_may_have_no_evidence_but_may_not_cite_fake_evidence() -> 
     assert validator.validate([unknown]).is_valid
     fake = unknown.model_copy(update={"claim_id": "u2", "evidence_ids": ["ext:00000000-0000-0000-0000-000000000000"]})
     assert validator.validate([fake]).status is GroundingStatus.UNSUPPORTED
+    session.close()
+
+
+def test_evidence_backed_conflicted_claim_is_valid_but_preserves_conflict_status() -> None:
+    session = _session()
+    _project_id, evidence_ref = _seed_evidence(session)
+    validator = GroundingValidator(EvidenceCatalog(session))
+    claim = GroundedClaim(
+        claim_id="conflict-1",
+        claim_type="source_conflict",
+        claim_text="The current source state contains a conflict that requires validation.",
+        classification="CONFLICTED",
+        evidence_ids=[evidence_ref],
+        rationale="The cited source supports exposing the conflict without resolving it.",
+    )
+    report = validator.validate([claim])
+    assert report.status is GroundingStatus.CONFLICTED
+    assert report.is_valid
+    assert report.issues == ()
     session.close()
 
 

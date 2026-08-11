@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -71,9 +72,12 @@ class ExecutiveBriefOutput(StrictAIModel):
 
 def strict_response_format(model: type[BaseModel], *, name: str) -> dict[str, object]:
     """Return the Responses API strict JSON-schema format for a Pydantic output model."""
+    provider_name = re.sub(r"[^a-zA-Z0-9_-]", "_", name)
+    if not provider_name:
+        raise ValueError("structured-output schema name must contain an alphanumeric character")
     return {
         "type": "json_schema",
-        "name": name,
+        "name": provider_name,
         "strict": True,
         "schema": model.model_json_schema(),
     }
