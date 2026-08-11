@@ -2,106 +2,132 @@
   <img src="assets/readme/hero.svg" width="100%" alt="Off Grid Commercial Intelligence Engine" />
 </div>
 
+<br />
+
 <p align="center">
-  <a href="#02--the-golden-path"><img alt="Stafford: Pursue and Verify" src="https://img.shields.io/badge/STAFFORD-PURSUE%20%2F%20VERIFY-18a558?style=for-the-badge&amp;labelColor=081b12" /></a>
-  <a href="#evidence-is-a-first-class-type"><img alt="Evidence grounded" src="https://img.shields.io/badge/EVIDENCE-GROUNDED-25c46a?style=for-the-badge&amp;labelColor=081b12" /></a>
-  <a href="#crm-readiness-not-crm-noise"><img alt="CRM mode: dry run" src="https://img.shields.io/badge/CRM-DRY%20RUN-f0ad38?style=for-the-badge&amp;labelColor=081b12" /></a>
-  <a href="#07--run-the-engine"><img alt="Run locally with Docker" src="https://img.shields.io/badge/DOCKER-RUN%20LOCALLY-2496ed?style=for-the-badge&amp;labelColor=081b12&amp;logo=docker&amp;logoColor=white" /></a>
-  <a href="#where-openai-fits"><img alt="OpenAI is optional" src="https://img.shields.io/badge/OPENAI-OPTIONAL-7c5ce7?style=for-the-badge&amp;labelColor=081b12&amp;logo=openai&amp;logoColor=white" /></a>
+  <a href="https://www.python.org/"><img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" /></a>
+  <a href="https://fastapi.tiangolo.com/"><img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&amp;logo=fastapi&amp;logoColor=white" /></a>
+  <a href="https://react.dev/"><img alt="React 19" src="https://img.shields.io/badge/React-19-20232A?style=flat-square&amp;logo=react&amp;logoColor=61DAFB" /></a>
+  <a href="https://www.typescriptlang.org/"><img alt="TypeScript 5.9" src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&amp;logo=typescript&amp;logoColor=white" /></a>
 </p>
 
 <p align="center">
-  <strong>Turning construction-project data into qualified commercial action.</strong><br />
-  <sub>Evidence-aware qualification · conservative identity resolution · explainable next action</sub>
+  <a href="https://www.docker.com/"><img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&amp;logo=docker&amp;logoColor=white" /></a>
+  <a href="https://aws.amazon.com/"><img alt="AWS" src="https://img.shields.io/badge/AWS-232F3E?style=flat-square&amp;logo=amazonwebservices&amp;logoColor=white" /></a>
+  <a href="https://openai.com/"><img alt="OpenAI" src="https://img.shields.io/badge/OpenAI-412991?style=flat-square&amp;logo=openai&amp;logoColor=white" /></a>
+  <a href="https://www.sqlite.org/"><img alt="SQLite" src="https://img.shields.io/badge/SQLite-003B57?style=flat-square&amp;logo=sqlite&amp;logoColor=white" /></a>
 </p>
 
+<h3 align="center">A decision engine—not a data pump.</h3>
+
+<p align="center">
+  Turns construction-project records into evidence-backed commercial opportunities.<br />
+  Separates what looks valuable from what is actually trustworthy.
+</p>
+
+<p align="center">
+  <a href="#how-it-works"><strong>How it works</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#stafford-golden-path"><strong>Stafford golden path</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#commercial-motions"><strong>Commercial motions</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#architecture"><strong>Architecture</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#run-locally"><strong>Run locally</strong></a>
+</p>
+
+<br />
+
 ---
 
-## Why this exists
+<h2 align="center">Why Off Grid needs this</h2>
 
-I built this project around one practical question:
+<p align="center"><sub>CONSTRUCTION DATA IS USEFUL · COMMERCIAL JUDGMENT MAKES IT ACTIONABLE</sub></p>
 
-> **How do you turn a messy construction record into an opportunity a salesperson can trust and act on?**
+Off Grid's workflow spans ConstructConnect, Apollo, Pipedrive, Google Sheets/Forms, and Trello. Connecting those tools is not the hard part. The hard part is deciding:
 
-Off Grid's workflow spans ConstructConnect, Apollo, Pipedrive, Google Sheets/Forms, and Trello. Connecting those tools is not the hard part. The hard part is deciding what matters, what is trustworthy, who is relevant, what Off Grid could sell, and whether the record is clean enough to enter the CRM.
+- which projects matter;
+- which facts deserve trust;
+- which company and person are relevant;
+- what Off Grid could sell; and
+- when an opportunity is clean enough to enter the CRM.
 
-The **Off Grid Commercial Intelligence Engine** is a production-oriented proof of concept for that decision layer, built for the **Off Grid Innovation USA interview project**.
+<table>
+  <tr>
+    <td width="33%" align="center"><strong>QUALIFY</strong><br /><sub>Is this project commercially relevant?</sub></td>
+    <td width="33%" align="center"><strong>VERIFY</strong><br /><sub>What evidence supports the decision?</sub></td>
+    <td width="33%" align="center"><strong>ACT</strong><br /><sub>What should the commercial team do next?</sub></td>
+  </tr>
+</table>
 
-| The engine receives | The engine decides | The engine produces |
-|---|---|---|
-| Project and company records | Trust, fit, identity, authority, readiness | Evidence-backed next action |
-| Conflicting or incomplete fields | What to accept, cap, verify, or block | A clean CRM preview |
-| Commercial signals | Which unknowns matter most | Contractor and rental-house motion |
+> [!IMPORTANT]
+> The application does not treat parsed source data as truth and push it into Pipedrive. Every important conclusion retains provenance, confidence, and decision treatment.
 
 ---
 
-## 01 — How the engine thinks
+<a id="how-it-works"></a>
+
+<h2 align="center">How it works</h2>
+
+<p align="center"><sub>FROM SOURCE RECORD TO COMMERCIAL ACTION</sub></p>
 
 <div align="center">
   <img src="assets/readme/pipeline.svg" width="100%" alt="Source data moves through trust, qualification, resolution, action and CRM readiness" />
 </div>
 
-The application never assumes that parsed source data is automatically true. Every important field or conclusion retains an evidence treatment.
+<br />
 
-<a id="evidence-is-a-first-class-type"></a>
-
-### Evidence is a first-class type
-
-| Treatment | Meaning | Allowed behavior |
+| Evidence treatment | What it means | System behavior |
 |---|---|---|
 | **Explicit** | The source directly states it | Preserve with provenance |
 | **Derived** | Deterministic logic can reproduce it | Use under versioned rules |
 | **Inferred** | Commercial reasoning suggests it | Explain and verify |
 | **Questionable** | The source conflicts with itself or reality | Cap, warn, route, or block |
-| **Unknown** | The evidence is not there yet | Keep it unknown; generate the next step |
+| **Unknown** | The evidence is not there yet | Keep it unknown; identify the next step |
 
-> **Bad source data should not become bad CRM data faster.**
+> [!NOTE]
+> Commercial fit and data confidence are separate dimensions. A project can be attractive while still containing unreliable information.
 
 ---
 
-<a id="02--the-golden-path"></a>
+<a id="stafford-golden-path"></a>
 
-## 02 — The golden path
+<h2 align="center">Stafford golden path</h2>
 
-### Stafford Technology Campus
+<p align="center"><sub>THE END-TO-END DECISION CASE</sub></p>
 
-The supplied **Stafford Technology Campus Phases 3 & 4** record is the primary end-to-end case. It contains strong commercial signals—data-center construction, site work, paving, a general contractor award, EE Reed involvement, and multiple phases—but it also reports a **$7.5B** value that should not be trusted blindly.
+The supplied **Stafford Technology Campus Phases 3 & 4** record contains strong opportunity signals: data-center construction, site work, paving, EE Reed involvement, and multiple phases.
 
-The source says the value and square footage reflect the larger development and that phase-level costs are not publicly confirmed. The system keeps the source value without letting it dominate the decision.
+It also reports a **$7.5B** value that should not be trusted blindly. The source says that value reflects the larger development and that phase-level costs are not publicly confirmed.
 
-| Reported fact | Decision treatment |
-|---|---|
-| `$7.5B` reported value | Retained with provenance |
-| ConstructConnect source | Explicit evidence |
-| Phase-level confidence | Low |
-| Scoring influence | Capped |
-| Recommendation | **PURSUE / VERIFY** |
-
-<a id="commercial-fit-and-data-confidence"></a>
-
-### Commercial fit and data confidence are different questions
+<table>
+  <tr>
+    <td align="center"><strong>$7.5B</strong><br /><sub>retained as source-reported</sub></td>
+    <td align="center"><strong>LOW CONFIDENCE</strong><br /><sub>phase value not verified</sub></td>
+    <td align="center"><strong>CAPPED</strong><br /><sub>limited scoring influence</sub></td>
+    <td align="center"><strong>PURSUE / VERIFY</strong><br /><sub>recommendation survives</sub></td>
+  </tr>
+</table>
 
 <div align="center">
   <img src="assets/readme/decision-model.svg" width="100%" alt="Commercial Fit and Data Confidence remain separate dimensions" />
 </div>
 
-| Current golden result | Value |
+<br />
+
+| Golden result | Value |
 |---|---:|
 | Commercial Fit | `80 / 100` |
 | Data Confidence | `69.25 / 100` |
 | Without the reported `$7.5B` | `75 / 100 — PURSUE` |
 | CRM state | `Lead-ready / Deal-blocked` |
 
-There is no single unexplained “AI score.” Commercial fit, data confidence, product fit, contact confidence, and CRM readiness remain independently inspectable.
+> [!TIP]
+> The backend can remove the reported value from scoring and recalculate the recommendation. The result explains what drives the decision instead of hiding judgment inside one AI score.
 
 <details>
-<summary><strong>Challenge the recommendation</strong></summary>
-
-The backend can remove the reported value from scoring and recalculate the recommendation. That answers a useful counterfactual:
-
-> Would Stafford still be worth pursuing if the $7.5B value were completely wrong?
-
-It also identifies the unknowns most likely to change the decision:
+<summary><strong>What could change the recommendation?</strong></summary>
 
 - Who controls temporary lighting and portable power?
 - Has relevant equipment already been committed elsewhere?
@@ -113,31 +139,39 @@ It also identifies the unknowns most likely to change the decision:
 
 ---
 
-## 03 — One project, two commercial motions
+<a id="commercial-motions"></a>
+
+<h2 align="center">Two commercial motions</h2>
+
+<p align="center"><sub>ONE PROJECT · TWO CONNECTED AUDIENCES</sub></p>
 
 <div align="center">
   <img src="assets/readme/commercial-motions.svg" width="100%" alt="Contractor-demand and rental-house fleet motions" />
 </div>
 
-1. **Contractor demand** moves from a live project to the people experiencing the site need and able to request a demonstration.
-2. **Rental-house / fleet opportunity** translates demonstrated demand into a partner, branch, fleet, demo, or channel-sale opportunity.
+<br />
 
-The paths are connected, but they are not interchangeable. If Stafford's rental provider is not identified, that node remains **UNRESOLVED**. The engine does not invent an answer to complete the diagram.
+| Contractor demand | Rental-house / fleet opportunity |
+|---|---|
+| Move from a live project to the people experiencing the site need | Translate demonstrated demand into a partner, branch, fleet, or channel opportunity |
+| Goal: product demonstration request | Goal: demo, fleet placement, or channel sale |
+| Current path: highest probability | Current path: dependent on partner identification |
+
+> [!WARNING]
+> If Stafford's rental provider is not identified, that node remains **UNRESOLVED**. The engine does not invent an answer to complete the workflow.
 
 <details>
 <summary><strong>What the EE Reed record reveals</strong></summary>
 
-The supplied **EE Reed Construction — Houston (HQ)** record contains valuable account intelligence alongside repeated contacts, likely name variants, generic inboxes, multiple domains, mixed historical/current projects, and limited project-specific role evidence.
+The EE Reed record contains useful intelligence alongside repeated contacts, likely name variants, generic inboxes, multiple domains, mixed historical/current projects, and limited project-specific role evidence.
 
-Rather than copying those rows into Pipedrive, the engine surfaces the issues first. It also recognizes related phases without automatically double-counting them:
+The engine surfaces those issues before CRM promotion and recognizes related phases without automatically double-counting them:
 
 ```text
 Stafford Technology Campus
 ├── Phases 1 & 2
 └── Phases 3 & 4
 ```
-
-That reveals a recurring account-level opportunity without pretending each phase is an independent pipeline record.
 
 </details>
 
@@ -156,13 +190,15 @@ Role Relevant
 Authority Verified
 ```
 
-A contact database can find people. It cannot prove who controls lighting or equipment rental on a particular site. A person may be a strong project contact without being the final decision-maker. If the evidence stops there, the application says so and generates the next verification questions.
+A strong project contact is not automatically the final rental decision-maker. If the evidence stops early, the application says so and generates the next verification questions.
 
 </details>
 
 ---
 
-## 04 — Deterministic truth, optional AI
+<h2 align="center">Deterministic truth, optional AI</h2>
+
+<p align="center"><sub>AI EXPLAINS AND REASONS · SOFTWARE RETAINS AUTHORITY</sub></p>
 
 | Deterministic software owns | OpenAI may assist with |
 |---|---|
@@ -171,21 +207,8 @@ A contact database can find people. It cannot prove who controls lighting or equ
 | Workflow and verification state | Evidence-grounded product reasoning |
 | CRM identity and readiness gates | Explanations, summaries, and analysis |
 
-<a id="where-openai-fits"></a>
-
-### Where OpenAI fits
-
-```text
-Deterministic software + OpenAI reasoning
-                    ↓
-                 Evidence
-                    ↓
-           Grounding validation
-                    ↓
-          Commercial recommendation
-```
-
-AI-generated factual claims must point back to evidence already available to the application. Unsupported claims are rejected instead of promoted into company data. The deterministic core remains usable when OpenAI is disabled, unavailable, or budget-blocked.
+> [!IMPORTANT]
+> AI-generated factual claims must point back to application evidence. Unsupported claims are rejected instead of promoted into company data. The deterministic core works when OpenAI is disabled or unavailable.
 
 <details>
 <summary><strong>Questions the Commercial Analyst can answer</strong></summary>
@@ -198,29 +221,13 @@ AI-generated factual claims must point back to evidence already available to the
 - What blocks this opportunity from entering Pipedrive?
 - What should I ask on the first call?
 
-The analyst retrieves current project, evidence, quality, scoring, contact, exception, and CRM state rather than relying on conversational memory.
-
 </details>
 
 ---
 
-## 05 — Where automation stops
+<h2 align="center">CRM readiness—not CRM noise</h2>
 
-Ambiguous records enter an **Exception Queue** instead of quietly continuing.
-
-| Severity | Example | Treatment |
-|---|---|---|
-| `CRITICAL` | Parser reconciliation failure | Stop and escalate |
-| `HIGH` | Future date labeled “Actual” | Verify before progression |
-| `HIGH` | Project-value uncertainty | Cap influence and warn |
-| `HIGH` | Ambiguous organization match | Require human resolution |
-| `MEDIUM` | Possible duplicate or generic email | Review before merge |
-
-Exceptions can be verified, corrected, deferred, retried, or escalated. Uncertainty has somewhere explicit to go.
-
-<a id="crm-readiness-not-crm-noise"></a>
-
-### CRM readiness, not CRM noise
+<p align="center"><sub>QUALIFY FIRST · RESOLVE IDENTITY · VERIFY AUTHORITY · THEN PROMOTE</sub></p>
 
 ```text
 Raw intelligence → Qualified opportunity → Entity resolution
@@ -236,42 +243,47 @@ APOLLO_MODE=off
 DEMO_MODE=true
 ```
 
-Finding a project does not automatically create a Deal. The demo can show the object it *would* create without performing a consequential production write.
+Ambiguous records enter an **Exception Queue** instead of continuing quietly. They can be verified, corrected, deferred, retried, or escalated.
 
-### The Monday-morning number
-
-> **System-Sourced Demos Booked — Rolling 30 Days**
-
-Projects ingested, qualified records, verified contacts, CRM-ready opportunities, and engagement are diagnostics—not substitutes for a commercial outcome. Because the interview environment contains no Off Grid production sales history, the KPI displays **N/A** instead of invented performance.
+> [!NOTE]
+> The intended production KPI is **System-Sourced Demos Booked — Rolling 30 Days**. It displays `N/A` in the interview environment because no production outcome history is connected.
 
 ---
 
-## 06 — Architecture
+<a id="architecture"></a>
+
+<h2 align="center">Architecture</h2>
+
+<p align="center"><sub>ONE APPLICATION · CLEAR BUSINESS BOUNDARIES</sub></p>
 
 <div align="center">
   <img src="assets/readme/architecture.svg" width="100%" alt="Off Grid application architecture" />
 </div>
 
-The implementation deliberately stays compact: one React frontend, one FastAPI backend, and one relational database. Complexity lives in the commercial rules and evidence boundaries—not unnecessary infrastructure.
+<br />
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 19 · TypeScript · Vite |
-| Backend | Python 3.12 · FastAPI · Pydantic · SQLAlchemy · Alembic |
-| Data | SQLite demo runtime · portable relational models |
-| Documents | PyMuPDF · pdfplumber |
-| Entity resolution | Deterministic normalization · RapidFuzz-assisted matching |
-| AI | Optional OpenAI Responses API · structured outputs · controlled tools |
-| Quality | Golden · unit · integration · contract · failure · load · E2E tests |
-| Delivery | Multi-stage Docker · GitHub Actions · AWS CloudFormation/ECS definitions |
+<table>
+  <tr>
+    <td align="center"><strong>FRONTEND</strong><br /><sub>React 19 · TypeScript · Vite</sub></td>
+    <td align="center"><strong>BACKEND</strong><br /><sub>Python 3.12 · FastAPI · SQLAlchemy</sub></td>
+    <td align="center"><strong>DATA</strong><br /><sub>SQLite · Alembic · portable models</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>DOCUMENTS</strong><br /><sub>PyMuPDF · pdfplumber</sub></td>
+    <td align="center"><strong>INTELLIGENCE</strong><br /><sub>Deterministic rules · optional OpenAI</sub></td>
+    <td align="center"><strong>DELIVERY</strong><br /><sub>Docker · GitHub Actions · AWS</sub></td>
+  </tr>
+</table>
+
+The implementation deliberately stays compact: one frontend, one backend, and one relational database. Complexity lives in the commercial rules and evidence boundaries—not unnecessary infrastructure.
 
 ---
 
-<a id="07--run-the-engine"></a>
+<a id="run-locally"></a>
 
-## 07 — Run the engine
+<h2 align="center">Run locally</h2>
 
-### Fastest path: Docker
+<p align="center"><sub>THE FASTEST PATH IS ONE DOCKER IMAGE</sub></p>
 
 ```bash
 git clone https://github.com/KevinSGarrett/Off_Grid.git
@@ -307,7 +319,7 @@ npm --prefix apps/web run build
 
 ---
 
-## 08 — Explore the repository
+<h2 align="center">Repository map</h2>
 
 ```text
 apps/api/           FastAPI application, domain services, migrations
@@ -320,12 +332,9 @@ scripts/            Validation, reset, scoring and privacy tools
 infra/aws/          ECR, ECS, Secrets Manager and OIDC templates
 ```
 
-### Design rules
-
 > **Parsed does not mean trusted.**<br />
 > **A likely contact is not a verified decision-maker.**<br />
 > **Commercial fit and data confidence are not the same thing.**<br />
-> **AI may reason and explain; it may not quietly redefine company facts.**<br />
 > **Unknown is better than fabricated certainty.**
 
 ---
