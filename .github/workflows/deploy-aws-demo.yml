@@ -73,10 +73,15 @@ jobs:
         run: |
           set -euo pipefail
           get_output() {
-            aws cloudformation describe-stacks \
+            value="$(aws cloudformation describe-stacks \
               --stack-name "$FOUNDATION_STACK" \
               --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" \
-              --output text
+              --output text)"
+            [[ -n "$value" && "$value" != "None" ]] || {
+              echo "Foundation output $1 is missing" >&2
+              exit 1
+            }
+            printf '%s' "$value"
           }
           echo "repository_uri=$(get_output RepositoryUri)" >> "$GITHUB_OUTPUT"
           echo "cluster_name=$(get_output ClusterName)" >> "$GITHUB_OUTPUT"

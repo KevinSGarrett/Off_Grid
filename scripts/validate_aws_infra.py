@@ -119,6 +119,9 @@ def main() -> int:
         or "environment:${DeploymentEnvironment}" not in trust
     ):
         errors.append("GitHub OIDC trust is not restricted to repository environment")
+    policies_text = str(role.get("Policies", []))
+    if "FoundationStackRead" not in policies_text or "offgrid-commercial-intelligence-demo-foundation" not in policies_text:
+        errors.append("GitHub deploy role cannot read the prepared foundation stack outputs")
 
     workflow = (ROOT / ".github/workflows/deploy-aws-demo.yml").read_text()
     for needle in (
@@ -136,6 +139,8 @@ def main() -> int:
         errors.append("AWS deployment workflow must not auto-run on push/PR")
     if "run_wave16_test_matrix.sh" in workflow:
         errors.append("AWS deployment workflow references a private-only test script")
+    if "Foundation output $1 is missing" not in workflow:
+        errors.append("AWS deployment workflow does not fail closed on missing foundation outputs")
 
     dockerignore = (ROOT / ".dockerignore").read_text()
     for private in ("context/private_source_documents", "context/original_chat_logs", "data/private"):

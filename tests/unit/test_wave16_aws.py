@@ -86,6 +86,14 @@ def test_github_oidc_role_is_repository_environment_scoped() -> None:
     assert "repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepository}@${GitHubRepositoryId}:environment:${DeploymentEnvironment}" in text
     assert "iam:PassRole" in text
     assert "offgrid-commercial-intelligence-demo-execution" in text
+    assert "FoundationStackRead" in text
+    assert "offgrid-commercial-intelligence-demo-foundation" in text
+
+
+def test_deploy_workflow_fails_closed_on_missing_foundation_outputs() -> None:
+    text = (ROOT / ".github" / "workflows" / "deploy-aws-demo.yml").read_text()
+    assert '[[ -n "$value" && "$value" != "None" ]]' in text
+    assert "Foundation output $1 is missing" in text
 
 
 def test_cost_model_matches_documented_fixed_subtotal() -> None:

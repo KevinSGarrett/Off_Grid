@@ -87,6 +87,11 @@ Resources:
                   - cloudformation:ListStackResources
                   - cloudformation:DeleteChangeSet
                 Resource: !Sub arn:${AWS::Partition}:cloudformation:${Region}:${AWS::AccountId}:stack/offgrid-commercial-intelligence-demo-service/*
+              - Sid: FoundationStackRead
+                Effect: Allow
+                Action:
+                  - cloudformation:DescribeStacks
+                Resource: !Sub arn:${AWS::Partition}:cloudformation:${Region}:${AWS::AccountId}:stack/offgrid-commercial-intelligence-demo-foundation/*
               - Sid: ExpressServiceLifecycle
                 Effect: Allow
                 Action:
