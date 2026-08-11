@@ -1,0 +1,94 @@
+openai:
+  name: offgrid-openai-intelligence
+  version: openai-intelligence-1.0
+  verified_at: "2026-08-10"
+  official_sources:
+    models: "https://developers.openai.com/api/docs/models"
+    model_guidance: "https://developers.openai.com/api/docs/guides/latest-model"
+    quickstart: "https://developers.openai.com/api/docs/quickstart"
+    structured_outputs: "https://developers.openai.com/api/docs/guides/structured-outputs"
+    function_calling: "https://developers.openai.com/api/docs/guides/function-calling"
+    data_controls: "https://platform.openai.com/docs/models/default-usage-policies-by-endpoint"
+    python_sdk: "https://github.com/openai/openai-python"
+  defaults:
+    enabled: false
+    research_enabled: false
+    raw_documents: false
+    store_responses: false
+    max_retries: 2
+    timeout_seconds: 45
+    daily_budget_usd: 2.00
+    max_output_tokens: 1800
+    max_tool_rounds: 3
+  models:
+    fast:
+      id: gpt-5.6-luna
+      reasoning_effort: low
+      input_usd_per_million: 1.00
+      cached_input_usd_per_million: 0.10
+      output_usd_per_million: 6.00
+      role: "Routine structured classification and concise grounded explanation."
+    reasoning:
+      id: gpt-5.6-terra
+      reasoning_effort: medium
+      input_usd_per_million: 2.50
+      cached_input_usd_per_million: 0.25
+      output_usd_per_million: 15.00
+      role: "Commercial Analyst, ambiguous reasoning and executive synthesis."
+    research:
+      id: gpt-5.6-terra
+      reasoning_effort: medium
+      input_usd_per_million: 2.50
+      cached_input_usd_per_million: 0.25
+      output_usd_per_million: 15.00
+      role: "Permissioned public research with web_search; disabled by default."
+  tasks:
+    project_analysis:
+      model_route: fast
+      prompt_name: project_analysis
+      prompt_version: v1
+      output_schema: semantic-project-analysis-1.0
+    commercial_analyst:
+      model_route: reasoning
+      prompt_name: commercial_analyst
+      prompt_version: v1
+      output_schema: commercial-analyst-answer-1.0
+    executive_brief:
+      model_route: reasoning
+      prompt_name: executive_brief
+      prompt_version: v1
+      output_schema: executive-brief-1.0
+    contact_reasoning:
+      model_route: reasoning
+      prompt_name: contact_reasoning
+      prompt_version: v1
+      output_schema: contact-reasoning-1.0
+    product_fit:
+      model_route: reasoning
+      prompt_name: product_fit
+      prompt_version: v1
+      output_schema: product-fit-explanation-1.0
+    research:
+      model_route: research
+      prompt_name: research
+      prompt_version: v1
+      output_schema: research-summary-1.0
+  safety:
+    write_tools_allowed: false
+    evidence_ids_required_for_factual_claims: true
+    allow_ai_self_declare_explicit_or_verified: false
+    high_risk_claim_types:
+      - equipment_quantity
+      - product_capacity
+      - roi
+      - savings
+      - rental_authority
+    forbidden_tool_name_tokens:
+      - create
+      - update
+      - delete
+      - sync
+      - send
+      - write
+      - merge
+      - verify

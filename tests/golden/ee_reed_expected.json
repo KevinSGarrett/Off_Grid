@@ -1,0 +1,33 @@
+{
+  "source_sha256": "5236c52854783b51ae073daecd997ee983fb37c06307d5c3d24a2095378945eb",
+  "report_type": "COMPANY",
+  "company_name": "EE Reed Construction - Houston (HQ)",
+  "company_id": "1000647848",
+  "expected_counts": {
+    "planning": 6,
+    "post_bid": 87,
+    "bidding_role": 74,
+    "contacts": 32,
+    "project_rows_total": 167
+  },
+  "stafford_rows": [
+    {"name": "Stafford Technology Campus Phases 1 & 2", "value_usd": 2500000000, "page": 4},
+    {"name": "Stafford Technology Campus Phases 3 & 4", "value_usd": 7500000000, "page": 5}
+  ],
+  "required_domains": ["eereed.com", "eereedeast.com", "zapalacreed.com"],
+  "required_contact_cases": {
+    "duplicate_exact": "Curtis Rakosi",
+    "malformed_candidate": "Curits Rakosi",
+    "generic_named_inbox": "Brian Owrey",
+    "alternate_domain_contact": "Cary Brown",
+    "related_domain_contact": "Renee Fullick",
+    "repeated_contact": "Dan Delforge"
+  },
+  "required_quality_flags": [
+    "GENERIC_CONTACT_EMAIL",
+    "ORGANIZATION_DOMAIN_CONFLICT",
+    "POSSIBLE_DUPLICATE_CONTACT",
+    "VIEWED_NOT_TRACKED"
+  ],
+  "reconciliation_passed": true
+}

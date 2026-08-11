@@ -1,0 +1,153 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repository-policy:
+    name: Repository Policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install policy parser
+        run: python -m pip install "PyYAML>=6,<7"
+      - name: Validate GitHub configuration
+        run: python scripts/validate_github_config.py
+      - name: Validate tracked-file privacy boundary
+        run: python scripts/validate_git_privacy.py --require-git
+
+  backend-test-matrix:
+    name: Backend Test Matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install backend and dev dependencies
+        run: python -m pip install -e ".[dev]"
+      - name: Python compile gate
+        run: python -m compileall -q apps/api scripts tests
+      - name: Run complete isolated test matrix
+        run: bash scripts/run_wave19_test_matrix.sh
+
+  backend-static-quality:
+    name: Backend Static Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install backend and dev dependencies
+        run: python -m pip install -e ".[dev]"
+      - name: Ruff focused application/control-plane lint
+        run: ruff check apps/api/app/main.py apps/api/app/core apps/api/app/resilience apps/api/app/observability scripts/validate_github_config.py scripts/validate_git_privacy.py
+      - name: Mypy focused application boundary (advisory until clean Wave 17 type gate)
+        continue-on-error: true
+        run: mypy --ignore-missing-imports --follow-imports=skip apps/api/app/main.py apps/api/app/core apps/api/app/resilience apps/api/app/observability
+
+  golden-regression:
+    name: Golden Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install backend
+        run: python -m pip install -e ".[dev]"
+      - name: Run golden suite
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+        run: python -m pytest -q tests/golden
+
+  frontend-type-build:
+    name: Frontend Typecheck and Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck
+        working-directory: apps/web
+        run: npm run typecheck
+      - name: Production build
+        working-directory: apps/web
+        run: npm run build
+
+  docker-readiness:
+    name: Docker Readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build container when Dockerfile exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f Dockerfile ]]; then
+            docker build -t offgrid-commercial-intelligence:ci .
+          elif [[ -f docker/Dockerfile ]]; then
+            docker build -f docker/Dockerfile -t offgrid-commercial-intelligence:ci .
+          else
+            echo "Docker build is an explicit Wave 17 release gate; no Dockerfile is claimed in Wave 15."
+          fi
+
+  pack-protocol:
+    name: Pack Protocol
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build Wave 19 CI packs
+        run: python scripts/build_wave_packs.py --wave 19 --output-dir /tmp/w19-ci --test-state "CI pack protocol" --completed-wave 16 --next-wave 17
+      - name: Verify cumulative pack
+        run: python scripts/verify_wave_packs.py /tmp/w19-ci/OffGrid_Commercial_Intelligence_W19_CUMULATIVE.zip
+      - name: Verify hydration pack
+        run: python scripts/verify_wave_packs.py /tmp/w19-ci/OffGrid_Commercial_Intelligence_W19_HYDRATION.zip

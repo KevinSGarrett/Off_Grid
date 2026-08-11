@@ -1,0 +1,16 @@
+SANITIZED CONSTRUCTCONNECT-LIKE COMPANY FIXTURE — NOT A REAL SOURCE EXPORT
+
+Company: Example Construction Co. - HQ
+Company ID: SYNTH-COMPANY-001
+Planning Projects: 6
+Post Bid Projects: 87
+Bidding Role Projects: 74
+
+Synthetic contact-quality examples:
+- Alex Example | info@exampleconstruction.com | Active
+- Alexa Example | aexample@exampleconstruction.com | Active
+- Example Duplicate | duplicate@exampleconstruction.com | Active
+- Example Duplicate | duplicate@exampleconstruction.com | Active
+- Related Domain Example | person@exampleconstruction-east.com | Active
+
+Purpose: demonstrate structural regression cases while containing no real individual phone number or email from the interview source.

@@ -1,0 +1,121 @@
+workflow:
+  name: offgrid-dual-commercial-motion
+  version: commercial-workflow-1.0
+  owner: commercial_research
+  external_write_policy:
+    outreach_enabled: false
+    pipedrive_live_writes_enabled: false
+    reason: Wave 09 builds decision/action state only; Wave 10 owns CRM integration and no outreach is sent autonomously.
+
+  demand_signal:
+    source: current_product_fit_assessments
+    high_threshold: 70
+    medium_threshold: 50
+    labels:
+      high: HIGH_INFERRED
+      medium: MEDIUM_INFERRED
+      low: LOW_OR_UNPROVEN
+    confidence_state: MEDIUM
+    classification: INFERRED
+    caveat: Product fit is commercial inference. It does not prove current site demand, equipment quantity, incumbent equipment, or rental ownership.
+
+  actions:
+    - key: VERIFY_SITE_EQUIPMENT_RESPONSIBILITY
+      motion: CONTRACTOR
+      priority: 10
+      execution_mode: HUMAN_CONFIRMATION
+      dependency: null
+      owner: commercial_research
+      reason: Establish who actually controls or influences temporary lighting/mobile-power and equipment-rental decisions at Stafford before treating any contact as decision authority.
+    - key: VALIDATE_TEMP_LIGHTING_POWER_NEED
+      motion: CONTRACTOR
+      priority: 20
+      execution_mode: HUMAN_CONFIRMATION
+      dependency: VERIFY_SITE_EQUIPMENT_RESPONSIBILITY
+      owner: commercial_research
+      reason: Confirm the real current/upcoming lighting and mobile-power requirement instead of promoting product-fit inference into fact.
+    - key: IDENTIFY_INCUMBENT_RENTAL_PROVIDER
+      motion: RENTAL_HOUSE
+      priority: 30
+      execution_mode: HUMAN_RESEARCH_OR_CONFIRMATION
+      dependency: VALIDATE_TEMP_LIGHTING_POWER_NEED
+      owner: commercial_research
+      reason: Determine which rental company/branch currently serves the Stafford site; the supplied sources do not establish one.
+    - key: RESOLVE_RENTAL_BRANCH_FLEET_BUYER
+      motion: RENTAL_HOUSE
+      priority: 40
+      execution_mode: HUMAN_RESEARCH_OR_CONFIRMATION
+      dependency: IDENTIFY_INCUMBENT_RENTAL_PROVIDER
+      owner: commercial_research
+      reason: Resolve the branch/fleet acquisition person only after the actual rental provider/branch is established.
+    - key: VALIDATE_FLEET_OPPORTUNITY
+      motion: RENTAL_HOUSE
+      priority: 50
+      execution_mode: HUMAN_CONFIRMATION
+      dependency: RESOLVE_RENTAL_BRANCH_FLEET_BUYER
+      owner: commercial_research
+      reason: Determine whether verified contractor demand creates a real fleet/demo/purchase opportunity for the serving rental channel.
+    - key: PREPARE_SITE_DEMO_PATH
+      motion: CONTRACTOR
+      priority: 45
+      execution_mode: HUMAN_APPROVAL
+      dependency: VALIDATE_TEMP_LIGHTING_POWER_NEED
+      owner: commercial_research
+      reason: Prepare a site-demo path only after responsibility and need are validated; Wave 09 never sends outreach automatically.
+
+  first_call_kit:
+    version: stafford-first-call-kit-1.0
+    objective: Determine who controls temporary site lighting and mobile power, how equipment is currently sourced, which rental provider serves Stafford, and who Off Grid should speak with about a site demo.
+    target_rule: Use the strongest evidence-backed Stafford-associated contact candidate as an investigation anchor; never describe that candidate as rental authority unless rental_authority is VERIFIED.
+    questions:
+      - Who handles temporary lighting and portable/mobile power for the Stafford Technology Campus site?
+      - Is that responsibility owned by the project team, field operations, procurement, or a rental company/branch?
+      - Which rental provider and local branch currently services the Stafford site for temporary equipment?
+      - Are diesel light towers or other temporary-lighting systems currently being used, and who chooses or approves them?
+      - Is there active or upcoming work that creates a need for distributed lighting or temporary/mobile power?
+      - Who is the correct person for Off Grid to speak with about evaluating or demonstrating KVT, KV6, or KVP for this site?
+    after_call_capture:
+      - correct_person_identified
+      - rental_authority_status
+      - temporary_lighting_need
+      - temporary_mobile_power_need
+      - current_equipment_arrangement
+      - rental_provider_identified
+      - rental_branch_identified
+      - demo_interest
+      - follow_up_date
+      - verification_source
+      - verification_notes
+
+  outcomes:
+    model_version: commercial-outcomes-1.0
+    source_required: true
+    fabricated_activity_forbidden: true
+    categories:
+      contact:
+        - RIGHT_PERSON
+        - WRONG_PERSON
+        - LEFT_COMPANY
+      project:
+        - GOOD_FIT
+        - POOR_FIT
+        - NO_NEED
+        - NOT_NOW
+      commercial:
+        - NO_RESPONSE
+        - RESPONDED
+        - INTERESTED
+        - DEMO_BOOKED
+        - DEMO_COMPLETED
+        - RENTAL_PARTNER_IDENTIFIED
+        - WON
+        - LOST
+    loss_reasons:
+      - INCUMBENT_SUPPLIER
+      - TIMING
+      - PRICE
+      - PRODUCT_FIT
+      - BUDGET
+      - AUTHORITY
+      - OTHER
+    future_use: Store structured outcomes for later calibration/analysis; do not train or claim predictive ML from the two interview PDFs.

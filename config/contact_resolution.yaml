@@ -1,0 +1,45 @@
+schema_version: 1
+model:
+  name: offgrid_contact_resolution
+  version: contact-resolution-1.0
+  policy: Rank the best people to investigate; never equate rank with verified rental authority.
+
+score_weights:
+  project_association: 35
+  role_relevance: 25
+  employment: 20
+  source_freshness: 10
+  direct_contactability: 5
+  account_recurrence: 5
+
+verification_state_scores:
+  VERIFIED: 1.0
+  SUPPORTED: 0.7
+  UNKNOWN: 0.0
+  CONFLICTED: 0.0
+  REJECTED: 0.0
+
+freshness:
+  full_score_days: 120
+  partial_score_days: 365
+  partial_multiplier: 0.5
+
+contactability:
+  verified_direct_business_contact: 1.0
+  supported_direct_business_contact: 0.7
+  generic_inbox_only: 0.0
+  no_direct_contact: 0.0
+
+recurrence:
+  projects_for_full_score: 5
+  cap: 1.0
+
+state_policy:
+  employment_verified_requires: VERIFIED
+  project_association_verified_requires: VERIFIED
+  role_relevant_accepts:
+    - VERIFIED
+    - SUPPORTED
+  authority_verified_requires: VERIFIED
+  no_state_skipping: true
+  no_authority_from_title_only: true

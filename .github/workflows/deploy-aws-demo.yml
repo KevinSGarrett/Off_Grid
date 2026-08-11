@@ -1,0 +1,124 @@
+name: Deploy AWS Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: 'Type DEPLOY to acknowledge this can create/update billable AWS resources.'
+        required: true
+        type: string
+      image_tag:
+        description: Optional immutable image tag; defaults to the Git commit SHA.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aws-demo-deploy
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  FOUNDATION_STACK: offgrid-commercial-intelligence-demo-foundation
+  SERVICE_STACK: offgrid-commercial-intelligence-demo-service
+
+jobs:
+  authorize:
+    name: Explicit Cost Authorization
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require explicit deploy acknowledgement
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "${{ inputs.confirm_deploy }}" == "DEPLOY" ]] || {
+            echo "Refusing deployment: confirm_deploy must equal DEPLOY" >&2
+            exit 1
+          }
+
+  verify-build-deploy:
+    name: Verify Build and Deploy AWS Demo
+    needs: authorize
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    environment: aws-demo
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install backend verification dependencies
+        run: python -m pip install -e '.[dev]'
+      - name: Run Wave 16 release matrix
+        run: bash scripts/run_wave16_test_matrix.sh
+      - name: Validate AWS templates and deployment policy
+        run: python scripts/validate_aws_infra.py
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v6.2.3
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+      - name: Read foundation outputs
+        id: foundation
+        shell: bash
+        run: |
+          set -euo pipefail
+          get_output() {
+            aws cloudformation describe-stacks \
+              --stack-name "$FOUNDATION_STACK" \
+              --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" \
+              --output text
+          }
+          echo "repository_uri=$(get_output RepositoryUri)" >> "$GITHUB_OUTPUT"
+          echo "cluster_name=$(get_output ClusterName)" >> "$GITHUB_OUTPUT"
+          echo "execution_role_arn=$(get_output ExecutionRoleArn)" >> "$GITHUB_OUTPUT"
+          echo "infrastructure_role_arn=$(get_output InfrastructureRoleArn)" >> "$GITHUB_OUTPUT"
+          echo "access_secret_arn=$(get_output AccessSecretArn)" >> "$GITHUB_OUTPUT"
+          echo "log_group_name=$(get_output LogGroupName)" >> "$GITHUB_OUTPUT"
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push immutable image
+        id: image
+        shell: bash
+        env:
+          REPOSITORY_URI: ${{ steps.foundation.outputs.repository_uri }}
+          REQUESTED_TAG: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          TAG="${REQUESTED_TAG:-${GITHUB_SHA}}"
+          IMAGE_URI="${REPOSITORY_URI}:${TAG}"
+          docker build --pull -t "$IMAGE_URI" .
+          docker push "$IMAGE_URI"
+          echo "uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+      - name: Deploy ECS Express Mode service through CloudFormation
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws cloudformation deploy \
+            --stack-name "$SERVICE_STACK" \
+            --template-file infra/aws/service.yaml \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              ImageUri='${{ steps.image.outputs.uri }}' \
+              ClusterName='${{ steps.foundation.outputs.cluster_name }}' \
+              ExecutionRoleArn='${{ steps.foundation.outputs.execution_role_arn }}' \
+              InfrastructureRoleArn='${{ steps.foundation.outputs.infrastructure_role_arn }}' \
+              AccessSecretArn='${{ steps.foundation.outputs.access_secret_arn }}' \
+              LogGroupName='${{ steps.foundation.outputs.log_group_name }}'
+      - name: Show protected demo endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws cloudformation describe-stacks \
+            --stack-name "$SERVICE_STACK" \
+            --query "Stacks[0].Outputs[?OutputKey=='Endpoint'].OutputValue" \
+            --output text

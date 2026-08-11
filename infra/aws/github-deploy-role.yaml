@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  GitHub OIDC deployment role for an already-created GitHub OIDC provider. The role is scoped to
+  one repository and the aws-demo GitHub environment. This stack is a one-time operator bootstrap.
+
+Parameters:
+  GitHubOidcProviderArn:
+    Type: String
+    Description: ARN of the IAM OIDC provider for token.actions.githubusercontent.com.
+  GitHubOwner:
+    Type: String
+  GitHubRepository:
+    Type: String
+  DeploymentEnvironment:
+    Type: String
+    Default: aws-demo
+  Region:
+    Type: String
+    Default: us-east-1
+
+Resources:
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: offgrid-commercial-intelligence-github-deploy
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOidcProviderArn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOwner}/${GitHubRepository}:environment:${DeploymentEnvironment}
+      Policies:
+        - PolicyName: DeployInterviewDemo
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: EcrAuth
+                Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: '*'
+              - Sid: EcrImagePush
+                Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:CompleteLayerUpload
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                  - ecr:BatchGetImage
+                Resource: !Sub arn:${AWS::Partition}:ecr:${Region}:${AWS::AccountId}:repository/offgrid-commercial-intelligence
+              - Sid: ServiceStack
+                Effect: Allow
+                Action:
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:CreateStack
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:UpdateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:GetTemplate
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:ListStackResources
+                  - cloudformation:DeleteChangeSet
+                Resource: !Sub arn:${AWS::Partition}:cloudformation:${Region}:${AWS::AccountId}:stack/offgrid-commercial-intelligence-demo-service/*
+              - Sid: ExpressServiceLifecycle
+                Effect: Allow
+                Action:
+                  - ecs:CreateExpressGatewayService
+                  - ecs:UpdateExpressGatewayService
+                  - ecs:DeleteExpressGatewayService
+                  - ecs:DescribeExpressGatewayService
+                  - ecs:ListExpressGatewayServices
+                  - ecs:TagResource
+                  - ecs:UntagResource
+                  - ecs:DescribeClusters
+                Resource: '*'
+              - Sid: PassOnlyDemoRoles
+                Effect: Allow
+                Action: iam:PassRole
+                Resource:
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/offgrid-commercial-intelligence-demo-execution
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/offgrid-commercial-intelligence-express-infrastructure
+      Tags:
+        - Key: Project
+          Value: OffGridCommercialIntelligence
+        - Key: Environment
+          Value: demo
+        - Key: Purpose
+          Value: Interview
+
+Outputs:
+  RoleArn:
+    Value: !GetAtt GitHubDeployRole.Arn

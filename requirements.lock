@@ -1,0 +1,35 @@
+# Wave 17 Python runtime lock generated from the clean integration environment on 2026-08-11.
+# Runtime core only; OpenAI remains an optional server-side extra and is disabled in the AWS demo.
+alembic==1.18.4
+annotated-doc==0.0.4
+annotated-types==0.7.0
+anyio==4.13.0
+certifi==2026.5.20
+cffi==2.0.0
+charset-normalizer==3.4.7
+click==8.1.8
+cryptography==46.0.4
+fastapi==0.128.2
+greenlet==3.5.1
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.17
+Mako==1.3.12
+MarkupSafe==3.0.3
+pdfminer.six==20251230
+pdfplumber==0.11.9
+pillow==12.3.0
+pycparser==3.0
+pydantic==2.13.4
+pydantic_core==2.46.4
+PyMuPDF==1.26.7
+pypdfium2==5.8.0
+python-multipart==0.0.29
+PyYAML==6.0.3
+RapidFuzz==3.14.3
+SQLAlchemy==2.0.50
+starlette==0.50.0
+typing_extensions==4.16.0
+typing-inspection==0.4.2
+uvicorn==0.48.0

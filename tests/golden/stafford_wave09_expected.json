@@ -1,0 +1,24 @@
+{
+  "workflow_version": "commercial-workflow-1.0",
+  "contractor_motion_status": "VALIDATING",
+  "contractor_organization": "EE Reed Construction",
+  "rental_motion_status": "UNRESOLVED",
+  "rental_provider": "UNRESOLVED",
+  "top_contact": "Doug Meadows",
+  "top_contact_authority": "UNKNOWN",
+  "next_best_action": "VERIFY_SITE_EQUIPMENT_RESPONSIBILITY",
+  "next_best_action_status": "OPEN",
+  "required_action_types": [
+    "VERIFY_SITE_EQUIPMENT_RESPONSIBILITY",
+    "VALIDATE_TEMP_LIGHTING_POWER_NEED",
+    "IDENTIFY_INCUMBENT_RENTAL_PROVIDER",
+    "RESOLVE_RENTAL_BRANCH_FLEET_BUYER",
+    "VALIDATE_FLEET_OPPORTUNITY",
+    "PREPARE_SITE_DEMO_PATH"
+  ],
+  "first_call_kit_version": "stafford-first-call-kit-1.0",
+  "outcome_model_version": "commercial-outcomes-1.0",
+  "initial_stored_outcomes": 0,
+  "external_writes_executed": 0,
+  "outreach_messages_sent": 0
+}

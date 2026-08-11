@@ -1,0 +1,52 @@
+name: Release Candidate Gate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-candidate:
+    name: Release Candidate Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install backend
+        run: python -m pip install -e ".[dev]"
+      - name: Validate repository policy/privacy
+        run: |
+          python scripts/validate_github_config.py
+          python scripts/validate_git_privacy.py --require-git
+      - name: Backend complete test matrix
+        run: bash scripts/run_wave19_test_matrix.sh
+      - name: Frontend install/typecheck/build
+        working-directory: apps/web
+        run: |
+          npm ci --no-audit --no-fund
+          npm run typecheck
+          npm run build
+      - name: Docker release gate when implementation exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f Dockerfile ]]; then
+            docker build -t offgrid-commercial-intelligence:release-candidate .
+          elif [[ -f docker/Dockerfile ]]; then
+            docker build -f docker/Dockerfile -t offgrid-commercial-intelligence:release-candidate .
+          else
+            echo "DEFERRED: Docker implementation belongs to Wave 17; do not claim container release readiness yet."
+          fi

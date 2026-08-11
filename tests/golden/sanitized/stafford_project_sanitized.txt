@@ -1,0 +1,14 @@
+SANITIZED CONSTRUCTCONNECT-LIKE PROJECT FIXTURE — NOT A REAL SOURCE EXPORT
+
+Project Name: Example Technology Campus Phases 3 & 4
+Project ID: SYNTH-PROJECT-001
+City/State: Example City, VA
+Reported Value: $7,500,000,000
+Stage: POST BID - General Contractor Award
+Scope: Site work, paving and new construction of a data center facility.
+Source Caveat: Listed value and area are estimates derived from broader development projections; phase-level cost is not confirmed.
+Project Event: Start Date 10/5/2026 — Actual Start Date
+Report Date: 7/8/2026
+General Contractor: Example Construction Co.
+
+Purpose: preserve parser/test concepts without redistributing the licensed interview PDF or individual contact data.

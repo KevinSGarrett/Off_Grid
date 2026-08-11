@@ -1,0 +1,189 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Non-service foundation for the Off Grid Commercial Intelligence interview demo.
+  Creates ECR, ECS roles, a generated access secret, log group, cluster, and optional cost budget.
+
+Parameters:
+  BudgetEmail:
+    Type: String
+    Default: ''
+    Description: Optional email address for AWS Budget alerts. Leave blank to omit the budget resource.
+  MonthlyBudgetUsd:
+    Type: Number
+    Default: 50
+    MinValue: 5
+    Description: Monthly cost budget when BudgetEmail is supplied.
+
+Conditions:
+  CreateBudget: !Not [!Equals [!Ref BudgetEmail, '']]
+
+Resources:
+  ContainerRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: offgrid-commercial-intelligence
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      ImageTagMutability: IMMUTABLE
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Retain the newest 5 release images",
+                "selection": {"tagStatus": "any", "countType": "imageCountMoreThan", "countNumber": 5},
+                "action": {"type": "expire"}
+              }
+            ]
+          }
+      Tags:
+        - Key: Project
+          Value: OffGridCommercialIntelligence
+        - Key: Environment
+          Value: demo
+        - Key: Purpose
+          Value: Interview
+
+  DemoAccessSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: offgrid-commercial-intelligence/demo/access-password
+      Description: Generated HTTP Basic password for the read-only employer demo.
+      GenerateSecretString:
+        PasswordLength: 32
+        ExcludePunctuation: true
+      Tags:
+        - Key: Project
+          Value: OffGridCommercialIntelligence
+        - Key: Environment
+          Value: demo
+        - Key: Purpose
+          Value: Interview
+
+  DemoLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /offgrid-commercial-intelligence/demo
+      RetentionInDays: 7
+      Tags:
+        - Key: Project
+          Value: OffGridCommercialIntelligence
+        - Key: Environment
+          Value: demo
+        - Key: Purpose
+          Value: Interview
+
+  DemoCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: offgrid-commercial-intelligence-demo
+      Tags:
+        - Key: Project
+          Value: OffGridCommercialIntelligence
+        - Key: Environment
+          Value: demo
+        - Key: Purpose
+          Value: Interview
+
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: offgrid-commercial-intelligence-demo-execution
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: ReadDemoAccessSecret
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref DemoAccessSecret
+      Tags:
+        - Key: Project
+          Value: OffGridCommercialIntelligence
+        - Key: Environment
+          Value: demo
+        - Key: Purpose
+          Value: Interview
+
+  ExpressInfrastructureRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: offgrid-commercial-intelligence-express-infrastructure
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices
+      Tags:
+        - Key: Project
+          Value: OffGridCommercialIntelligence
+        - Key: Environment
+          Value: demo
+        - Key: Purpose
+          Value: Interview
+
+  MonthlyCostBudget:
+    Type: AWS::Budgets::Budget
+    Condition: CreateBudget
+    Properties:
+      Budget:
+        BudgetName: offgrid-commercial-intelligence-demo-monthly
+        BudgetLimit:
+          Amount: !Ref MonthlyBudgetUsd
+          Unit: USD
+        BudgetType: COST
+        TimeUnit: MONTHLY
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 50
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+        - Notification:
+            NotificationType: FORECASTED
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+
+Outputs:
+  RepositoryUri:
+    Value: !GetAtt ContainerRepository.RepositoryUri
+  ClusterName:
+    Value: !Ref DemoCluster
+  ExecutionRoleArn:
+    Value: !GetAtt TaskExecutionRole.Arn
+  InfrastructureRoleArn:
+    Value: !GetAtt ExpressInfrastructureRole.Arn
+  AccessSecretArn:
+    Value: !Ref DemoAccessSecret
+  LogGroupName:
+    Value: !Ref DemoLogGroup

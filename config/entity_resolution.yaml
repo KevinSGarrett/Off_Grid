@@ -1,0 +1,32 @@
+entity_resolution:
+  version: entity-resolution-1.0
+  deterministic_first: true
+  no_silent_fuzzy_merge: true
+  organization:
+    location_hq_suffix_pattern: '\\s*-\\s*[^-()]+\\s*\\(HQ\\)\\s*$'
+    fuzzy_review_threshold: 90
+    fuzzy_auto_merge_allowed: false
+    exact_alias_match_score: 0.98
+    exact_supported_domain_match_score: 0.96
+    exact_address_match_score: 0.94
+  person:
+    fuzzy_review_threshold: 90
+    exact_individual_email_is_strong_identity: true
+    generic_email_is_identity_key: false
+    shared_phone_requires_name_support: true
+  project:
+    phase_pattern: '(?i)\\bphases?\\s+(\\d+)\\s*(?:&|and|-)\\s*(\\d+)\\b'
+    fuzzy_review_threshold: 92
+    require_geography_for_fuzzy_auto_match: true
+  account_intelligence:
+    recent_activity_days: 730
+    strong_repeat_unique_projects_min: 50
+    strong_recent_unique_projects_min: 5
+    current_source_sections:
+      - PLANNING
+    activity_stage_labels:
+      - Construction Underway
+      - General Contractor Award
+      - Post Bid
+      - Low Bids Announced
+      - Construction Documents

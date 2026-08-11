@@ -1,0 +1,64 @@
+schema_version: 1
+model:
+  name: offgrid_data_confidence
+  version: confidence-1.0
+  bands:
+    VERY_HIGH: 92
+    HIGH: 85
+    MEDIUM: 65
+    LOW: 45
+    VERY_LOW: 0
+
+observation_components:
+  - field: project.external_id
+    label: Stable project identity
+    weight: 10
+  - field: project.scope
+    label: Project scope
+    weight: 20
+  - field: project.description
+    label: Project narrative / phase context
+    weight: 10
+  - field: project.stage
+    label: Construction stage
+    weight: 15
+  - field: project.reported_value
+    label: Reported project value
+    weight: 10
+  - field: project.start_date
+    label: Start timing
+    weight: 10
+
+relationship_components:
+  - key: general_contractor
+    label: General contractor relationship
+    weight: 15
+    role: General Contractor
+    state_scores:
+      VERIFIED: 1.0
+      SUPPORTED: 0.90
+      UNKNOWN: 0.30
+      CONFLICTED: 0.10
+      REJECTED: 0.00
+
+completeness_components:
+  - key: named_gc_project_contact
+    label: Named project-level GC contact completeness
+    weight: 10
+    signal: named_gc_project_contact
+    present_score: 1.0
+    missing_score: 0.25
+
+quality_flag_penalties:
+  FUTURE_ACTUAL_DATE: 5
+  MISSING_PROJECT_GC_CONTACT: 3
+  PROJECT_VALUE_UNCERTAINTY: 0
+  VIEWED_NOT_TRACKED: 0
+
+validation_multipliers:
+  VALID: 1.0
+  REQUIRES_REVIEW: 1.0
+  UNVALIDATED: 0.65
+  CONFLICTED: 0.35
+  INVALID: 0.0
+  QUARANTINED: 0.0

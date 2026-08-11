@@ -1,0 +1,33 @@
+{
+  "resolution_version": "entity-resolution-1.0",
+  "stafford_group_name": "Stafford Technology Campus",
+  "member_names": [
+    "Stafford Technology Campus Phases 1 & 2",
+    "Stafford Technology Campus Phases 3 & 4"
+  ],
+  "phase_ranges": [[1, 2], [3, 4]],
+  "relationship_type": "SAME_CAMPUS_PHASE_SEQUENCE",
+  "relationship_state": "SUPPORTED",
+  "value_aggregation_allowed": false,
+  "ee_reed_canonical_name": "EE Reed Construction",
+  "required_source_alias": "EE Reed Construction - Houston (HQ)",
+  "domain_states": {
+    "eereed.com": "SUPPORTED",
+    "eereedeast.com": "UNKNOWN",
+    "zapalacreed.com": "UNKNOWN"
+  },
+  "source_section_counts": {
+    "PLANNING": 6,
+    "POST_BID": 87,
+    "BIDDING_ROLE": 74
+  },
+  "source_project_rows": 167,
+  "unique_projects": 165,
+  "required_contact_recurrence": {
+    "Dan Delforge": 5,
+    "David Zebold": 2,
+    "Radie Stroud": 2
+  },
+  "rental_authority_implied_by_recurrence": false,
+  "entity_resolution_state": "REVIEW_DIVISION_RELATIONSHIP"
+}
