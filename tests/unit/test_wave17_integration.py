@@ -10,13 +10,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-import sqlalchemy as sa
 import pytest
-from fastapi.testclient import TestClient
-
+import sqlalchemy as sa
 from app.main import create_app
 from app.models import Organization, Project
 from app.persistence.database import build_engine, build_session_factory
+from fastapi.testclient import TestClient
 
 ROOT = Path(__file__).resolve().parents[2]
 SEED = ROOT / "data/demo_seed/offgrid_demo_seed.db"
@@ -76,7 +75,7 @@ def test_wave17_seed_contains_no_direct_email_phone_or_private_host_path() -> No
         dump = "\n".join(con.iterdump())
     finally:
         con.close()
-    assert not re.search(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", dump, re.I)
+    assert not re.search(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", dump, re.IGNORECASE)
     assert not re.search(r"(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}", dump)
     assert "/mnt/data" not in dump
     assert "context/private_source_documents" not in dump
@@ -126,6 +125,17 @@ def test_wave17_dockerfile_uses_locked_python_and_fail_closed_frontend_install()
     assert "npm install --no-audit" not in text
     assert "data/demo_seed/offgrid_demo_seed.db" in text
     assert "SERVE_WEB=true" in text
+
+
+def test_readme_selects_python_312_explicitly_for_windows_and_bash() -> None:
+    text = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "Windows PowerShell" in text
+    assert "py -3.12 -m venv .venv" in text
+    assert r".\.venv\Scripts\python.exe scripts\run_public_test_matrix.py" in text
+    assert "python3.12 -m venv .venv" in text
+    assert ".venv/bin/python scripts/run_public_test_matrix.py" in text
+    assert "\npython -m venv .venv" not in text
 
 
 def test_wave17_openai_is_optional_runtime_extra() -> None:
