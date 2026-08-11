@@ -6,7 +6,10 @@ import sys
 import zipfile
 from pathlib import Path
 
-from scripts.release_claims import load_current_claim_entries, validate_current_claims
+from scripts.release_claims import (
+    load_current_claim_entries,
+    validate_current_claims,
+)
 
 ROOT=Path(__file__).resolve().parents[2]
 
@@ -38,6 +41,11 @@ def test_wave20_preserves_current_release_candidate_state():
     assert control["no_wave_21"] is True
 
 def test_current_handoff_claims_match_the_release_candidate():
+    private_verifier = ROOT / "scripts/verify_wave20_final.py"
+    if private_verifier.exists():
+        assert "CURRENT_CLAIM_ARCHIVE_NAMES = set(CURRENT_CLAIM_RULES)" in (
+            private_verifier.read_text()
+        )
     assert validate_current_claims(load_current_claim_entries(ROOT)) == []
 
 def test_current_handoff_claims_reject_resolved_environment_blockers():
