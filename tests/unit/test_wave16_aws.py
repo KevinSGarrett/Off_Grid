@@ -71,15 +71,33 @@ def test_deploy_workflow_is_manual_oidc_and_acknowledged() -> None:
     assert 'confirm_deploy }}" == "DEPLOY"' in text
     assert "aws-actions/configure-aws-credentials@v6.2.3" in text
     assert "aws-actions/amazon-ecr-login@v2" in text
+    assert "python scripts/run_public_test_matrix.py" in text
+    assert "run_wave16_test_matrix.sh" not in text
     assert "on:\n  push:" not in text
 
 
 def test_github_oidc_role_is_repository_environment_scoped() -> None:
     text = (ROOT / "infra" / "aws" / "github-deploy-role.yaml").read_text()
+    assert "Type: AWS::IAM::OIDCProvider" in text
+    assert "Url: https://token.actions.githubusercontent.com" in text
+    assert "ClientIdList:" in text and "sts.amazonaws.com" in text
     assert "token.actions.githubusercontent.com:aud: sts.amazonaws.com" in text
-    assert "repo:${GitHubOwner}/${GitHubRepository}:environment:${DeploymentEnvironment}" in text
+    assert "GitHubOwnerId:" in text and "GitHubRepositoryId:" in text
+    assert "repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepository}@${GitHubRepositoryId}:environment:${DeploymentEnvironment}" in text
     assert "iam:PassRole" in text
     assert "offgrid-commercial-intelligence-demo-execution" in text
+    assert "ecs:RegisterTaskDefinition" in text
+    assert "ecs:DeregisterTaskDefinition" in text
+    assert "ecs:ListServiceDeployments" in text
+    assert "ecs:DescribeServiceRevisions" in text
+    assert "FoundationStackRead" in text
+    assert "offgrid-commercial-intelligence-demo-foundation" in text
+
+
+def test_deploy_workflow_fails_closed_on_missing_foundation_outputs() -> None:
+    text = (ROOT / ".github" / "workflows" / "deploy-aws-demo.yml").read_text()
+    assert '[[ -n "$value" && "$value" != "None" ]]' in text
+    assert "Foundation output $1 is missing" in text
 
 
 def test_cost_model_matches_documented_fixed_subtotal() -> None:

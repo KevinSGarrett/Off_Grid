@@ -101,10 +101,36 @@ def main() -> int:
         if tag_map.get(key) != value:
             errors.append(f"missing required service tag {key}={value}")
 
+    provider = ores.get("GitHubOidcProvider", {})
+    if provider.get("Type") != "AWS::IAM::OIDCProvider":
+        errors.append("GitHub OIDC provider must be managed by the deployment-role stack")
+    provider_props = provider.get("Properties", {})
+    if provider_props.get("Url") != "https://token.actions.githubusercontent.com":
+        errors.append("GitHub OIDC provider URL is missing or incorrect")
+    if "sts.amazonaws.com" not in provider_props.get("ClientIdList", []):
+        errors.append("GitHub OIDC provider must trust the AWS STS audience")
+
     role = ores.get("GitHubDeployRole", {}).get("Properties", {})
     trust = str(role.get("AssumeRolePolicyDocument", {}))
-    if "token.actions.githubusercontent.com:sub" not in trust or "environment:${DeploymentEnvironment}" not in trust:
+    if (
+        "token.actions.githubusercontent.com:sub" not in trust
+        or "GitHubOwnerId" not in trust
+        or "GitHubRepositoryId" not in trust
+        or "environment:${DeploymentEnvironment}" not in trust
+    ):
         errors.append("GitHub OIDC trust is not restricted to repository environment")
+    policies_text = str(role.get("Policies", []))
+    if "FoundationStackRead" not in policies_text or "offgrid-commercial-intelligence-demo-foundation" not in policies_text:
+        errors.append("GitHub deploy role cannot read the prepared foundation stack outputs")
+    for action in (
+        "ecs:RegisterTaskDefinition",
+        "ecs:DeregisterTaskDefinition",
+        "ecs:ListServiceDeployments",
+        "ecs:DescribeServiceDeployments",
+        "ecs:DescribeServiceRevisions",
+    ):
+        if action not in policies_text:
+            errors.append(f"GitHub deploy role missing Express task-definition action {action}")
 
     workflow = (ROOT / ".github/workflows/deploy-aws-demo.yml").read_text()
     for needle in (
@@ -114,11 +140,16 @@ def main() -> int:
         'confirm_deploy }}" == "DEPLOY"',
         "aws-actions/configure-aws-credentials@v6.2.3",
         "aws-actions/amazon-ecr-login@v2",
+        "python scripts/run_public_test_matrix.py",
     ):
         if needle not in workflow:
             errors.append(f"deployment workflow missing {needle!r}")
     if re.search(r"on:\s*\n\s*(push|pull_request):", workflow):
         errors.append("AWS deployment workflow must not auto-run on push/PR")
+    if "run_wave16_test_matrix.sh" in workflow:
+        errors.append("AWS deployment workflow references a private-only test script")
+    if "Foundation output $1 is missing" not in workflow:
+        errors.append("AWS deployment workflow does not fail closed on missing foundation outputs")
 
     dockerignore = (ROOT / ".dockerignore").read_text()
     for private in ("context/private_source_documents", "context/original_chat_logs", "data/private"):

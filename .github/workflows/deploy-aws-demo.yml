@@ -57,8 +57,8 @@ jobs:
           cache: pip
       - name: Install backend verification dependencies
         run: python -m pip install -e '.[dev]'
-      - name: Run Wave 16 release matrix
-        run: bash scripts/run_wave16_test_matrix.sh
+      - name: Run public release matrix
+        run: python scripts/run_public_test_matrix.py
       - name: Validate AWS templates and deployment policy
         run: python scripts/validate_aws_infra.py
       - name: Configure AWS credentials using OIDC
@@ -73,10 +73,15 @@ jobs:
         run: |
           set -euo pipefail
           get_output() {
-            aws cloudformation describe-stacks \
+            value="$(aws cloudformation describe-stacks \
               --stack-name "$FOUNDATION_STACK" \
               --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" \
-              --output text
+              --output text)"
+            [[ -n "$value" && "$value" != "None" ]] || {
+              echo "Foundation output $1 is missing" >&2
+              exit 1
+            }
+            printf '%s' "$value"
           }
           echo "repository_uri=$(get_output RepositoryUri)" >> "$GITHUB_OUTPUT"
           echo "cluster_name=$(get_output ClusterName)" >> "$GITHUB_OUTPUT"

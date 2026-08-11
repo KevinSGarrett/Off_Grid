@@ -1,16 +1,19 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
-  GitHub OIDC deployment role for an already-created GitHub OIDC provider. The role is scoped to
-  one repository and the aws-demo GitHub environment. This stack is a one-time operator bootstrap.
+  GitHub OIDC provider and deployment role scoped to one repository and the aws-demo GitHub
+  environment. This stack is a one-time operator bootstrap.
 
 Parameters:
-  GitHubOidcProviderArn:
-    Type: String
-    Description: ARN of the IAM OIDC provider for token.actions.githubusercontent.com.
   GitHubOwner:
     Type: String
+  GitHubOwnerId:
+    Type: String
+    Description: Immutable numeric GitHub owner ID used in OIDC subjects.
   GitHubRepository:
     Type: String
+  GitHubRepositoryId:
+    Type: String
+    Description: Immutable numeric GitHub repository ID used in OIDC subjects.
   DeploymentEnvironment:
     Type: String
     Default: aws-demo
@@ -19,6 +22,20 @@ Parameters:
     Default: us-east-1
 
 Resources:
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      Tags:
+        - Key: Project
+          Value: OffGridCommercialIntelligence
+        - Key: Environment
+          Value: demo
+        - Key: Purpose
+          Value: GitHubActionsOIDC
+
   GitHubDeployRole:
     Type: AWS::IAM::Role
     Properties:
@@ -28,12 +45,12 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Ref GitHubOidcProviderArn
+              Federated: !Ref GitHubOidcProvider
             Action: sts:AssumeRoleWithWebIdentity
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOwner}/${GitHubRepository}:environment:${DeploymentEnvironment}
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepository}@${GitHubRepositoryId}:environment:${DeploymentEnvironment}
       Policies:
         - PolicyName: DeployInterviewDemo
           PolicyDocument:
@@ -70,6 +87,11 @@ Resources:
                   - cloudformation:ListStackResources
                   - cloudformation:DeleteChangeSet
                 Resource: !Sub arn:${AWS::Partition}:cloudformation:${Region}:${AWS::AccountId}:stack/offgrid-commercial-intelligence-demo-service/*
+              - Sid: FoundationStackRead
+                Effect: Allow
+                Action:
+                  - cloudformation:DescribeStacks
+                Resource: !Sub arn:${AWS::Partition}:cloudformation:${Region}:${AWS::AccountId}:stack/offgrid-commercial-intelligence-demo-foundation/*
               - Sid: ExpressServiceLifecycle
                 Effect: Allow
                 Action:
@@ -78,6 +100,12 @@ Resources:
                   - ecs:DeleteExpressGatewayService
                   - ecs:DescribeExpressGatewayService
                   - ecs:ListExpressGatewayServices
+                  - ecs:RegisterTaskDefinition
+                  - ecs:DeregisterTaskDefinition
+                  - ecs:DescribeTaskDefinition
+                  - ecs:ListServiceDeployments
+                  - ecs:DescribeServiceDeployments
+                  - ecs:DescribeServiceRevisions
                   - ecs:TagResource
                   - ecs:UntagResource
                   - ecs:DescribeClusters
@@ -97,5 +125,7 @@ Resources:
           Value: Interview
 
 Outputs:
+  OidcProviderArn:
+    Value: !Ref GitHubOidcProvider
   RoleArn:
     Value: !GetAtt GitHubDeployRole.Arn
