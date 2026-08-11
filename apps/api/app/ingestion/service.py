@@ -42,6 +42,7 @@ from app.services.provenance_policy import observation_decision_eligibility
 from app.observability.context import bind_pipeline_run
 from app.observability.logging import get_logger, sanitize_for_log
 from app.models import (
+    FieldHistory,
     Organization,
     OrganizationAddress,
     OrganizationAlias,
@@ -61,6 +62,13 @@ from app.models import (
 
 SOURCE_TYPE = "constructconnect_pdf"
 SOURCE_SYSTEM = "constructconnect"
+MATERIAL_PROJECT_FIELD_POLICY = (
+    ("canonical_name", "project.name", "HIGH"),
+    ("stage", "project.stage", "HIGH"),
+    ("category", "project.category", "MEDIUM"),
+    ("reported_value", "project.reported_value", "HIGH"),
+    ("start_date", "project.start_date", "HIGH"),
+)
 logger = get_logger("ingestion")
 
 
@@ -90,6 +98,16 @@ def _fingerprint(*parts: object) -> str:
 
 def _safe_decimal(value: float | str) -> Decimal:
     return Decimal(str(value))
+
+
+def _history_value(value: object | None) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return format(value, "f")
+    return str(value)
 
 
 class ConstructConnectIngestionService:
@@ -237,6 +255,8 @@ class ConstructConnectIngestionService:
         entity_type: str | None,
         entity_id: str | None,
         message: str | None,
+        *,
+        safe_metadata: dict | None = None,
     ) -> None:
         self._event_seq += 1
         self.session.add(
@@ -248,6 +268,7 @@ class ConstructConnectIngestionService:
                 entity_type=entity_type,
                 entity_id=entity_id,
                 message=message,
+                safe_metadata=safe_metadata,
                 occurred_at=_now(),
             )
         )
@@ -470,6 +491,7 @@ class ConstructConnectIngestionService:
             sa.select(Project).where(Project.source_system == SOURCE_SYSTEM, Project.external_id == parsed.project_id)
         )
         created = 0
+        existing_project = project is not None
         if project is None:
             exact = sa.select(Project).where(Project.normalized_name == normalized_name(parsed.project_name))
             if parsed.region:
@@ -477,6 +499,7 @@ class ConstructConnectIngestionService:
             if parsed.city:
                 exact = exact.where(Project.city == parsed.city)
             project = self.session.scalar(exact.limit(1))
+            existing_project = project is not None
         if project is None:
             project = Project(
                 canonical_name=parsed.project_name,
@@ -499,20 +522,17 @@ class ConstructConnectIngestionService:
             self.session.flush()
             created += 1
         else:
-            project.canonical_name = parsed.project_name
-            project.normalized_name = normalized_name(parsed.project_name)
             project.canonical_key = f"constructconnect:{parsed.project_id}"
             project.source_system = SOURCE_SYSTEM
             project.external_id = parsed.project_id
             project.state = ProjectState.PARSED
-            project.stage = parsed.stage or project.stage
-            project.category = parsed.category or project.category
-            project.reported_value = parsed.estimated_value or project.reported_value
             project.currency_code = "USD" if parsed.estimated_value is not None else project.currency_code
-            project.start_date = parsed.start_date or project.start_date
 
         self._event(run, "SOURCE_DOCUMENT_REGISTERED", "INGEST", "SourceDocument", str(doc.id), payload.sha256)
         self._event(run, "PROJECT_PARSED", "PARSE", "Project", str(project.id), parsed.project_name)
+        if existing_project:
+            change_count = self._apply_material_project_updates(project, parsed, doc, run)
+            run.updated_count = 1 if change_count else 0
 
         self._observation(
             doc, field_name="project.external_id", raw=parsed.project_id, value_type=ValueType.IDENTIFIER,
@@ -709,6 +729,62 @@ class ConstructConnectIngestionService:
             created_count=created + 1,
             quality_flag_codes=codes,
         )
+
+    def _apply_material_project_updates(
+        self,
+        project: Project,
+        parsed: ParsedProjectReport,
+        doc: SourceDocument,
+        run: PipelineRun,
+    ) -> int:
+        """Apply non-null source updates while preserving material before/after lineage."""
+        candidates: dict[str, object | None] = {
+            "canonical_name": parsed.project_name,
+            "stage": parsed.stage,
+            "category": parsed.category,
+            "reported_value": parsed.estimated_value,
+            "start_date": parsed.start_date,
+        }
+        change_count = 0
+        for attribute, field_name, impact in MATERIAL_PROJECT_FIELD_POLICY:
+            previous = getattr(project, attribute)
+            candidate = candidates[attribute]
+            # Missing values in a later source do not erase established canonical state.
+            if candidate is None or candidate == previous:
+                continue
+            setattr(project, attribute, candidate)
+            if attribute == "canonical_name":
+                project.normalized_name = normalized_name(str(candidate))
+            self.session.add(
+                FieldHistory(
+                    pipeline_run_id=run.id,
+                    source_document_id=doc.id,
+                    entity_type="Project",
+                    entity_id=str(project.id),
+                    field_name=field_name,
+                    previous_value=_history_value(previous),
+                    new_value=_history_value(candidate),
+                    change_type="MATERIAL_SOURCE_CHANGE",
+                    detected_at=_now(),
+                    commercial_impact=impact,
+                )
+            )
+            self._event(
+                run,
+                "MATERIAL_FIELD_CHANGED",
+                "CHANGE_DETECTION",
+                "Project",
+                str(project.id),
+                field_name,
+                safe_metadata={
+                    "field_name": field_name,
+                    "change_type": "MATERIAL_SOURCE_CHANGE",
+                    "commercial_impact": impact,
+                    "source_document_id": str(doc.id),
+                },
+            )
+            change_count += 1
+        return change_count
 
     def _persist_company(self, payload, parsed: ParsedCompanyReport, run: PipelineRun) -> IngestionResult:
         doc = self._new_document(

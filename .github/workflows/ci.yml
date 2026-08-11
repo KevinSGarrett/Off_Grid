@@ -65,6 +65,7 @@ jobs:
           tests/unit/test_wave04_privacy.py
           tests/unit/test_wave04_provenance.py
           tests/unit/test_wave05_sanitized_fixtures.py
+          tests/unit/test_wave05_ingestion.py::test_later_material_project_change_creates_history_and_pipeline_event
           tests/unit/test_wave06_configuration.py
           tests/unit/test_wave06_migration.py
           tests/unit/test_wave07_migration.py
