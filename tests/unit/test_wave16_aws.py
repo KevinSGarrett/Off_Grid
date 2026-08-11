@@ -86,6 +86,8 @@ def test_github_oidc_role_is_repository_environment_scoped() -> None:
     assert "repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepository}@${GitHubRepositoryId}:environment:${DeploymentEnvironment}" in text
     assert "iam:PassRole" in text
     assert "offgrid-commercial-intelligence-demo-execution" in text
+    assert "ecs:RegisterTaskDefinition" in text
+    assert "ecs:DeregisterTaskDefinition" in text
     assert "FoundationStackRead" in text
     assert "offgrid-commercial-intelligence-demo-foundation" in text
 

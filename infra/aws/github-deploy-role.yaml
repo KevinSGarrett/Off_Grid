@@ -100,6 +100,9 @@ Resources:
                   - ecs:DeleteExpressGatewayService
                   - ecs:DescribeExpressGatewayService
                   - ecs:ListExpressGatewayServices
+                  - ecs:RegisterTaskDefinition
+                  - ecs:DeregisterTaskDefinition
+                  - ecs:DescribeTaskDefinition
                   - ecs:TagResource
                   - ecs:UntagResource
                   - ecs:DescribeClusters

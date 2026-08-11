@@ -122,6 +122,9 @@ def main() -> int:
     policies_text = str(role.get("Policies", []))
     if "FoundationStackRead" not in policies_text or "offgrid-commercial-intelligence-demo-foundation" not in policies_text:
         errors.append("GitHub deploy role cannot read the prepared foundation stack outputs")
+    for action in ("ecs:RegisterTaskDefinition", "ecs:DeregisterTaskDefinition"):
+        if action not in policies_text:
+            errors.append(f"GitHub deploy role missing Express task-definition action {action}")
 
     workflow = (ROOT / ".github/workflows/deploy-aws-demo.yml").read_text()
     for needle in (
