@@ -219,3 +219,7 @@ $RECYCLE.BIN/
 *.ckpt
 *.safetensors
 *.bin
+
+# Local browser-review evidence (retained privately, never published)
+/.playwright-mcp/
+/task*-guided-*.png
