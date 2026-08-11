@@ -1,56 +1,51 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="500" viewBox="0 0 1440 500" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="520" viewBox="0 0 1440 520" role="img" aria-labelledby="title desc">
   <title id="title">Off Grid application architecture</title>
-  <desc id="desc">React frontend, FastAPI application layer, deterministic data and commercial engines, optional OpenAI reasoning, SQLAlchemy data layer, and safe external adapters.</desc>
+  <desc id="desc">A simple layered architecture showing the React interface, FastAPI boundary, three business engines, and relational data layer.</desc>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07150f"/><stop offset="1" stop-color="#0d3020"/></linearGradient>
-    <linearGradient id="green" x1="0" x2="1"><stop stop-color="#6bf292"/><stop offset="1" stop-color="#12b85d"/></linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#06120d"/><stop offset="1" stop-color="#0e2d1e"/></linearGradient>
+    <linearGradient id="primary" x1="0" x2="1"><stop stop-color="#155e38"/><stop offset="1" stop-color="#1a8047"/></linearGradient>
   </defs>
-  <rect width="1440" height="500" rx="28" fill="url(#bg)"/>
+  <rect width="1440" height="520" rx="28" fill="url(#bg)"/>
   <g font-family="Inter,Segoe UI,Arial,sans-serif">
-    <text x="64" y="55" fill="#84a894" font-size="14" font-weight="700" letter-spacing="2">COMPACT DEPLOYMENT · EXPLICIT BUSINESS BOUNDARIES</text>
-    <g transform="translate(420 82)">
-      <rect width="600" height="64" rx="16" fill="#123e2a" stroke="#3c835b"/>
-      <text x="300" y="29" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="800">React + TypeScript</text>
-      <text x="300" y="50" text-anchor="middle" fill="#9dc3ae" font-size="13">Employer review · analyst UI · evidence inspection</text>
+    <text x="70" y="48" fill="#78e795" font-size="15" font-weight="800" letter-spacing="2">ONE APPLICATION · CLEAR RESPONSIBILITIES</text>
+    <text x="70" y="78" fill="#a9c2b3" font-size="16">The interface explains decisions. Deterministic services retain authority over business truth.</text>
+
+    <g transform="translate(420 102)">
+      <rect width="600" height="66" rx="17" fill="url(#primary)" stroke="#55dd7d"/>
+      <text x="300" y="29" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="800">React + TypeScript interface</text>
+      <text x="300" y="51" text-anchor="middle" fill="#c5f4d3" font-size="14">employer review · guided analysis · evidence inspection</text>
     </g>
-    <path d="M720 146v34" stroke="#61dc83" stroke-width="2"/><path d="m714 174 6 12 6-12z" fill="#61dc83"/>
-    <g transform="translate(420 186)">
-      <rect width="600" height="58" rx="16" fill="#0c291d" stroke="#357253"/>
-      <text x="300" y="36" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="800">FastAPI application boundary</text>
+
+    <path d="M720 168v31" stroke="#65e48a" stroke-width="3"/><path d="m712 192 8 14 8-14z" fill="#65e48a"/>
+
+    <g transform="translate(420 206)">
+      <rect width="600" height="62" rx="17" fill="#0e3423" stroke="#3e8b60"/>
+      <text x="300" y="39" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="800">FastAPI application boundary</text>
     </g>
-    <path d="M720 244v29" stroke="#61dc83" stroke-width="2"/>
-    <path d="M260 273H1180" stroke="#35684d" stroke-width="2"/>
-    <path d="M260 273v24M720 273v24M1180 273v24" stroke="#35684d" stroke-width="2"/>
-    <g transform="translate(80 297)">
-      <rect width="360" height="92" rx="18" fill="#0d2d20" stroke="#32694d"/>
-      <text x="180" y="37" text-anchor="middle" fill="#ffffff" font-size="18" font-weight="800">Data + Trust Engine</text>
-      <text x="180" y="63" text-anchor="middle" fill="#8fb19e" font-size="13">ingest · provenance · quality · identity</text>
+
+    <path d="M720 268v30M220 298H1220M220 298v25M720 298v25M1220 298v25" fill="none" stroke="#428361" stroke-width="3"/>
+
+    <g transform="translate(60 323)">
+      <rect width="320" height="92" rx="18" fill="#0d2b1f" stroke="#377b57"/>
+      <text x="160" y="38" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="800">Data + Trust</text>
+      <text x="160" y="65" text-anchor="middle" fill="#9fc3ad" font-size="14">ingest · provenance · quality · identity</text>
     </g>
-    <g transform="translate(540 297)">
-      <rect width="360" height="92" rx="18" fill="#123e2a" stroke="#4b9769"/>
-      <text x="180" y="37" text-anchor="middle" fill="#ffffff" font-size="18" font-weight="800">Commercial Logic Engine</text>
-      <text x="180" y="63" text-anchor="middle" fill="#9bc4ad" font-size="13">qualification · product fit · action · CRM gates</text>
+    <g transform="translate(560 323)">
+      <rect width="320" height="92" rx="18" fill="url(#primary)" stroke="#55dd7d"/>
+      <text x="160" y="38" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="800">Commercial Logic</text>
+      <text x="160" y="65" text-anchor="middle" fill="#c5f4d3" font-size="14">qualification · product fit · action · CRM</text>
     </g>
-    <g transform="translate(1000 297)">
-      <rect width="360" height="92" rx="18" fill="#0d2d20" stroke="#32694d"/>
-      <text x="180" y="37" text-anchor="middle" fill="#ffffff" font-size="18" font-weight="800">Optional OpenAI Layer</text>
-      <text x="180" y="63" text-anchor="middle" fill="#8fb19e" font-size="13">controlled tools · grounding · safe fallback</text>
+    <g transform="translate(1060 323)">
+      <rect width="320" height="92" rx="18" fill="#0d2b1f" stroke="#377b57"/>
+      <text x="160" y="38" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="800">Optional AI</text>
+      <text x="160" y="65" text-anchor="middle" fill="#9fc3ad" font-size="14">controlled tools · grounding · safe fallback</text>
     </g>
-    <path d="M260 389v31M720 389v31M1180 389v31" stroke="#35684d" stroke-width="2"/>
-    <path d="M260 420H1180" stroke="#35684d" stroke-width="2"/>
-    <g transform="translate(390 420)">
-      <rect width="660" height="56" rx="16" fill="#071812" stroke="#2c6549"/>
-      <text x="330" y="34" text-anchor="middle" fill="#eaffef" font-size="18" font-weight="800">SQLAlchemy · SQLite demo runtime · Alembic migrations</text>
-    </g>
-    <g transform="translate(64 82)">
-      <rect width="270" height="162" rx="18" fill="#071812" stroke="#285c43"/>
-      <text x="22" y="32" fill="#73e98f" font-size="13" font-weight="800">INPUT ADAPTERS</text>
-      <text x="22" y="66" fill="#d8e8de" font-size="15">ConstructConnect</text><text x="22" y="94" fill="#d8e8de" font-size="15">PDF / normalized records</text><text x="22" y="122" fill="#d8e8de" font-size="15">Synthetic demo portfolio</text>
-    </g>
-    <g transform="translate(1106 82)">
-      <rect width="270" height="162" rx="18" fill="#071812" stroke="#285c43"/>
-      <text x="22" y="32" fill="#73e98f" font-size="13" font-weight="800">SAFE OUTPUT ADAPTERS</text>
-      <text x="22" y="66" fill="#d8e8de" font-size="15">Apollo · off</text><text x="22" y="94" fill="#d8e8de" font-size="15">Pipedrive · dry run</text><text x="22" y="122" fill="#d8e8de" font-size="15">Google / Trello · off</text>
+
+    <path d="M220 415v28M720 415v28M1220 415v28M220 443H1220" fill="none" stroke="#428361" stroke-width="3"/>
+
+    <g transform="translate(390 443)">
+      <rect width="660" height="54" rx="16" fill="#071812" stroke="#3d8a60"/>
+      <text x="330" y="34" text-anchor="middle" fill="#ffffff" font-size="19" font-weight="800">SQLAlchemy · SQLite demo runtime · Alembic migrations</text>
     </g>
   </g>
 </svg>

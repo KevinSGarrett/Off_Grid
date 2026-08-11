@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="300" height="68" viewBox="0 0 300 68" role="img" aria-label="Run the Engine">
-  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#132c22"/><stop offset="1" stop-color="#174b32"/></linearGradient></defs>
-  <rect x="1" y="1" width="298" height="66" rx="15" fill="url(#g)" stroke="#3f7a5a" stroke-width="2"/>
-  <circle cx="35" cy="34" r="19" fill="#0a2419"/><path d="m31 25 13 9-13 9Z" fill="#68ef8b"/>
-  <text x="65" y="30" fill="#9bd5af" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="12" font-weight="700" letter-spacing="1">DOCKER</text>
-  <text x="65" y="49" fill="#ffffff" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="800">Run the Engine</text>
-  <path d="m268 28 7 6-7 6" fill="none" stroke="#d9ffe3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
