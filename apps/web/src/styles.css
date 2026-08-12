@@ -489,6 +489,8 @@ pre { max-height: 280px; overflow: auto; margin: 9px 0 0; padding: 11px; border-
   html, body, #root, .app-shell, .workspace { max-width: 100%; overflow-x: clip; }
   .content { padding-inline: 10px; }
   .score-band, .score-band.four { grid-template-columns: 1fr; }
+  .ranked-action.compact { grid-template-columns: 25px minmax(0, 1fr); }
+  .ranked-action.compact > .pill { grid-column: 2; justify-self: start; margin-top: 3px; }
   .utility-actions .account-button { display: none; }
   .page-header { min-height: 64px; }
   .guided-copy h1 { font-size: 2.18rem; }
