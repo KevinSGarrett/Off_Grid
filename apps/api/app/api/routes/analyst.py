@@ -21,7 +21,10 @@ router = APIRouter(tags=["ai-intelligence"])
 class AnalystQuery(BaseModel):
     project_id: UUID
     question: str = Field(min_length=3, max_length=4000)
-    mode: Literal["FAST", "STANDARD", "DEEP"] = "STANDARD"
+    # The public ECS gateway has a shorter response window than a bounded Sol
+    # analysis can require. Keep Sol available explicitly, but make omitted
+    # requests use the gateway-safe Terra path.
+    mode: Literal["FAST", "STANDARD", "DEEP"] = "FAST"
     conversation_context: list[dict[str, object]] = Field(default_factory=list, max_length=4)
 
 

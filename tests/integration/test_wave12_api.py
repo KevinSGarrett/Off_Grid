@@ -209,6 +209,44 @@ def test_disabled_openai_analyst_and_brief_degrade_without_breaking_api(api_stat
     assert executive.json()["external_request_executed"] is False
 
 
+def test_analyst_omitted_mode_defaults_to_gateway_safe_fast(api_state, monkeypatch) -> None:
+    from app.api.routes import analyst as analyst_route
+
+    captured: dict[str, str] = {}
+
+    def fake_answer(self, *, project_id, question, mode, conversation_context):
+        captured["mode"] = mode
+        from decimal import Decimal
+
+        from app.ai.types import AIRunResult, AIRunStatus
+
+        return AIRunResult(
+            status=AIRunStatus.DISABLED,
+            task="commercial_analyst",
+            model_id=None,
+            prompt_run_id=None,
+            parsed=None,
+            grounding=None,
+            estimated_cost_usd=Decimal("0"),
+            fallback_reason="test",
+        )
+
+    monkeypatch.setattr(
+        analyst_route.OpenAIIntelligenceService,
+        "answer_commercial_question",
+        fake_answer,
+    )
+    response = api_state["client"].post(
+        "/api/v1/analyst/query",
+        json={
+            "project_id": str(api_state["ids"]["project"]),
+            "question": "Why pursue Stafford?",
+        },
+    )
+    assert response.status_code == 200
+    assert captured["mode"] == "FAST"
+
+
 def test_contact_verification_rejects_weak_authority_evidence(api_state) -> None:
     client = api_state["client"]
     candidate_id = api_state["ids"]["candidate"]

@@ -295,7 +295,7 @@ function Analyst({ d }: { d: DashboardData }) {
   const [question, setQuestion] = useState(questions[0]);
   const [response, setResponse] = useState<AnalystResponse | null>(null);
   const [busy, setBusy] = useState(false);
-  const [mode, setMode] = useState("STANDARD");
+  const [mode, setMode] = useState("FAST");
   const [conversation, setConversation] = useState<any[]>([]);
   const answer = response?.answer as any;
   async function submit(event?: FormEvent) {

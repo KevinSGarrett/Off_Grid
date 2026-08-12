@@ -24,6 +24,6 @@ export async function loadDashboard(): Promise<DashboardData> {
   ]);
   return { project, assessment, signals: signals.items, evidence: evidence.items, quality: quality.items, projectOrganizations, organization, organizationProjects, organizationContacts, candidates, actions, motions, crm, readiness, metrics, monday, exceptions, sensitivity };
 }
-export function askAnalyst(projectId: string, question: string, mode = "STANDARD", conversationContext: ApiRecord[] = []): Promise<AnalystResponse> {
+export function askAnalyst(projectId: string, question: string, mode = "FAST", conversationContext: ApiRecord[] = []): Promise<AnalystResponse> {
   return get<AnalystResponse>("/analyst/query", { method: "POST", body: JSON.stringify({ project_id: projectId, question, mode, conversation_context: conversationContext }) });
 }
