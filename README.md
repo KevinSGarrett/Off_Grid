@@ -300,6 +300,14 @@ Open `http://localhost:8080` and verify `http://localhost:8080/api/v1/health`.
 
 The username may be any non-empty value; the password is the value supplied through `APP_ACCESS_PASSWORD`. The deterministic core works without OpenAI, Apollo, or Pipedrive credentials.
 
+### Hosted employer demo
+
+The access-controlled AWS demo is available at:
+
+**https://of-f07eea2ba1d043d6804dad505d7498ab.ecs.us-east-1.on.aws**
+
+The application and API require Basic authentication; credentials are distributed separately and are never stored in this repository. The unauthenticated `/api/v1/health` endpoint is reserved for service health checks. The hosted Commercial Analyst uses the authorized bounded server-side OpenAI path, while deterministic behavior remains available during provider disablement or failure. Apollo and consequential CRM writes remain off or dry-run.
+
 <details>
 <summary><strong>Developer setup</strong></summary>
 
