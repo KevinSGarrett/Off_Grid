@@ -18,6 +18,7 @@ class AIRunStatus(StrEnum):
     DISABLED = "DISABLED"
     BUDGET_BLOCKED = "BUDGET_BLOCKED"
     GROUNDING_REJECTED = "GROUNDING_REJECTED"
+    PARTIAL_VALIDATED = "PARTIAL_VALIDATED"
     FAILED = "FAILED"
 
 
@@ -85,3 +86,7 @@ class AIRunResult:
     estimated_cost_usd: Decimal
     fallback_reason: str | None = None
     external_request_executed: bool = False
+    repair_attempted: bool = False
+    latency_ms: int | None = None
+    tool_rounds: int = 0
+    cache_hit: bool = False

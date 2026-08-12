@@ -58,8 +58,8 @@ def test_wave17_deployment_seed_contains_integrated_golden_truth() -> None:
     contacts = client.get(f"/api/v1/projects/{project_id}/contact-candidates").json()["items"]
     readiness = client.get(f"/api/v1/projects/{project_id}/crm-readiness").json()
     monday = client.get("/api/v1/monday-brief").json()
-    assert assessment["disposition"] == "PURSUE"
-    assert float(assessment["commercial_fit_score"]) == 80.0
+    assert assessment["disposition"] == "VERIFY"
+    assert float(assessment["commercial_fit_score"]) == 57.0
     assert float(assessment["data_confidence_score"]) == 69.25
     assert contacts[0]["display_name"] == "Doug Meadows"
     assert contacts[0]["verification"]["project_association"] == "VERIFIED"

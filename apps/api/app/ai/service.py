@@ -3,9 +3,11 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from datetime import datetime, timezone
+from collections.abc import Mapping
+from dataclasses import replace
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Mapping, TypeVar
+from typing import Any, ClassVar, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -41,6 +43,8 @@ T = TypeVar("T", bound=BaseModel)
 
 class OpenAIIntelligenceService:
     """Controlled Responses API layer with strict outputs, grounding, budget and fallback."""
+
+    _validated_answer_cache: ClassVar[dict[str, AIRunResult]] = {}
 
     def __init__(
         self,
@@ -106,25 +110,98 @@ class OpenAIIntelligenceService:
             subject_project_id=project_id,
         )
 
-    def answer_commercial_question(self, *, project_id: UUID, question: str) -> AIRunResult:
+    def answer_commercial_question(
+        self,
+        *,
+        project_id: UUID,
+        question: str,
+        mode: str = "STANDARD",
+        conversation_context: tuple[Mapping[str, Any], ...] = (),
+    ) -> AIRunResult:
         task_cfg, route = self.config.route_for_task("commercial_analyst")
+        route = self.config.analyst_route(mode)
         prompt = load_prompt(task_cfg.prompt_name, task_cfg.prompt_version)
         tools = ReadOnlyCommercialToolRegistry(self.session)
+        packet = self._commercial_analysis_packet(project_id, tools)
+        cache_material = json.dumps(
+            {
+                "project_id": str(project_id),
+                "question": " ".join(question.lower().split()),
+                "mode": mode.upper(),
+                "model": route.model_id,
+                "reasoning_effort": route.reasoning_effort,
+                "prompt_version": task_cfg.prompt_version,
+                "evidence_version": packet["evidence_version"],
+                "context": list(conversation_context)[-4:],
+            },
+            sort_keys=True,
+            default=str,
+        )
+        cache_key = hashlib.sha256(cache_material.encode("utf-8")).hexdigest()
+        cached = self._validated_answer_cache.get(cache_key)
+        if cached is not None:
+            return replace(cached, cache_hit=True, external_request_executed=False)
         request = self._base_request(
             route=route,
             prompt_text=prompt.text,
-            input_payload={"project_id": str(project_id), "question": question},
+            input_payload={
+                "project_id": str(project_id),
+                "question": question,
+                "analysis_mode": mode.upper(),
+                "commercial_analysis_packet": packet,
+                "prior_validated_context": list(conversation_context)[-4:],
+            },
             output_model=CommercialAnalystAnswer,
             schema_name=task_cfg.output_schema,
         )
+        cache_project = hashlib.sha256(str(project_id).encode("utf-8")).hexdigest()[:24]
+        request["prompt_cache_key"] = f"offgrid-analyst-v2:{cache_project}"
         request["tools"] = tools.definitions()
-        return self._execute_structured(
+        result = self._execute_structured(
             task="commercial_analyst",
             request=request,
             output_model=CommercialAnalystAnswer,
             subject_project_id=project_id,
             tool_registry=tools,
+            route_override=route,
         )
+        if result.status in {AIRunStatus.SUCCEEDED, AIRunStatus.PARTIAL_VALIDATED}:
+            self._validated_answer_cache[cache_key] = result
+        return result
+
+    def _commercial_analysis_packet(
+        self,
+        project_id: UUID,
+        tools: ReadOnlyCommercialToolRegistry,
+    ) -> dict[str, Any]:
+        """Build one compact, sanitized packet so common questions need no tool round."""
+        pid = str(project_id)
+        sections: dict[str, Any] = {
+            "project": tools.call("get_project", json.dumps({"project_id": pid})),
+            "assessment": tools.call("get_project_assessment", json.dumps({"project_id": pid})),
+            "products": tools.call("get_product_fit", json.dumps({"project_id": pid})),
+            "contacts": tools.call("get_contact_candidates", json.dumps({"project_id": pid})),
+            "actions": tools.call("get_next_best_actions", json.dumps({"project_id": pid})),
+            "crm": tools.call("get_crm_readiness", json.dumps({"project_id": pid})),
+            "source_evidence": tools.call("get_project_evidence", json.dumps({"project_id": pid})),
+        }
+        for key, value in sections.items():
+            evidence_id = f"det:{project_id}:{key}"
+            self.catalog.register_deterministic(
+                evidence_id,
+                json.dumps(value, sort_keys=True, default=str),
+            )
+            if isinstance(value, dict):
+                value["deterministic_evidence_id"] = evidence_id
+        serialized = json.dumps(sections, sort_keys=True, default=str, separators=(",", ":"))
+        return {
+            "packet_version": "commercial-analysis-packet-2.0",
+            "evidence_version": hashlib.sha256(serialized.encode("utf-8")).hexdigest(),
+            "deterministic_assessment_notice": (
+                "Decision support only; not a probability, forecast, verified demand, or authority claim."
+            ),
+            **sections,
+        }
 
     def generate_executive_brief(self, context: Mapping[str, Any]) -> AIRunResult:
         task_cfg, route = self.config.route_for_task("executive_brief")
@@ -187,10 +264,14 @@ class OpenAIIntelligenceService:
                     ],
                 }
             ],
-            "text": {"format": strict_response_format(output_model, name=schema_name)},
+            "text": {
+                "format": strict_response_format(output_model, name=schema_name),
+                "verbosity": self.config.text_verbosity,
+            },
             "reasoning": {"effort": route.reasoning_effort},
             "max_output_tokens": self.config.max_output_tokens,
             "store": self.config.store_responses,
+            "service_tier": self.config.service_tier,
         }
 
     def _execute_structured(
@@ -201,6 +282,7 @@ class OpenAIIntelligenceService:
         output_model: type[T],
         subject_project_id: UUID | None = None,
         tool_registry: ReadOnlyCommercialToolRegistry | None = None,
+        route_override=None,
     ) -> AIRunResult:
         if not self.config.enabled:
             return AIRunResult(
@@ -210,7 +292,7 @@ class OpenAIIntelligenceService:
                 prompt_run_id=None,
                 parsed=None,
                 grounding=None,
-                estimated_cost_usd=Decimal("0"),
+                estimated_cost_usd=Decimal(0),
                 fallback_reason="OPENAI_ENABLED=false; deterministic core remains available.",
                 external_request_executed=False,
             )
@@ -222,12 +304,13 @@ class OpenAIIntelligenceService:
                 prompt_run_id=None,
                 parsed=None,
                 grounding=None,
-                estimated_cost_usd=Decimal("0"),
+                estimated_cost_usd=Decimal(0),
                 fallback_reason="OpenAI is enabled but no live transport/API key is configured.",
                 external_request_executed=False,
             )
 
-        task_cfg, route = self.config.route_for_task(task)
+        task_cfg, configured_route = self.config.route_for_task(task)
+        route = route_override or configured_route
         prompt = load_prompt(task_cfg.prompt_name, task_cfg.prompt_version)
         guard = DailyBudgetGuard(self.session, self.config.daily_budget_usd)
         preflight = estimate_request_cost(
@@ -243,7 +326,7 @@ class OpenAIIntelligenceService:
                 prompt_run_id=None,
                 parsed=None,
                 grounding=None,
-                estimated_cost_usd=Decimal("0"),
+                estimated_cost_usd=Decimal(0),
                 fallback_reason=(
                     f"Daily OpenAI budget guard blocked an estimated ${preflight} request; "
                     "deterministic core remains available."
@@ -261,7 +344,7 @@ class OpenAIIntelligenceService:
             model_id=route.model_id,
             input_hash=input_hash,
             status=RunStatus.RUNNING,
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
         )
         self.session.add(run)
         self.session.flush()
@@ -313,10 +396,51 @@ class OpenAIIntelligenceService:
                 parsed = parsed.model_copy(update={"tool_calls_used": tool_calls_used})
             claims = self._claims_from(parsed)
             grounding = self.grounding.validate(claims)
+            repair_attempted = False
+            if isinstance(parsed, CommercialAnalystAnswer) and not grounding.is_valid:
+                repair_attempted = True
+                repair_request = dict(current_request)
+                repair_request.pop("tools", None)
+                issues = [
+                    {"claim_id": issue.claim_id, "reason": issue.reason}
+                    for issue in grounding.issues
+                ]
+                repair_request["instructions"] = (
+                    str(request["instructions"])
+                    + "\n\nREPAIR PASS: Correct exactly the validator issues below. Remove any claim "
+                    "that cannot be supported. Return a complete v2 object.\n"
+                    + json.dumps(issues, sort_keys=True)
+                )
+                repair_envelope = self.transport.create_response(repair_request)
+                total_usage = UsageMetrics(
+                    input_tokens=total_usage.input_tokens + repair_envelope.usage.input_tokens,
+                    output_tokens=total_usage.output_tokens + repair_envelope.usage.output_tokens,
+                    cached_input_tokens=total_usage.cached_input_tokens
+                    + repair_envelope.usage.cached_input_tokens,
+                )
+                repaired = output_model.model_validate_json(repair_envelope.output_text)
+                repaired = repaired.model_copy(update={"tool_calls_used": tool_calls_used})
+                repaired_claims = self._claims_from(repaired)
+                repaired_grounding = self.grounding.validate(repaired_claims)
+                final_envelope = repair_envelope
+                if repaired_grounding.is_valid:
+                    parsed, claims, grounding = repaired, repaired_claims, repaired_grounding
+                else:
+                    valid_ids = set(repaired_grounding.valid_claim_ids)
+                    valid_claims = [claim for claim in repaired_claims if claim.claim_id in valid_ids]
+                    parsed = self._validated_analyst_answer(
+                        repaired,
+                        valid_claims,
+                        withheld=True,
+                    )
+                    claims = valid_claims
+                    grounding = repaired_grounding
+            if isinstance(parsed, CommercialAnalystAnswer) and grounding.is_valid:
+                parsed = self._validated_analyst_answer(parsed, claims, withheld=False)
             cost = estimate_usage_cost(route, total_usage)
             run.response_id = final_envelope.response_id
             run.latency_ms = int((time.perf_counter() - started) * 1000)
-            run.completed_at = datetime.now(timezone.utc)
+            run.completed_at = datetime.now(UTC)
             run.status = RunStatus.SUCCEEDED if grounding.is_valid else RunStatus.PARTIAL
             self.session.add(
                 AIUsage(
@@ -335,15 +459,22 @@ class OpenAIIntelligenceService:
             )
             self.session.commit()
             return AIRunResult(
-                status=(AIRunStatus.SUCCEEDED if grounding.is_valid else AIRunStatus.GROUNDING_REJECTED),
+                status=(AIRunStatus.SUCCEEDED if grounding.is_valid else AIRunStatus.PARTIAL_VALIDATED),
                 task=task,
                 model_id=final_envelope.model_id or route.model_id,
                 prompt_run_id=run.id,
                 parsed=parsed,
                 grounding=grounding,
                 estimated_cost_usd=cost,
-                fallback_reason=(None if grounding.is_valid else "GroundingValidator rejected unsupported claims."),
+                fallback_reason=(
+                    None
+                    if grounding.is_valid
+                    else "Unsupported material was withheld after the bounded repair pass; only validated claims are shown."
+                ),
                 external_request_executed=isinstance(self.transport, OfficialOpenAITransport),
+                repair_attempted=repair_attempted,
+                latency_ms=run.latency_ms,
+                tool_rounds=len(tool_calls_used),
             )
         except Exception as exc:
             # The broad catch is intentional at the provider boundary: the deterministic core degrades
@@ -352,7 +483,7 @@ class OpenAIIntelligenceService:
             run.error_code = type(exc).__name__
             run.error_detail = str(exc)[:2000]
             run.latency_ms = int((time.perf_counter() - started) * 1000)
-            run.completed_at = datetime.now(timezone.utc)
+            run.completed_at = datetime.now(UTC)
             self.session.commit()
             return AIRunResult(
                 status=AIRunStatus.FAILED,
@@ -361,7 +492,7 @@ class OpenAIIntelligenceService:
                 prompt_run_id=run.id,
                 parsed=None,
                 grounding=None,
-                estimated_cost_usd=Decimal("0"),
+                estimated_cost_usd=Decimal(0),
                 fallback_reason=f"OpenAI capability failed safely: {type(exc).__name__}: {exc}",
                 external_request_executed=isinstance(self.transport, OfficialOpenAITransport),
             )
@@ -369,10 +500,50 @@ class OpenAIIntelligenceService:
     @staticmethod
     def _claims_from(parsed: BaseModel) -> list[GroundedClaim]:
         if hasattr(parsed, "claims"):
-            return list(getattr(parsed, "claims"))
+            return list(parsed.claims)
         if isinstance(parsed, ExecutiveBriefOutput):
             return [claim for section in parsed.sections for claim in section.claims]
         return []
+
+    @staticmethod
+    def _validated_analyst_answer(
+        parsed: CommercialAnalystAnswer,
+        claims: list[GroundedClaim],
+        *,
+        withheld: bool,
+    ) -> CommercialAnalystAnswer:
+        """Construct displayed prose only from claim text and its concise rationale."""
+        supported = [claim for claim in claims if claim.classification != "UNKNOWN"]
+        unknown_claims = [claim for claim in claims if claim.classification == "UNKNOWN"]
+        if supported:
+            paragraphs = [
+                f"{claim.claim_text}\nWhy: {claim.rationale}"
+                for claim in supported
+            ]
+            answer = "\n\n".join(paragraphs)
+            conclusion = supported[0].claim_text
+        else:
+            answer = "No material analyst conclusion could be validated from the current evidence."
+            conclusion = answer
+        if withheld:
+            answer += "\n\nSome model-generated material was withheld because it did not pass grounding validation."
+        return parsed.model_copy(
+            update={
+                "answer": answer,
+                "direct_conclusion": conclusion,
+                "why": [claim.rationale for claim in supported],
+                "supporting_evidence": [ref for claim in supported for ref in claim.evidence_ids],
+                "caveats": [claim.claim_text for claim in unknown_claims],
+                "counterevidence_and_conflicts": [
+                    claim.claim_text for claim in claims if claim.classification == "CONFLICTED"
+                ],
+                "decision_changing_unknowns": [claim.claim_text for claim in unknown_claims],
+                "recommendation_triggers": [claim.rationale for claim in unknown_claims],
+                "next_action": supported[-1].claim_text if supported else conclusion,
+                "claims": claims,
+                "unknowns": list(dict.fromkeys(parsed.unknowns + [claim.claim_text for claim in unknown_claims])),
+            }
+        )
 
     def _persist_claims(
         self,

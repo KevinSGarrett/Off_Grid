@@ -162,7 +162,7 @@ class Wave10IntegrationService:
         lead_checks = [
             ReadinessCheck(
                 key="qualified_project",
-                passed=assessment.disposition == "PURSUE",
+                passed=assessment.disposition in {"ACT", "VERIFY"},
                 applies_to=(CRMPromotionState.LEAD, CRMPromotionState.DEAL),
                 rationale=f"Current deterministic disposition is {assessment.disposition}.",
             ),

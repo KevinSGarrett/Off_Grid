@@ -47,21 +47,21 @@ def test_stafford_score_is_computed_reproducible_and_separate_from_confidence() 
         assert DecimalLike(first.commercial_fit_score).between(0, 100)
         assert DecimalLike(first.data_confidence_score).between(0, 100)
         assert first.model_version == EXPECTED["qualification_model_version"]
+        assert first.commercial_fit_score == EXPECTED["stafford_internal_ordering_score"]
+        assert first.overall_band == EXPECTED["stafford_band"]
+        assert first.operational_action == EXPECTED["stafford_action"]
         assert first.confidence_model_version == EXPECTED["confidence_model_version"]
         # Distinct measures, not one shared opaque value.
         assert first.commercial_fit_score != first.data_confidence_score
 
 
-def test_reported_value_is_capped_and_counterfactual_preserves_current_disposition() -> None:
+def test_reported_value_has_zero_influence_and_counterfactual_preserves_decision() -> None:
     with _session() as session:
         _, result = _ingest_and_score(session, persist=False)
-        counterfactual = next(x for x in result.counterfactuals if x.key == "ignore_reported_value")
-        assert abs(counterfactual.score_delta) <= EXPECTED["reported_value_max_points"]
+        counterfactual = next(x for x in result.counterfactuals if x.key == "without_reported_value")
+        assert counterfactual.score_delta == EXPECTED["reported_value_max_points"]
         assert counterfactual.disposition == result.disposition
-        scale = next(x for x in result.factors if x.key == "scale_duration")
-        assert "large_project_value" in scale.matched_rule_keys
-        # The rule is never allowed to dominate a 100-point score.
-        assert EXPECTED["reported_value_max_points"] <= scale.max_points
+        assert all("large_project_value" not in factor.matched_rule_keys for factor in result.factors)
 
 
 def test_source_fact_derived_and_inference_boundaries_are_visible() -> None:
@@ -85,9 +85,8 @@ def test_product_fit_is_separate_inferred_and_missing_evidence_is_explicit() -> 
             assert fit.classification is EvidenceClassification.INFERRED
             assert fit.missing_evidence
             assert 0 <= fit.fit_score <= 100
-        assert fits["KVT"].score_cap_applied is not None
-        assert fits["KV6"].score_cap_applied is not None
-        assert fits["KVP"].score_cap_applied is not None
+            assert fit.applicability_status == "UNVERIFIED_APPLICABILITY"
+        assert {fit.fit_band for fit in fits.values()} == {"UNVERIFIED_APPLICABILITY"}
 
 
 def test_decision_unknowns_rank_material_questions_above_exact_phase_value() -> None:
@@ -108,9 +107,61 @@ def test_factor_counterfactuals_identify_actual_decision_reversal_conditions_wit
     with _session() as session:
         _, result = _ingest_and_score(session, persist=False)
         assert result.what_would_change_my_mind
-        assert all(item.changes_disposition for item in result.what_would_change_my_mind)
-        assert all(item.score < result.commercial_fit_score for item in result.what_would_change_my_mind)
-        assert next(x for x in result.counterfactuals if x.key == "ignore_reported_value").changes_disposition is False
+        assert all(item.changes_band or item.changes_action for item in result.what_would_change_my_mind)
+        assert next(x for x in result.counterfactuals if x.key == "without_reported_value").changes_band is False
+
+
+def test_dimensions_do_not_double_count_signals_and_missing_need_is_not_positive() -> None:
+    with _session() as session:
+        _, result = _ingest_and_score(session, persist=False)
+        matched = [key for dimension in result.dimensions for key in dimension.matched_signal_keys]
+        assert len(matched) == len(set(matched))
+        assert "site_work" not in matched and "paving" not in matched
+        assert matched.count("site_activity_context") == 1
+        assert matched.count("gc_awarded") == 1
+        need = next(item for item in result.dimensions if item.key == "confirmed_product_need")
+        assert need.internal_score == 0
+        assert need.band == "NOT_CONFIRMED"
+        assert need.missing_evidence
+
+
+def test_comparison_cohort_excludes_missing_values_instead_of_imputing_zero() -> None:
+    with _session() as session:
+        project, result = _ingest_and_score(session, persist=False)
+        missing = Project(
+            canonical_name="Missing comparison value",
+            normalized_name="missing comparison value",
+            canonical_key="test:missing-comparison-value",
+            source_system="test",
+            external_id="missing-value",
+            state=ProjectState.INGESTED,
+            reported_value=None,
+            currency_code="USD",
+            is_synthetic=False,
+        )
+        lower = [
+            Project(
+                canonical_name=f"Lower comparison value {index}",
+                normalized_name=f"lower comparison value {index}",
+                canonical_key=f"test:lower-comparison-value:{index}",
+                source_system="test",
+                external_id=f"lower-value-{index}",
+                state=ProjectState.INGESTED,
+                reported_value=index + 1,
+                currency_code=project.currency_code,
+                is_synthetic=False,
+            )
+            for index in range(4)
+        ]
+        session.add_all([missing, *lower])
+        session.flush()
+        result = QualificationService(session).evaluate(project.id, persist=False)
+        cohort = result.comparison_cohorts[0]
+        assert cohort.total_projects == 6
+        assert cohort.cohort_size == 5
+        assert cohort.missing_count == 1
+        assert cohort.rank == 1
+        assert "never imputed as zero" in cohort.missing_data_treatment
 
 
 def test_persistence_versions_configuration_and_current_assessment_state() -> None:
@@ -120,9 +171,9 @@ def test_persistence_versions_configuration_and_current_assessment_state() -> No
         assert project.state is ProjectState.QUALIFIED
         configs = session.scalars(sa.select(ConfigVersion)).all()
         assert {(x.config_kind, x.version) for x in configs} >= {
-            ("qualification", "qualification-1.0"),
+            ("qualification", "qualification-2.0"),
             ("confidence", "confidence-1.0"),
-            ("products", "products-1.0"),
+            ("products", "products-2.0"),
         }
         assessments = session.scalars(
             sa.select(OpportunityAssessment).where(OpportunityAssessment.project_id == project.id).order_by(OpportunityAssessment.computed_at)
@@ -131,7 +182,7 @@ def test_persistence_versions_configuration_and_current_assessment_state() -> No
         assert sum(1 for row in assessments if row.is_current) == 1
         current = next(row for row in assessments if row.is_current)
         assert current.commercial_fit_score == second.commercial_fit_score
-        assert session.scalar(sa.select(sa.func.count()).select_from(AssessmentFactor).where(AssessmentFactor.assessment_id == current.id)) == 7
+        assert session.scalar(sa.select(sa.func.count()).select_from(AssessmentFactor).where(AssessmentFactor.assessment_id == current.id)) == 4
         assert session.scalar(sa.select(sa.func.count()).select_from(ProductFitAssessment).where(ProductFitAssessment.opportunity_assessment_id == current.id)) == 3
 
 

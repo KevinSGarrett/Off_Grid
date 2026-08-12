@@ -48,6 +48,8 @@ class OpenAIIntelligenceConfig:
     daily_budget_usd: Decimal
     max_output_tokens: int
     max_tool_rounds: int
+    text_verbosity: str
+    service_tier: str
     model_routes: dict[str, ModelRoute]
     tasks: dict[str, TaskConfig]
     safety: dict[str, Any]
@@ -55,6 +57,16 @@ class OpenAIIntelligenceConfig:
     def route_for_task(self, task: str) -> tuple[TaskConfig, ModelRoute]:
         task_cfg = self.tasks[task]
         return task_cfg, self.model_routes[task_cfg.model_route]
+
+    def analyst_route(self, mode: str) -> ModelRoute:
+        key = {
+            "FAST": "analyst_fast",
+            "STANDARD": "analyst_standard",
+            "DEEP": "analyst_deep",
+        }.get(mode.upper())
+        if key is None:
+            raise ValueError(f"Unknown Commercial Analyst mode: {mode}")
+        return self.model_routes[key]
 
 
 def _decimal(value: object) -> Decimal:
@@ -70,6 +82,9 @@ def load_openai_config(path: Path | None = None) -> OpenAIIntelligenceConfig:
             "fast": settings.openai_model_fast,
             "reasoning": settings.openai_model_reasoning,
             "research": settings.openai_model_research,
+            "analyst_fast": "gpt-5.6-terra",
+            "analyst_standard": settings.openai_model_reasoning,
+            "analyst_deep": settings.openai_model_reasoning,
         }.get(name, str(row["id"]))
         routes[name] = ModelRoute(
             name=name,
@@ -110,6 +125,8 @@ def load_openai_config(path: Path | None = None) -> OpenAIIntelligenceConfig:
         ),
         max_output_tokens=int(defaults["max_output_tokens"]),
         max_tool_rounds=int(defaults["max_tool_rounds"]),
+        text_verbosity=str(defaults.get("text_verbosity", "high")),
+        service_tier=str(defaults.get("service_tier", "auto")),
         model_routes=routes,
         tasks=tasks,
         safety=dict(raw["safety"]),

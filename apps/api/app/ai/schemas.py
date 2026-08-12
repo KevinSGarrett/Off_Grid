@@ -36,11 +36,25 @@ class SemanticProjectAnalysis(StrictAIModel):
 
 
 class CommercialAnalystAnswer(StrictAIModel):
-    schema_version: Literal["commercial-analyst-answer-1.0"]
+    schema_version: Literal["commercial-analyst-answer-2.0"]
     answer: str
+    direct_conclusion: str
+    why: list[str]
+    supporting_evidence: list[str]
+    caveats: list[str]
+    counterevidence_and_conflicts: list[str]
+    decision_changing_unknowns: list[str]
+    recommendation_triggers: list[str]
+    next_action: str
     claims: list[GroundedClaim]
     unknowns: list[str]
     tool_calls_used: list[str]
+
+    @model_validator(mode="after")
+    def answer_must_be_represented_by_claims(self):
+        if self.answer.strip() and not self.claims:
+            raise ValueError("A substantive analyst answer requires grounded claims")
+        return self
 
 
 class ExecutiveBriefSection(StrictAIModel):

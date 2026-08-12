@@ -1,17 +1,14 @@
 {
-  "qualification_model_version": "qualification-1.0",
+  "qualification_model_version": "qualification-2.0",
   "confidence_model_version": "confidence-1.0",
-  "product_registry_version": "products-1.0",
-  "required_products": ["KVT", "KV6", "KVP"],
-  "required_explicit_signals": ["data_center", "new_construction", "site_work", "paving", "gc_awarded"],
+  "product_registry_version": "products-2.0",
+  "stafford_internal_ordering_score": 57.0,
+  "stafford_band": "Promising candidate",
+  "stafford_action": "VERIFY",
+  "reported_value_max_points": 0,
+  "required_explicit_signals": ["data_center", "new_construction", "site_work", "paving", "multi_phase", "gc_awarded"],
   "required_inferred_non_decision_signals": ["temporary_lighting_relevance", "temporary_power_relevance"],
-  "reported_value_max_points": 5,
-  "reported_value_counterfactual_must_preserve_disposition": true,
-  "required_low_impact_unknown": "exact_phase_value",
-  "required_high_impact_unknowns": [
-    "named_gc_project_leadership",
-    "temporary_lighting_power_responsibility",
-    "incumbent_rental_supplier"
-  ],
-  "forbid_fixed_commercial_fit_score": true
+  "required_products": ["KVT", "KV6", "KVP"],
+  "required_high_impact_unknowns": ["temporary_lighting_power_responsibility", "actual_lighting_need", "actual_mobile_power_need", "named_gc_project_leadership"],
+  "required_low_impact_unknown": "exact_phase_value"
 }

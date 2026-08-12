@@ -13,9 +13,16 @@ ROOT = Path(__file__).resolve().parents[2]
 def test_qualification_and_confidence_configs_are_versioned_and_weighted() -> None:
     qualification = load_qualification_config()
     confidence = load_confidence_config()
-    assert qualification.data["model"]["version"] == "qualification-1.0"
+    assert qualification.data["model"]["version"] == "qualification-2.0"
     assert confidence.data["model"]["version"] == "confidence-1.0"
-    assert sum(float(x["max_points"]) for x in qualification.data["factors"]) == 100
+    assert sum(float(x["max_points"]) for x in qualification.data["dimensions"]) == 100
+    scoring_signals = [
+        rule["signal"]
+        for dimension in qualification.data["dimensions"]
+        for rule in dimension["rules"]
+    ]
+    assert len(scoring_signals) == len(set(scoring_signals))
+    assert "large_project_value" not in scoring_signals
     confidence_weight = sum(
         float(x["weight"])
         for section in ("observation_components", "relationship_components", "completeness_components")
@@ -26,7 +33,7 @@ def test_qualification_and_confidence_configs_are_versioned_and_weighted() -> No
 
 def test_product_registry_contains_only_controlled_products_and_fact_boundaries() -> None:
     registry = load_product_registry()
-    assert registry.version == "products-1.0"
+    assert registry.version == "products-2.0"
     assert {p.code for p in registry.products} == {"KVT", "KV6", "KVP"}
     for product in registry.products:
         assert product.approved_facts

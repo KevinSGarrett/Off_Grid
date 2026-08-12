@@ -9,6 +9,11 @@ from app.ai.types import GroundingIssue, GroundingReport, GroundingStatus
 from app.domain.states import EvidenceClassification
 
 _NUMERIC_RE = re.compile(r"(?<![A-Za-z])\d+(?:[.,]\d+)?")
+_DETERMINISTIC_MATERIAL_RE = re.compile(
+    r"\b(commercial fit|qualification|crm|pipedrive|deal[- ]ready|lead[- ]ready|"
+    r"rental authority|product applicability|confirmed fit|next (?:best )?action)\b",
+    re.IGNORECASE,
+)
 
 
 class GroundingValidator:
@@ -64,6 +69,16 @@ class GroundingValidator:
                 evidence.append(item)
         if issues:
             return issues
+
+        if _DETERMINISTIC_MATERIAL_RE.search(claim.claim_text) and not any(
+            ref.startswith("det:") for ref in claim.evidence_ids
+        ):
+            issues.append(
+                GroundingIssue(
+                    claim.claim_id,
+                    "material workflow/assessment claim requires deterministic-state provenance",
+                )
+            )
 
         if claim.claim_type in self.high_risk_claim_types:
             corpus = " ".join(item.excerpt for item in evidence).lower()

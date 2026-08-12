@@ -107,8 +107,16 @@ class AnalystToolLoopFakeTransport:
         evidence_rows = json.loads(tool_outputs[-1]["output"])["evidence"]
         evidence_ref = evidence_rows[0]["evidence_id"]
         output = {
-            "schema_version": "commercial-analyst-answer-1.0",
+            "schema_version": "commercial-analyst-answer-2.0",
             "answer": "Stafford should remain in pursue/verify because the deterministic pipeline has qualified it while unresolved facts still require validation.",
+            "direct_conclusion": "Stafford remains a promising candidate requiring verification.",
+            "why": ["The stored Stafford evidence supports project relevance."],
+            "supporting_evidence": [evidence_ref],
+            "caveats": ["Product need and rental authority remain unverified."],
+            "counterevidence_and_conflicts": [],
+            "decision_changing_unknowns": ["verified rental authority"],
+            "recommendation_triggers": ["Confirm direct lighting or power need."],
+            "next_action": "Verify direct site need and decision authority.",
             "claims": [
                 {
                     "claim_id": "analyst-1",

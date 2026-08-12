@@ -1,4 +1,4 @@
-import type { AnalystResponse, DashboardData } from "./types";
+import type { AnalystResponse, ApiRecord, DashboardData } from "./types";
 const ROOT = "/api/v1";
 async function get<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${ROOT}${path}`, { headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) }, ...init });
@@ -24,6 +24,6 @@ export async function loadDashboard(): Promise<DashboardData> {
   ]);
   return { project, assessment, signals: signals.items, evidence: evidence.items, quality: quality.items, projectOrganizations, organization, organizationProjects, organizationContacts, candidates, actions, motions, crm, readiness, metrics, monday, exceptions, sensitivity };
 }
-export function askAnalyst(projectId: string, question: string): Promise<AnalystResponse> {
-  return get<AnalystResponse>("/analyst/query", { method: "POST", body: JSON.stringify({ project_id: projectId, question }) });
+export function askAnalyst(projectId: string, question: string, mode = "STANDARD", conversationContext: ApiRecord[] = []): Promise<AnalystResponse> {
+  return get<AnalystResponse>("/analyst/query", { method: "POST", body: JSON.stringify({ project_id: projectId, question, mode, conversation_context: conversationContext }) });
 }

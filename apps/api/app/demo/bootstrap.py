@@ -8,7 +8,7 @@ import sqlalchemy as sa
 
 from app.commercial_workflow.service import Wave09CommercialWorkflowService
 from app.contact_resolution.service import Wave08ContactResolutionService
-from app.crm.service import Wave10IntegrationService, Wave10IntegrationResult
+from app.crm.service import Wave10IntegrationResult, Wave10IntegrationService
 from app.ingestion.service import ConstructConnectIngestionService
 from app.models import Base, Organization, Project
 from app.persistence.database import build_engine, build_session_factory
@@ -77,7 +77,7 @@ def build_real_demo_database(
         Wave09CommercialWorkflowService(session).run()
         integrations = Wave10IntegrationService(session, demo_mode=True).run()
 
-        return DemoBootstrapResult(
+        result = DemoBootstrapResult(
             database_path=db,
             project_id=project.id,
             organization_id=organization.id,
@@ -86,3 +86,5 @@ def build_real_demo_database(
             assessment=assessment,
             integrations=integrations,
         )
+    engine.dispose()
+    return result

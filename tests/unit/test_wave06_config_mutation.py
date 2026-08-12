@@ -19,7 +19,7 @@ def test_mutating_versioned_rule_changes_score_without_code_or_project_special_c
     original = yaml.safe_load((ROOT / "config/qualification.yaml").read_text(encoding="utf-8"))
     mutated = yaml.safe_load((ROOT / "config/qualification.yaml").read_text(encoding="utf-8"))
     mutated["model"]["version"] = "qualification-test-mutated"
-    mutated["factors"][0]["rules"][0]["points"] -= 1
+    mutated["dimensions"][0]["rules"][0]["points"] -= 1
     path = tmp_path / "qualification.yaml"
     path.write_text(yaml.safe_dump(mutated, sort_keys=False), encoding="utf-8")
 

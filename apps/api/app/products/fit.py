@@ -11,18 +11,6 @@ def _d(value: object) -> Decimal:
     return Decimal(str(value))
 
 
-def _band(score: Decimal) -> str:
-    if score >= Decimal("80"):
-        return "HIGH"
-    if score >= Decimal("60"):
-        return "MEDIUM_HIGH"
-    if score >= Decimal("40"):
-        return "MEDIUM"
-    if score >= Decimal("20"):
-        return "LOW"
-    return "VERY_LOW"
-
-
 class ProductFitEngine:
     """Evidence-constrained commercial product fit.
 
@@ -41,7 +29,7 @@ class ProductFitEngine:
     ) -> tuple[ProductFitResult, ...]:
         results: list[ProductFitResult] = []
         for product in self.registry.products:
-            score = Decimal("0")
+            score = Decimal(0)
             matched: list[str] = []
             for rule in product.fit_rules:
                 signal = signals.get(str(rule["signal"]))
@@ -52,15 +40,17 @@ class ProductFitEngine:
                 }:
                     score += _d(rule["points"])
                     matched.append(signal.key)
-            raw_score = min(Decimal("100"), score)
+            raw_score = min(Decimal(100), score)
 
             gate = product.validation_gate
-            gate_signals = [signals.get(str(key)) for key in gate.get("until_any_signal", [])]
-            gate_satisfied = any(signal and signal.present for signal in gate_signals)
+
+            def any_present(keys: list[str]) -> bool:
+                return any(signals.get(str(key)) and signals[str(key)].present for key in keys)
+
+            context_present = any_present(list(gate.get("context_signals", [])))
+            need_present = any_present(list(gate.get("need_signals", [])))
+            confirmation_present = any_present(list(gate.get("confirmation_signals", [])))
             cap = None
-            if gate and not gate_satisfied:
-                cap = _d(gate.get("cap_score", 100))
-                score = min(score, cap)
 
             missing: list[str] = []
             for evidence in product.required_evidence:
@@ -68,26 +58,38 @@ class ProductFitEngine:
                 if not signal or not signal.present:
                     missing.append(str(evidence["label"]))
 
-            fit_score = min(Decimal("100"), score).quantize(Decimal("0.01"))
+            fit_score = min(Decimal(100), score).quantize(Decimal("0.01"))
+            if need_present and confirmation_present:
+                status = str(gate.get("validated_status", "CONFIRMED_FIT"))
+            elif need_present:
+                status = str(gate.get("confirmed_status", "SUPPORTED_CANDIDATE"))
+            elif context_present:
+                status = str(gate.get("unconfirmed_status", "UNVERIFIED_APPLICABILITY"))
+            else:
+                status = str(gate.get("not_indicated_status", "NOT_INDICATED"))
             explanation = (
-                f"{product.code} fit is a commercial inference from approved product facts plus "
-                f"decision-eligible project signals ({', '.join(matched) if matched else 'none'})."
+                f"{product.code} project characteristics suggest possible relevance from "
+                f"decision-eligible context ({', '.join(matched) if matched else 'none'}). "
+                "This is not verified demand or a validated product specification."
             )
-            if cap is not None and raw_score > cap:
-                explanation += f" Score capped at {cap} until direct use-case evidence is confirmed."
+            if not need_present:
+                explanation += " Applicability remains unverified until direct lighting/power need is confirmed."
             results.append(
                 ProductFitResult(
                     product_code=product.code,
                     product_name=product.name,
                     raw_score=raw_score.quantize(Decimal("0.01")),
                     fit_score=fit_score,
-                    fit_band=_band(fit_score),
+                    fit_band=status,
                     classification=EvidenceClassification.INFERRED,
                     confidence_state=data_confidence_state,
                     explanation=explanation,
                     matched_signals=tuple(matched),
                     missing_evidence=tuple(missing),
                     score_cap_applied=cap,
+                    applicability_status=status,
+                    supporting_evidence=tuple(matched),
+                    contradicting_evidence=(),
                 )
             )
         return tuple(results)

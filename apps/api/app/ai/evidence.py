@@ -6,9 +6,9 @@ from uuid import UUID
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
+from app.ai.types import EvidenceItem
 from app.domain.states import PIIClass
 from app.models import ExternalEvidence, SourceEvidence, SourceObservation
-from app.ai.types import EvidenceItem
 
 
 class EvidenceCatalog:
@@ -16,6 +16,19 @@ class EvidenceCatalog:
 
     def __init__(self, session: Session):
         self.session = session
+        self._deterministic: dict[str, EvidenceItem] = {}
+
+    def register_deterministic(self, evidence_id: str, excerpt: str) -> str:
+        if not evidence_id.startswith("det:"):
+            raise ValueError("deterministic evidence ids must begin with det:")
+        self._deterministic[evidence_id] = EvidenceItem(
+            evidence_id=evidence_id,
+            excerpt=excerpt[:900],
+            source_kind="deterministic",
+            classification="DERIVED",
+            pii_class="NONE",
+        )
+        return evidence_id
 
     @staticmethod
     def source_ref(evidence_id: UUID) -> str:
@@ -26,6 +39,8 @@ class EvidenceCatalog:
         return f"ext:{evidence_id}"
 
     def get(self, evidence_ref: str) -> EvidenceItem | None:
+        if evidence_ref.startswith("det:"):
+            return self._deterministic.get(evidence_ref)
         prefix, _, raw_id = evidence_ref.partition(":")
         try:
             evidence_id = UUID(raw_id)

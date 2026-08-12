@@ -24,7 +24,8 @@ def test_employer_golden_path_is_coherent_end_to_end(wave14_full_state) -> None:
     monday = client.get("/api/v1/monday-brief").json()
 
     assert project["external_id"] == "1007341663"
-    assert assessment["assessment"]["disposition"] == "PURSUE"
+    assert assessment["assessment"]["disposition"] == "VERIFY"
+    assert assessment["assessment"]["overall_band"] == "Promising candidate"
     assert evidence["count"] > 0
     assert {row["rule_code"] for row in quality["items"]} >= {"PROJECT_VALUE_UNCERTAINTY", "FUTURE_ACTUAL_DATE"}
     assert contacts["items"][0]["verification"]["rental_authority"] == "UNKNOWN"

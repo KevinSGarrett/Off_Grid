@@ -63,7 +63,7 @@ class Settings:
         default_factory=lambda: os.getenv("OPENAI_MODEL_FAST", "gpt-5.6-luna")
     )
     openai_model_reasoning: str = field(
-        default_factory=lambda: os.getenv("OPENAI_MODEL_REASONING", "gpt-5.6-terra")
+        default_factory=lambda: os.getenv("OPENAI_MODEL_REASONING", "gpt-5.6-sol")
     )
     openai_model_research: str = field(
         default_factory=lambda: os.getenv("OPENAI_MODEL_RESEARCH", "gpt-5.6-terra")
@@ -75,7 +75,7 @@ class Settings:
         default_factory=lambda: _decimal("OPENAI_DAILY_BUDGET", Decimal("2.00"))
     )
     openai_max_retries: int = field(default_factory=lambda: _int("OPENAI_MAX_RETRIES", 2))
-    openai_timeout_seconds: int = field(default_factory=lambda: _int("OPENAI_TIMEOUT_SECONDS", 45))
+    openai_timeout_seconds: int = field(default_factory=lambda: _int("OPENAI_TIMEOUT_SECONDS", 180))
     openai_raw_documents: bool = field(default_factory=lambda: _bool("OPENAI_RAW_DOCUMENTS", False))
 
     apollo_mode: IntegrationMode = field(

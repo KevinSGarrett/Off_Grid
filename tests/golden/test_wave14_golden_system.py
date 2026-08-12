@@ -28,8 +28,9 @@ def test_real_stafford_golden_truth_and_quality_survive_wave14(wave14_full_state
             session.scalars(sa.select(QualityFlag.rule_code).where(QualityFlag.project_id == project.id)).all()
         )
         assert {"FUTURE_ACTUAL_DATE", "PROJECT_VALUE_UNCERTAINTY", "MISSING_PROJECT_GC_CONTACT"} <= codes
-        assert wave14_full_state["assessment"].disposition == "PURSUE"
-        assert wave14_full_state["assessment"].commercial_fit_score == Decimal("80.00")
+        assert wave14_full_state["assessment"].disposition == "VERIFY"
+        assert wave14_full_state["assessment"].overall_band == "Promising candidate"
+        assert wave14_full_state["assessment"].commercial_fit_score == Decimal("57.00")
 
 
 def test_real_ee_reed_reconciliation_duplicates_domains_and_generic_inboxes(wave14_full_state) -> None:

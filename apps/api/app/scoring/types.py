@@ -32,6 +32,19 @@ class FactorResult:
 
 
 @dataclass(frozen=True)
+class DimensionResult:
+    key: str
+    label: str
+    internal_score: Decimal
+    max_points: Decimal
+    band: str
+    supporting_evidence: tuple[str, ...] = ()
+    contradicting_evidence: tuple[str, ...] = ()
+    missing_evidence: tuple[str, ...] = ()
+    matched_signal_keys: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class ConfidenceComponentResult:
     key: str
     label: str
@@ -54,6 +67,9 @@ class ProductFitResult:
     matched_signals: tuple[str, ...] = ()
     missing_evidence: tuple[str, ...] = ()
     score_cap_applied: Decimal | None = None
+    applicability_status: str = "UNVERIFIED_APPLICABILITY"
+    supporting_evidence: tuple[str, ...] = ()
+    contradicting_evidence: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -64,6 +80,10 @@ class CounterfactualResult:
     disposition: str
     score_delta: Decimal
     changes_disposition: bool
+    band: str = ""
+    action: str = ""
+    changes_band: bool = False
+    changes_action: bool = False
     excluded_factor_keys: tuple[str, ...] = ()
     excluded_rule_keys: tuple[str, ...] = ()
 
@@ -75,6 +95,26 @@ class DecisionUnknown:
     impact_score: int
     impact_band: str
     validation: str
+    decision_impact: int = 0
+    evidence_gap: int = 0
+    resolvability: int = 0
+    method_version: str = "value-of-next-information-1.0"
+
+
+@dataclass(frozen=True)
+class ComparisonCohortResult:
+    field: str
+    label: str
+    eligible: bool
+    total_projects: int
+    cohort_size: int
+    field_coverage_fraction: Decimal
+    missing_count: int
+    missing_data_treatment: str
+    rank: int | None
+    percentile: Decimal | None
+    direction: str
+    caveat: str
 
 
 @dataclass(frozen=True)
@@ -88,13 +128,16 @@ class QualificationResult:
     data_confidence_score: Decimal
     disposition: str
     operational_action: str
+    overall_band: str
     confidence_state: ConfidenceState
     factors: tuple[FactorResult, ...]
+    dimensions: tuple[DimensionResult, ...]
     confidence_components: tuple[ConfidenceComponentResult, ...]
     product_fits: tuple[ProductFitResult, ...]
     signals: tuple[SignalSnapshot, ...]
     counterfactuals: tuple[CounterfactualResult, ...] = ()
     decision_changing_unknowns: tuple[DecisionUnknown, ...] = ()
     what_would_change_my_mind: tuple[CounterfactualResult, ...] = ()
+    comparison_cohorts: tuple[ComparisonCohortResult, ...] = ()
     assessment_id: UUID | None = None
     notes: tuple[str, ...] = field(default_factory=tuple)

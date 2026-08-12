@@ -105,8 +105,8 @@ It also reports a **$7.5B** value that should not be trusted blindly. The source
   <tr>
     <td align="center"><strong>$7.5B</strong><br /><sub>retained as source-reported</sub></td>
     <td align="center"><strong>LOW CONFIDENCE</strong><br /><sub>phase value not verified</sub></td>
-    <td align="center"><strong>CAPPED</strong><br /><sub>limited scoring influence</sub></td>
-    <td align="center"><strong>PURSUE / VERIFY</strong><br /><sub>recommendation survives</sub></td>
+    <td align="center"><strong>ZERO POINTS</strong><br /><sub>cannot control disposition</sub></td>
+    <td align="center"><strong>PROMISING / VERIFY</strong><br /><sub>investigate before action</sub></td>
   </tr>
 </table>
 
@@ -118,10 +118,14 @@ It also reports a **$7.5B** value that should not be trusted blindly. The source
 
 | Golden result | Value |
 |---|---:|
-| Commercial Fit | `80 / 100` |
-| Data Confidence | `69.25 / 100` |
-| Without the reported `$7.5B` | `75 / 100 — PURSUE` |
+| Commercial Fit | `Promising candidate — VERIFY` |
+| Data Confidence | `MEDIUM` (independent evidence state) |
+| Without the reported `$7.5B` | `No band or action change` |
 | CRM state | `Lead-ready / Deal-blocked` |
+
+The internal qualification-2.0 ordering score is 57, but the UI presents the defensible band and
+action—not false decimal precision or a success probability. KVT, KV6, and KVP remain
+`UNVERIFIED_APPLICABILITY` until direct lighting or power need is confirmed.
 
 > [!TIP]
 > The backend can remove the reported value from scoring and recalculate the recommendation. The result explains what drives the decision instead of hiding judgment inside one AI score.

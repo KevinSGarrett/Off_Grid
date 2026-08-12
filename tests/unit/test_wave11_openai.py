@@ -84,14 +84,18 @@ def _seed_evidence(session: Session) -> tuple[str, str]:
 
 def test_openai_config_safe_defaults_and_verified_model_routes() -> None:
     cfg = load_openai_config(ROOT / "config/openai.yaml")
-    assert cfg.version == "openai-intelligence-1.0"
+    assert cfg.version == "openai-intelligence-2.0"
     assert cfg.enabled is False
     assert cfg.research_enabled is False
     assert cfg.raw_documents is False
     assert cfg.store_responses is False
-    assert cfg.max_output_tokens == 3000
+    assert cfg.max_output_tokens == 8000
+    assert cfg.text_verbosity == "high"
     assert cfg.model_routes["fast"].model_id == "gpt-5.6-luna"
-    assert cfg.model_routes["reasoning"].model_id == "gpt-5.6-terra"
+    assert cfg.model_routes["reasoning"].model_id == "gpt-5.6-sol"
+    assert cfg.model_routes["analyst_fast"].model_id == "gpt-5.6-terra"
+    assert cfg.model_routes["analyst_standard"].model_id == "gpt-5.6-sol"
+    assert cfg.model_routes["analyst_deep"].reasoning_effort == "high"
     assert cfg.model_routes["research"].model_id == "gpt-5.6-terra"
 
 
@@ -147,6 +151,24 @@ def test_grounding_validator_rejects_invented_equipment_quantity() -> None:
     report = validator.validate([claim])
     assert report.status is GroundingStatus.UNSUPPORTED
     assert "18" in report.issues[0].reason
+    session.close()
+
+
+def test_grounding_validator_requires_deterministic_provenance_for_material_workflow_claim() -> None:
+    session = _session()
+    _project_id, evidence_ref = _seed_evidence(session)
+    validator = GroundingValidator(EvidenceCatalog(session))
+    claim = GroundedClaim(
+        claim_id="workflow-1",
+        claim_type="crm_readiness",
+        claim_text="The project is Pipedrive Lead-ready.",
+        classification="DERIVED",
+        evidence_ids=[evidence_ref],
+        rationale="A source excerpt alone cannot establish deterministic workflow state.",
+    )
+    report = validator.validate([claim])
+    assert report.status is GroundingStatus.UNSUPPORTED
+    assert "deterministic-state provenance" in report.issues[0].reason
     session.close()
 
 

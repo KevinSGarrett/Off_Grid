@@ -33,7 +33,8 @@ def test_project_organization_discovery_supports_frontend_without_uuid_hardcodin
 
 def test_demo_api_preserves_stafford_truth_and_unknown_authority(wave13_state):
     client,pid=wave13_state;a=client.get(f"/api/v1/projects/{pid}/assessment").json();c=client.get(f"/api/v1/projects/{pid}/contact-candidates").json();r=client.get(f"/api/v1/projects/{pid}/crm-readiness").json()
-    assert a["assessment"]["disposition"]=="PURSUE" and float(a["assessment"]["commercial_fit_score"])==80.0
+    assert a["assessment"]["disposition"]=="VERIFY" and float(a["assessment"]["commercial_fit_score"])==57.0
+    assert a["assessment"]["overall_band"] == "Promising candidate"
     assert c["items"][0]["display_name"]=="Doug Meadows" and c["items"][0]["verification"]["project_association"]=="VERIFIED" and c["items"][0]["verification"]["rental_authority"]=="UNKNOWN"
     assert r["lead_ready"] is True and r["deal_ready"] is False
 
@@ -51,5 +52,6 @@ def test_openapi_inventory_includes_wave13_read_only_discovery_projection(wave13
     methods = {'get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'}
     operations = sum(1 for path in paths.values() for method in path if method.lower() in methods)
     assert '/api/v1/projects/{project_id}/organizations' in paths
-    assert len(paths) == 31
-    assert operations == 32
+    assert len(paths) == 32
+    assert '/api/v1/analyst/query/stream' in paths
+    assert operations == 33

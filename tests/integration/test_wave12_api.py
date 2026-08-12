@@ -98,7 +98,9 @@ def test_project_assessment_signals_quality_and_evidence(api_state) -> None:
 
     assessment = client.get(f"/api/v1/projects/{project_id}/assessment")
     assert assessment.status_code == 200
-    assert assessment.json()["assessment"]["disposition"] == "PURSUE"
+    assert assessment.json()["assessment"]["disposition"] == "VERIFY"
+    assert assessment.json()["assessment"]["overall_band"] == "Promising candidate"
+    assert assessment.json()["assessment"]["model_version"] == "qualification-2.0"
     assert assessment.json()["product_fits"]
 
     signals = client.get(f"/api/v1/projects/{project_id}/signals")
@@ -125,7 +127,8 @@ def test_sensitivity_is_non_persisting_and_keeps_value_counterfactual(api_state)
     body = response.json()
     assert body["persisted"] is False
     by_key = {row["key"]: row for row in body["counterfactuals"]}
-    assert by_key["ignore_reported_value"]["disposition"] == "PURSUE"
+    assert by_key["without_reported_value"]["action"] == "VERIFY"
+    assert by_key["without_reported_value"]["score_delta"] == "0.00"
 
 
 def test_organization_contacts_and_contact_candidates_are_queryable(api_state) -> None:

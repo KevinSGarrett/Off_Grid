@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from dataclasses import replace
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
@@ -23,8 +24,10 @@ from app.scoring.config import LoadedConfig, load_confidence_config, load_qualif
 from app.scoring.signals import ProjectSignalBuilder
 from app.scoring.trust import DataConfidenceEngine
 from app.scoring.types import (
+    ComparisonCohortResult,
     CounterfactualResult,
     DecisionUnknown,
+    DimensionResult,
     FactorResult,
     QualificationResult,
     SignalSnapshot,
@@ -36,7 +39,7 @@ def _d(value: object) -> Decimal:
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class QualificationService:
@@ -77,17 +80,19 @@ class QualificationService:
         data_confidence_score, confidence_state, confidence_components = DataConfidenceEngine(
             self.session, self.confidence
         ).evaluate(project, signals)
-        factors, score = self._score(signals)
-        disposition = self._disposition(score)
-        action = self._action(score, data_confidence_score)
+        factors, dimensions, score = self._score(signals)
+        band = self._band(score)
+        action = self._action(band, dimensions, data_confidence_score)
+        disposition = action
         product_fits = ProductFitEngine(self.products).evaluate(
             signals, data_confidence_state=confidence_state
         )
-        counterfactuals = self._counterfactuals(signals, score, disposition)
+        counterfactuals = self._counterfactuals(signals, score, band, action, data_confidence_score)
         unknowns = self._unknowns(signals)
+        comparison = self._comparison_cohorts(project)
         changing = tuple(
             sorted(
-                (item for item in counterfactuals if item.changes_disposition),
+                (item for item in counterfactuals if item.changes_band or item.changes_action),
                 key=lambda item: (item.score, item.key),
             )
         )
@@ -116,19 +121,39 @@ class QualificationService:
             data_confidence_score=data_confidence_score,
             disposition=disposition,
             operational_action=action,
+            overall_band=band,
             confidence_state=confidence_state,
             factors=factors,
+            dimensions=dimensions
+            + (
+                DimensionResult(
+                    key="evidence_reliability",
+                    label="Evidence reliability and completeness",
+                    internal_score=data_confidence_score,
+                    max_points=Decimal(100),
+                    band=confidence_state.value,
+                    supporting_evidence=tuple(
+                        item.explanation for item in confidence_components if item.trust_fraction > 0
+                    ),
+                    missing_evidence=tuple(
+                        item.explanation for item in confidence_components if item.trust_fraction < 1
+                    ),
+                ),
+            ),
             confidence_components=confidence_components,
             product_fits=product_fits,
             signals=tuple(sorted(signals.values(), key=lambda item: item.key)),
             counterfactuals=counterfactuals,
             decision_changing_unknowns=unknowns,
             what_would_change_my_mind=changing,
+            comparison_cohorts=comparison,
             assessment_id=assessment_id,
             notes=(
                 "Commercial Fit is separate from Data Confidence.",
                 "INFERRED/UNKNOWN signals are not eligible for deterministic qualification.",
-                "Reported project value is limited to its configured rule contribution and source CAPPED treatment.",
+                "Internal scores support deterministic ordering only; bands/actions are not probabilities or forecasts.",
+                "Reported project value contributes zero qualification points and remains source-caveated.",
+                "Product characteristics indicate possible relevance only; direct product need remains unverified.",
             ),
         )
 
@@ -138,13 +163,14 @@ class QualificationService:
         *,
         excluded_factor_keys: set[str] | None = None,
         excluded_rule_keys: set[str] | None = None,
-    ) -> tuple[tuple[FactorResult, ...], Decimal]:
+    ) -> tuple[tuple[FactorResult, ...], tuple[DimensionResult, ...], Decimal]:
         excluded_factor_keys = excluded_factor_keys or set()
         excluded_rule_keys = excluded_rule_keys or set()
         factor_results: list[FactorResult] = []
-        total = Decimal("0")
+        dimension_results: list[DimensionResult] = []
+        total = Decimal(0)
 
-        for factor in self.qualification.data["factors"]:
+        for factor in self.qualification.data["dimensions"]:
             fkey = str(factor["key"])
             max_points = _d(factor["max_points"])
             if fkey in excluded_factor_keys:
@@ -153,18 +179,29 @@ class QualificationService:
                         key=fkey,
                         label=str(factor["label"]),
                         max_points=max_points,
-                        raw_points=Decimal("0"),
-                        adjusted_points=Decimal("0"),
+                        raw_points=Decimal(0),
+                        adjusted_points=Decimal(0),
                         explanation="Counterfactual exclusion: entire factor removed.",
+                    )
+                )
+                dimension_results.append(
+                    DimensionResult(
+                        key=fkey,
+                        label=str(factor["label"]),
+                        internal_score=Decimal(0),
+                        max_points=max_points,
+                        band="NOT_ASSESSED",
+                        missing_evidence=("Counterfactual exclusion",),
                     )
                 )
                 continue
 
-            raw = Decimal("0")
+            raw = Decimal(0)
             matched: list[str] = []
             source_ids: list[UUID] = []
             classes: list[EvidenceClassification] = []
             explanations: list[str] = []
+            supports: list[str] = []
             for rule in factor.get("rules", []):
                 rkey = str(rule["key"])
                 if rkey in excluded_rule_keys:
@@ -184,6 +221,7 @@ class QualificationService:
                     source_ids.append(signal.source_observation_id)
                 classes.append(signal.classification)
                 explanations.append(f"{rkey}: {signal.explanation}")
+                supports.append(signal.explanation)
 
             adjusted = min(max_points, raw)
             total += adjusted
@@ -204,87 +242,133 @@ class QualificationService:
                     explanation=" | ".join(explanations) if explanations else "No eligible evidence matched this factor.",
                 )
             )
+            missing = tuple(
+                str(item["label"])
+                for item in factor.get("missing_when_absent", [])
+                if not (
+                    (candidate := signals.get(str(item["signal"])))
+                    and candidate.present
+                    and candidate.decision_eligible
+                )
+            )
+            dimension_results.append(
+                DimensionResult(
+                    key=fkey,
+                    label=str(factor["label"]),
+                    internal_score=adjusted,
+                    max_points=max_points,
+                    band=self._dimension_band(adjusted, max_points),
+                    supporting_evidence=tuple(supports),
+                    contradicting_evidence=(),
+                    missing_evidence=missing,
+                    matched_signal_keys=tuple(
+                        str(rule["signal"])
+                        for rule in factor.get("rules", [])
+                        if str(rule["key"]) in matched
+                    ),
+                )
+            )
 
-        score = max(Decimal("0"), min(Decimal("100"), total)).quantize(Decimal("0.01"))
-        return tuple(factor_results), score
+        score = max(Decimal(0), min(Decimal(100), total)).quantize(Decimal("0.01"))
+        return tuple(factor_results), tuple(dimension_results), score
 
-    def _disposition(self, score: Decimal) -> str:
-        thresholds = self.qualification.data["model"]["thresholds"]
-        if score >= _d(thresholds["pursue"]):
-            return "PURSUE"
-        if score >= _d(thresholds["review"]):
+    def _band(self, score: Decimal) -> str:
+        bands = self.qualification.data["model"]["bands"]
+        if score >= _d(bands["strong_candidate"]):
+            return "Strong candidate"
+        if score >= _d(bands["promising_candidate"]):
+            return "Promising candidate"
+        if score >= _d(bands["needs_investigation"]):
+            return "Needs investigation"
+        return "Weak / not indicated"
+
+    @staticmethod
+    def _dimension_band(score: Decimal, maximum: Decimal) -> str:
+        fraction = score / maximum if maximum else Decimal(0)
+        if fraction >= Decimal("0.75"):
+            return "STRONG"
+        if fraction >= Decimal("0.45"):
+            return "PARTIAL"
+        if score > 0:
+            return "LIMITED"
+        return "NOT_CONFIRMED"
+
+    @staticmethod
+    def _action(
+        band: str,
+        dimensions: tuple[DimensionResult, ...],
+        confidence_score: Decimal,
+    ) -> str:
+        by_key = {item.key: item for item in dimensions}
+        need = by_key["confirmed_product_need"].internal_score
+        access = by_key["account_access"].internal_score
+        if band == "Strong candidate" and need >= 15 and access >= 12 and confidence_score >= 65:
+            return "ACT"
+        if band in {"Strong candidate", "Promising candidate"}:
+            return "VERIFY"
+        if band == "Needs investigation":
             return "REVIEW"
         return "PASS"
-
-    def _fit_band(self, score: Decimal) -> str:
-        thresholds = self.qualification.data["model"]["thresholds"]
-        if score >= _d(thresholds["pursue"]):
-            return "HIGH"
-        if score >= _d(thresholds["review"]):
-            return "MEDIUM"
-        return "LOW"
-
-    def _confidence_band(self, score: Decimal) -> str:
-        bands = self.qualification.data["model"]["confidence_bands"]
-        if score >= _d(bands["high"]):
-            return "HIGH"
-        if score >= _d(bands["medium"]):
-            return "MEDIUM"
-        return "LOW"
-
-    def _action(self, fit_score: Decimal, confidence_score: Decimal) -> str:
-        fit = self._fit_band(fit_score)
-        confidence = self._confidence_band(confidence_score)
-        return str(self.qualification.data["model"]["fit_confidence_matrix"][fit][confidence])
 
     def _counterfactuals(
         self,
         signals: dict[str, SignalSnapshot],
         baseline_score: Decimal,
-        baseline_disposition: str,
+        baseline_band: str,
+        baseline_action: str,
+        confidence_score: Decimal,
     ) -> tuple[CounterfactualResult, ...]:
         rows: list[CounterfactualResult] = []
 
-        _, score = self._score(signals, excluded_rule_keys={"large_project_value"})
-        disposition = self._disposition(score)
-        rows.append(
-            CounterfactualResult(
-                key="ignore_reported_value",
-                label="Ignore the reported project value entirely",
-                score=score,
-                disposition=disposition,
-                score_delta=(score - baseline_score).quantize(Decimal("0.01")),
-                changes_disposition=disposition != baseline_disposition,
-                excluded_rule_keys=("large_project_value",),
-            )
-        )
-
-        for factor in self.qualification.data["factors"]:
-            fkey = str(factor["key"])
-            _, score = self._score(signals, excluded_factor_keys={fkey})
-            disposition = self._disposition(score)
+        for row in self.qualification.data.get("counterfactuals", []):
+            changed = dict(signals)
+            for key in row.get("set_absent", []):
+                if key in changed:
+                    changed[key] = replace(changed[key], present=False, decision_eligible=False)
+            for key in row.get("set_present", []):
+                current = changed.get(key)
+                if current is not None:
+                    changed[key] = replace(
+                        current,
+                        present=True,
+                        decision_eligible=True,
+                        classification=EvidenceClassification.VERIFIED,
+                        confidence_score=Decimal(1),
+                        explanation=f"Counterfactual only: {row['label']}",
+                    )
+            _, dimensions, score = self._score(changed)
+            band = self._band(score)
+            action = self._action(band, dimensions, confidence_score)
             rows.append(
                 CounterfactualResult(
-                    key=f"without_{fkey}",
-                    label=str(factor.get("counterfactual_label") or f"Remove {factor['label']}") ,
+                    key=str(row["key"]),
+                    label=str(row["label"]),
                     score=score,
-                    disposition=disposition,
+                    disposition=action,
                     score_delta=(score - baseline_score).quantize(Decimal("0.01")),
-                    changes_disposition=disposition != baseline_disposition,
-                    excluded_factor_keys=(fkey,),
+                    changes_disposition=band != baseline_band,
+                    band=band,
+                    action=action,
+                    changes_band=band != baseline_band,
+                    changes_action=action != baseline_action,
                 )
             )
         return tuple(rows)
 
     def _unknowns(self, signals: dict[str, SignalSnapshot]) -> tuple[DecisionUnknown, ...]:
         result: list[DecisionUnknown] = []
-        for row in self.qualification.data.get("unknowns", []):
+        config = self.qualification.data.get("next_information", {})
+        method = config.get("method", {})
+        for row in config.get("items", []):
             trigger = str(row.get("trigger_signal_absent", ""))
             signal = signals.get(trigger)
             if signal is not None and signal.present:
                 continue
-            impact = int(row["impact_score"])
-            if impact >= 90:
+            decision_impact = int(row["decision_impact"])
+            evidence_gap = int(row["evidence_gap"])
+            resolvability = int(row["resolvability"])
+            impact = round(decision_impact * 12.5 + evidence_gap * 10 + resolvability * 6.25)
+            if impact >= 100:
                 band = "VERY_HIGH"
             elif impact >= 75:
                 band = "HIGH"
@@ -299,9 +383,60 @@ class QualificationService:
                     impact_score=impact,
                     impact_band=band,
                     validation=str(row["validation"]),
+                    decision_impact=decision_impact,
+                    evidence_gap=evidence_gap,
+                    resolvability=resolvability,
+                    method_version=str(method.get("version", "value-of-next-information-1.0")),
                 )
             )
         return tuple(sorted(result, key=lambda item: (-item.impact_score, item.key)))
+
+    def _comparison_cohorts(self, project: Project) -> tuple[ComparisonCohortResult, ...]:
+        projects = self.session.scalars(
+            sa.select(Project).where(Project.is_synthetic.is_(False)).order_by(Project.id)
+        ).all()
+        total = len(projects)
+        results: list[ComparisonCohortResult] = []
+        for field in self.qualification.data.get("comparison", {}).get("fields", []):
+            key = str(field["key"])
+            values = [
+                (row, getattr(row, key))
+                for row in projects
+                if getattr(row, key) is not None
+                and (key != "reported_value" or row.currency_code == project.currency_code)
+            ]
+            coverage = (Decimal(len(values)) / Decimal(total)).quantize(Decimal("0.0001")) if total else Decimal(0)
+            eligible = (
+                getattr(project, key) is not None
+                and coverage >= _d(field.get("minimum_coverage_fraction", 1))
+            )
+            rank = None
+            percentile = None
+            if eligible:
+                current = getattr(project, key)
+                higher = sum(1 for _, value in values if value > current)
+                lower = sum(1 for _, value in values if value < current)
+                rank = higher + 1
+                percentile = (
+                    Decimal(100) * Decimal(lower) / Decimal(len(values))
+                ).quantize(Decimal("0.1"))
+            results.append(
+                ComparisonCohortResult(
+                    field=key,
+                    label=str(field["label"]),
+                    eligible=eligible,
+                    total_projects=total,
+                    cohort_size=len(values),
+                    field_coverage_fraction=coverage,
+                    missing_count=total - len(values),
+                    missing_data_treatment="Excluded from this field-specific cohort; never imputed as zero.",
+                    rank=rank,
+                    percentile=percentile,
+                    direction=str(field.get("direction", "descending")),
+                    caveat=str(field.get("note", "Comparable source fields only.")),
+                )
+            )
+        return tuple(results)
 
     def _ensure_config_version(self, kind: str, loaded: LoadedConfig, version: str) -> ConfigVersion:
         existing = self.session.scalar(
@@ -353,14 +488,14 @@ class QualificationService:
             )
         )
         if scoring is None:
-            thresholds = self.qualification.data["model"]["thresholds"]
+            bands = self.qualification.data["model"]["bands"]
             scoring = ScoringConfig(
                 config_version_id=q_cfg.id,
                 model_name=str(self.qualification.data["model"]["name"]),
                 model_version=q_version,
-                pursue_threshold=float(thresholds["pursue"]),
-                review_threshold=float(thresholds["review"]),
-                notes="Wave 6 deterministic config-driven qualification.",
+                pursue_threshold=float(bands["strong_candidate"]),
+                review_threshold=float(bands["promising_candidate"]),
+                notes="Qualification 2.0 deterministic, non-duplicative decision-support bands.",
             )
             self.session.add(scoring)
             self.session.flush()

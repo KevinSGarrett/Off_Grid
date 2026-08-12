@@ -25,8 +25,8 @@ def test_wave17_real_private_sources_build_the_same_integrated_truth(tmp_path: P
     )
     assert result.project_external_id == "1007341663"
     assert result.organization_canonical_key == "constructconnect:company:1000647848"
-    assert result.assessment.disposition == "PURSUE"
-    assert float(result.assessment.commercial_fit_score) == 80.0
+    assert result.assessment.disposition == "VERIFY"
+    assert float(result.assessment.commercial_fit_score) == 57.0
     assert float(result.assessment.data_confidence_score) == 69.25
     assert result.integrations.readiness.lead_ready is True
     assert result.integrations.readiness.deal_ready is False

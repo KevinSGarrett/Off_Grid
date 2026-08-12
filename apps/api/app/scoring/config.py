@@ -7,7 +7,6 @@ from typing import Any
 
 import yaml
 
-
 REPO_ROOT = Path(__file__).resolve().parents[4]
 
 
@@ -38,17 +37,27 @@ def load_qualification_config(path: str | Path = "config/qualification.yaml") ->
     loaded = load_yaml_config(path)
     data = loaded.data
     model = data.get("model")
-    factors = data.get("factors")
+    factors = data.get("dimensions", data.get("factors"))
     if not isinstance(model, dict) or not isinstance(factors, list) or not factors:
-        raise ScoringConfigurationError("qualification config requires model and non-empty factors")
-    thresholds = model.get("thresholds", {})
-    pursue = thresholds.get("pursue")
-    review = thresholds.get("review")
-    if not isinstance(pursue, (int, float)) or not isinstance(review, (int, float)) or pursue <= review:
-        raise ScoringConfigurationError("qualification thresholds require pursue > review")
+        raise ScoringConfigurationError("qualification config requires model and non-empty dimensions/factors")
+    if data.get("dimensions") is not None:
+        bands = model.get("bands", {})
+        values = [bands.get(key) for key in ("strong_candidate", "promising_candidate", "needs_investigation")]
+        if not all(isinstance(value, (int, float)) for value in values) or not (
+            values[0] > values[1] > values[2]
+        ):
+            raise ScoringConfigurationError("qualification bands must descend strong > promising > investigation")
+    else:
+        thresholds = model.get("thresholds", {})
+        pursue = thresholds.get("pursue")
+        review = thresholds.get("review")
+        if not isinstance(pursue, (int, float)) or not isinstance(review, (int, float)) or pursue <= review:
+            raise ScoringConfigurationError("qualification thresholds require pursue > review")
 
     factor_keys: set[str] = set()
     rule_keys: set[str] = set()
+    signal_keys: set[str] = set()
+    forbid_duplicate_signals = data.get("dimensions") is not None
     max_total = 0.0
     for factor in factors:
         if not isinstance(factor, dict):
@@ -67,6 +76,14 @@ def load_qualification_config(path: str | Path = "config/qualification.yaml") ->
             if not rkey or rkey in rule_keys:
                 raise ScoringConfigurationError(f"rule key missing/duplicated: {rkey}")
             rule_keys.add(rkey)
+            signal = str(rule.get("signal", ""))
+            if not signal:
+                raise ScoringConfigurationError(f"rule {rkey} requires a signal")
+            if forbid_duplicate_signals and signal in signal_keys:
+                raise ScoringConfigurationError(
+                    f"signal {signal} contributes to more than one scoring rule; qualification-2.0 forbids duplicated influence"
+                )
+            signal_keys.add(signal)
             points = float(rule.get("points", 0))
             if points < 0:
                 raise ScoringConfigurationError(f"rule {rkey} cannot award negative points")

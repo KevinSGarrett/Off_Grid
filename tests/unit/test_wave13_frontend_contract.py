@@ -54,7 +54,7 @@ def test_wave13_employer_experiences_are_present():
         "Commercial Analyst",
         "Monday Morning Brief",
         "First 14 Days",
-        "Challenge this recommendation",
+        "Counterfactual sensitivity",
     ]:
         assert text in APP
 

@@ -1,6 +1,6 @@
 schema_version: 1
 registry:
-  version: products-1.0
+  version: products-2.0
   source_basis: context/master_prompt/MASTER_INITIAL_PROMPT.md lines 159-171
   policy: Product facts are limited to employer-supplied facts unless a later research wave adds verified external evidence.
   forbidden_inventions:
@@ -14,6 +14,11 @@ registry:
     - energy_output
     - fuel_savings
     - fleet_sizing
+  scoring_policy:
+    - Internal points provide deterministic ordering only; the UI presents applicability states.
+    - Project characteristics are counted once as bounded context, never as confirmed demand.
+    - Direct need and product-specific evidence are separate gates.
+    - CONFIRMED_FIT requires both confirmed need and the product-specific confirmation signal.
 
 products:
   - code: KVT
@@ -30,18 +35,24 @@ products:
       - site_quantity
       - savings_or_roi
     fit_rules:
-      - signal: site_work
-        points: 25
-      - signal: paving
+      - signal: site_activity_context
         points: 15
       - signal: new_construction
-        points: 15
-      - signal: large_development
-        points: 15
-      - signal: multi_phase
         points: 10
+      - signal: multi_phase
+        points: 5
+      - signal: temporary_lighting_need_confirmed
+        points: 45
+      - signal: diesel_light_towers_confirmed
+        points: 25
     validation_gate:
-      cap_score: 75
+      context_signals: [site_activity_context, new_construction, multi_phase]
+      need_signals: [temporary_lighting_need_confirmed]
+      confirmation_signals: [diesel_light_towers_confirmed]
+      not_indicated_status: NOT_INDICATED
+      unconfirmed_status: UNVERIFIED_APPLICABILITY
+      confirmed_status: SUPPORTED_CANDIDATE
+      validated_status: CONFIRMED_FIT
       until_any_signal:
         - diesel_light_towers_confirmed
         - temporary_lighting_need_confirmed
@@ -68,18 +79,24 @@ products:
       - quantity_required
       - savings_or_roi
     fit_rules:
-      - signal: site_work
-        points: 25
-      - signal: paving
+      - signal: site_activity_context
         points: 15
       - signal: new_construction
-        points: 15
-      - signal: large_development
-        points: 15
-      - signal: multi_phase
         points: 10
+      - signal: multi_phase
+        points: 5
+      - signal: temporary_lighting_need_confirmed
+        points: 45
+      - signal: portable_lighting_need_confirmed
+        points: 25
     validation_gate:
-      cap_score: 75
+      context_signals: [site_activity_context, new_construction, multi_phase]
+      need_signals: [temporary_lighting_need_confirmed]
+      confirmation_signals: [portable_lighting_need_confirmed]
+      not_indicated_status: NOT_INDICATED
+      unconfirmed_status: UNVERIFIED_APPLICABILITY
+      confirmed_status: SUPPORTED_CANDIDATE
+      validated_status: CONFIRMED_FIT
       until_any_signal:
         - portable_lighting_need_confirmed
         - temporary_lighting_need_confirmed
@@ -106,18 +123,24 @@ products:
       - quantity_required
       - savings_or_roi
     fit_rules:
-      - signal: new_construction
-        points: 20
-      - signal: site_work
-        points: 10
-      - signal: large_development
-        points: 20
-      - signal: multi_phase
+      - signal: site_activity_context
         points: 15
-      - signal: gc_awarded
+      - signal: new_construction
+        points: 10
+      - signal: multi_phase
         points: 5
+      - signal: temporary_power_need_confirmed
+        points: 45
+      - signal: mobile_power_need_confirmed
+        points: 25
     validation_gate:
-      cap_score: 59
+      context_signals: [site_activity_context, new_construction, multi_phase]
+      need_signals: [temporary_power_need_confirmed]
+      confirmation_signals: [mobile_power_need_confirmed]
+      not_indicated_status: NOT_INDICATED
+      unconfirmed_status: UNVERIFIED_APPLICABILITY
+      confirmed_status: SUPPORTED_CANDIDATE
+      validated_status: CONFIRMED_FIT
       until_any_signal:
         - temporary_power_need_confirmed
         - mobile_power_need_confirmed

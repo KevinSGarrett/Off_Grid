@@ -77,7 +77,8 @@ class ProjectSignalBuilder:
             if persist:
                 self._upsert_signal(project.id, snapshot)
 
-        source_decision = lambda obs: bool(obs and getattr(obs, "decision_eligible", False))
+        def source_decision(obs) -> bool:
+            return bool(obs and getattr(obs, "decision_eligible", False))
         high = _decimal("0.95")
 
         add("data_center", "data center" in combined, EvidenceClassification.EXPLICIT, high, source_decision(scope) or source_decision(description), "Source narrative explicitly identifies data-center construction.", scope or description)
@@ -108,7 +109,7 @@ class ProjectSignalBuilder:
         flags = {row.rule_code for row in self.session.scalars(sa.select(QualityFlag).where(QualityFlag.project_id == project.id)).all()}
         trusted_timing = bool(start_date and start_date.validation_state is ValidationState.VALID and getattr(start_date, "decision_eligible", False))
         add("trusted_start_timing", trusted_timing, EvidenceClassification.DERIVED, start_date.confidence_score if start_date else None, trusted_timing, "Start timing is usable only when the source date semantics validate cleanly.", start_date)
-        large_value = bool(value and value.normalized_decimal is not None and value.normalized_decimal >= Decimal("100000000"))
+        large_value = bool(value and value.normalized_decimal is not None and value.normalized_decimal >= Decimal(100000000))
         value_eligible = bool(value and getattr(value, "decision_eligible", False))
         add("large_project_value", large_value, EvidenceClassification.EXPLICIT, value.confidence_score if value else None, value_eligible, "Reported project value exceeds the scale threshold, but its scoring contribution is capped by configuration/source treatment.", value)
         add("project_value_verified", bool(value and value.validation_state is ValidationState.VALID and value.confidence_score and value.confidence_score >= Decimal("0.85")), EvidenceClassification.DERIVED, value.confidence_score if value else None, False, "Value is only considered verified enough when validation and trust clear the configured evidence bar.", value)
@@ -121,12 +122,41 @@ class ProjectSignalBuilder:
         outdoor = signals["site_work"].present and signals["paving"].present
         outdoor_eligible = signals["site_work"].decision_eligible and signals["paving"].decision_eligible
         add("outdoor_site_activity", outdoor, EvidenceClassification.DERIVED, _decimal("0.85") if outdoor else None, outdoor_eligible, "Outdoor/distributed site activity is derived from explicit site-work and paving evidence.", scope)
+        site_context = signals["site_work"].present or signals["paving"].present
+        site_context_eligible = (
+            (signals["site_work"].present and signals["site_work"].decision_eligible)
+            or (signals["paving"].present and signals["paving"].decision_eligible)
+        )
+        add(
+            "site_activity_context",
+            site_context,
+            EvidenceClassification.DERIVED,
+            _decimal("0.85") if site_context else None,
+            site_context_eligible,
+            "A single bounded site-activity context is derived from site-work and/or paving evidence; the inputs are preserved but never scored separately.",
+            scope or notes,
+        )
 
         # Commercial-use-case hypotheses remain explicitly INFERRED and not eligible for deterministic qualification.
         lighting_inference = signals["site_work"].present and signals["new_construction"].present
         add("temporary_lighting_relevance", lighting_inference, EvidenceClassification.INFERRED, _decimal("0.65") if lighting_inference else None, False, "Temporary lighting relevance is a commercial inference requiring validation; it is not a source fact.", scope)
         power_inference = signals["large_development"].present and signals["new_construction"].present
         add("temporary_power_relevance", power_inference, EvidenceClassification.INFERRED, _decimal("0.55") if power_inference else None, False, "Temporary/mobile power relevance is a commercial inference requiring validation; no power demand is confirmed.", description or scope)
+
+        # Direct need/authority signals are explicit UNKNOWN placeholders until a permitted source
+        # or deterministic verification workflow establishes them. Absence never becomes positive evidence.
+        for key, explanation in (
+            ("temporary_lighting_need_confirmed", "No direct temporary/distributed lighting requirement is confirmed."),
+            ("portable_lighting_need_confirmed", "No direct portable-lighting requirement is confirmed."),
+            ("diesel_light_towers_confirmed", "No source confirms diesel light towers are used or planned."),
+            ("night_work_confirmed", "No source confirms night-work or after-dark operations."),
+            ("temporary_power_need_confirmed", "No direct temporary/mobile-power requirement is confirmed."),
+            ("mobile_power_need_confirmed", "No direct mobile-power requirement is confirmed."),
+            ("target_load_known", "No target load or application is known."),
+            ("temporary_lighting_power_authority_verified", "No person is verified as temporary lighting/mobile-power authority."),
+            ("rental_supplier_identified", "No incumbent rental supplier is identified."),
+        ):
+            add(key, False, EvidenceClassification.UNKNOWN, None, False, explanation)
 
         return signals
 

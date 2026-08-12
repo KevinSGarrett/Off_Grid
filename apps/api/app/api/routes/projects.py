@@ -11,11 +11,10 @@ from app.api.serialization import jsonable
 from app.models import (
     AssessmentFactor,
     OpportunityAssessment,
-    ProductFitAssessment,
+    Organization,
     Project,
     ProjectGroup,
     ProjectOrganization,
-    Organization,
     ProjectSignal,
     QualityFlag,
     SourceEvidence,
@@ -220,14 +219,18 @@ def get_project_assessment(project_id: UUID, session: Session = Depends(get_sess
     if assessment is None:
         raise HTTPException(status_code=404, detail={"code": "ASSESSMENT_NOT_FOUND", "message": "Run qualification first."})
     factors = session.scalars(sa.select(AssessmentFactor).where(AssessmentFactor.assessment_id == assessment.id).order_by(AssessmentFactor.factor_key)).all()
-    products = session.scalars(sa.select(ProductFitAssessment).where(ProductFitAssessment.opportunity_assessment_id == assessment.id).order_by(ProductFitAssessment.product_code)).all()
+    current = QualificationService(session).evaluate(project_id, persist=False)
     return {
         "project_id": str(project_id),
         "assessment": {
             "id": str(assessment.id),
-            "commercial_fit_score": str(assessment.commercial_fit_score),
-            "data_confidence_score": str(assessment.data_confidence_score),
-            "disposition": assessment.disposition,
+            "commercial_fit_score": str(current.commercial_fit_score),
+            "data_confidence_score": str(current.data_confidence_score),
+            "disposition": current.disposition,
+            "overall_band": current.overall_band,
+            "operational_action": current.operational_action,
+            "model_version": current.model_version,
+            "score_semantics": "Internal deterministic ordering only; not a probability, forecast, or verified demand.",
             "confidence_state": assessment.confidence_state.value,
             "computed_at": assessment.computed_at.isoformat(),
         },
@@ -244,18 +247,29 @@ def get_project_assessment(project_id: UUID, session: Session = Depends(get_sess
             }
             for row in factors
         ],
+        "dimensions": jsonable(current.dimensions),
         "product_fits": [
             {
                 "product_code": row.product_code,
-                "fit_score": str(row.fit_score),
-                "fit_band": row.fit_band,
+                "characteristic_relevance_score": str(row.fit_score),
+                "fit_band": row.applicability_status,
+                "applicability_status": row.applicability_status,
                 "classification": row.classification.value,
                 "confidence_state": row.confidence_state.value,
                 "explanation": row.explanation,
-                "missing_evidence": row.missing_evidence,
+                "supporting_evidence": list(row.supporting_evidence),
+                "contradicting_evidence": list(row.contradicting_evidence),
+                "missing_evidence": list(row.missing_evidence),
             }
-            for row in products
+            for row in current.product_fits
         ],
+        "comparison_cohorts": jsonable(current.comparison_cohorts),
+        "highest_value_next_verification": (
+            jsonable(current.decision_changing_unknowns[0])
+            if current.decision_changing_unknowns
+            else None
+        ),
+        "notes": list(current.notes),
     }
 
 
@@ -268,6 +282,8 @@ def run_project_sensitivity(project_id: UUID, session: Session = Depends(get_ses
         "baseline": {
             "commercial_fit_score": str(result.commercial_fit_score),
             "disposition": result.disposition,
+            "overall_band": result.overall_band,
+            "operational_action": result.operational_action,
         },
         "counterfactuals": jsonable(result.counterfactuals),
         "what_would_change_my_mind": jsonable(result.what_would_change_my_mind),

@@ -66,7 +66,7 @@ Resources:
           - Name: OPENAI_MODEL_FAST
             Value: gpt-5.6-luna
           - Name: OPENAI_MODEL_REASONING
-            Value: gpt-5.6-terra
+            Value: gpt-5.6-sol
           - Name: OPENAI_MODEL_RESEARCH
             Value: gpt-5.6-terra
           - Name: OPENAI_DAILY_BUDGET
@@ -74,7 +74,7 @@ Resources:
           - Name: OPENAI_MAX_RETRIES
             Value: '2'
           - Name: OPENAI_TIMEOUT_SECONDS
-            Value: '45'
+            Value: '180'
           - Name: OPENAI_RESEARCH_ENABLED
             Value: 'false'
           - Name: OPENAI_RAW_DOCUMENTS

@@ -333,7 +333,13 @@ def run_synthetic_load(
     evaluated = 0
     for project in projects:
         result = service.evaluate(project.id, persist=False)
-        dispositions[result.disposition] += 1
+        legacy_bucket = {
+            "ACT": "PURSUE",
+            "VERIFY": "PURSUE",
+            "REVIEW": "REVIEW",
+            "PASS": "PASS",
+        }[result.operational_action]
+        dispositions[legacy_bucket] += 1
         evaluated += 1
     scoring_seconds = max(time.perf_counter() - started, 0.000001)
     total_seconds = max(time.perf_counter() - total_started, 0.000001)
