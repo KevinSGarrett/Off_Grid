@@ -58,9 +58,12 @@ def test_current_handoff_claims_reject_resolved_environment_blockers():
 def test_wave20_truth_snapshot_is_stable():
     t=json.loads((ROOT/"research/WAVE_20_FINAL_CONTROL.json").read_text())["commercial_truth"]
     assert t["stafford_project_id"]=="1007341663"
-    assert t["commercial_fit"]==80.0
+    assert t["qualification_model"]=="qualification-2.0"
+    assert t["commercial_fit"]==57.0
+    assert t["commercial_band"]=="PROMISING_CANDIDATE"
+    assert t["action"]=="VERIFY"
     assert t["data_confidence"]==69.25
-    assert t["no_value_counterfactual"]==75.0
+    assert t["source_value_treatment"]=="REPORTED_UNCERTAIN_ZERO_SCORING_INFLUENCE"
     assert t["ee_reed_counts"]=={"planning":6,"post_bid":87,"bidding_role":74}
     assert t["rental_authority"]=="UNKNOWN"
     assert t["lead_ready"] is True
