@@ -95,19 +95,19 @@ Wave 6 deliberately **does not** add an exact Stafford Commercial Fit number to 
 
 Required scoring semantics:
 
-- qualification model = `qualification-1.0`;
+- active qualification model = `qualification-2.0`; `qualification-1.0` remains an immutable historical configuration;
 - confidence model = `confidence-1.0`;
 - product registry = `products-1.0`;
 - Commercial Fit and Data Confidence are separately computed and persisted;
 - the score equals the sum of configuration-driven factor contributions and is reproducible for identical inputs/config;
-- the source-caveated project value is decision-eligible **only through CAPPED treatment** and contributes no more than the configured five points;
-- removing the reported-value rule must not change the current Stafford disposition under `qualification-1.0`; this is a robustness assertion, not a fixed score assertion;
+- the source-caveated project value contributes zero qualification points and remains visible only as provenance-bearing context;
+- removing reported value must not change the current Stafford band/action under `qualification-2.0`; this is a robustness assertion, not a fixed score assertion;
 - the future `Actual Start Date` remains REVIEW/non-decision-eligible and therefore cannot add trusted-timing points;
 - EXPLICIT/DERIVED/VERIFIED signals may drive deterministic qualification when eligible; INFERRED/UNKNOWN signals may not;
-- KVT, KV6 and KVP receive separate fit assessments and each fit remains an `INFERRED` commercial recommendation;
+- KVT, KV6 and KVP receive separate applicability assessments and each remains `UNVERIFIED_APPLICABILITY` until direct product need is confirmed;
 - product fit must surface missing direct-use-case evidence and must not invent product capacity/runtime/pricing/ROI/quantity/savings;
 - Decision-Changing Unknowns must rank named GC project leadership, temporary lighting/power responsibility and incumbent rental supplier above exact phase value;
-- Fit × Confidence produces an operational action independently of the raw disposition.
+- Commercial Fit and Data Confidence remain independent; the deterministic action is not their product and neither is a probability.
 
 Machine-readable semantic expectations: `tests/golden/stafford_wave06_expected.json`.
 
