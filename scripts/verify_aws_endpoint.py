@@ -73,11 +73,19 @@ def request(
         raise SmokeError(f"public request failed: {type(exc).__name__}") from exc
 
 
-def verify(endpoint: str, secret_id: str, region: str) -> dict[str, Any]:
-    endpoint = endpoint.rstrip("/")
+def normalize_https_endpoint(endpoint: str) -> str:
+    endpoint = endpoint.strip().rstrip("/")
+    if "://" not in endpoint:
+        endpoint = f"https://{endpoint}"
     parsed = urlparse(endpoint)
     if parsed.scheme != "https" or not parsed.netloc:
-        raise SmokeError("endpoint must be a public HTTPS URL")
+        raise SmokeError("endpoint must be a public HTTPS URL or hostname")
+    return endpoint
+
+
+def verify(endpoint: str, secret_id: str, region: str) -> dict[str, Any]:
+    endpoint = normalize_https_endpoint(endpoint)
+    parsed = urlparse(endpoint)
 
     health_status, health = request(f"{endpoint}/api/v1/health", expect_json=True)
     unauthenticated_status, _ = request(endpoint)

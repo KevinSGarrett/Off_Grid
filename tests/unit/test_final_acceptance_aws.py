@@ -130,6 +130,25 @@ def test_endpoint_smoke_rejects_http_before_secret_access(monkeypatch) -> None:
         verifier.verify("http://example.test", "secret-arn", "us-east-1")
 
 
+def test_endpoint_smoke_normalizes_aws_generated_hostname(monkeypatch) -> None:
+    verifier = _endpoint_verifier()
+    monkeypatch.setattr(verifier, "retrieve_secret", lambda *_: "super-secret")
+    seen: list[str] = []
+
+    def fake_request(url: str, *, authorization=None, expect_json=False):
+        seen.append(url)
+        if url.endswith("/health"):
+            return 200, {"status": "ok"}
+        if url.endswith("/readiness"):
+            return 200, {"status": "ready"}
+        return (200, None) if authorization else (401, None)
+
+    monkeypatch.setattr(verifier, "request", fake_request)
+    result = verifier.verify("service.ecs.us-east-1.on.aws", "secret-arn", "us-east-1")
+    assert result["endpoint"] == "https://service.ecs.us-east-1.on.aws"
+    assert all(url.startswith("https://") for url in seen)
+
+
 def test_endpoint_secret_failure_never_reflects_process_output(monkeypatch) -> None:
     verifier = _endpoint_verifier()
     fake_result = SimpleNamespace(
