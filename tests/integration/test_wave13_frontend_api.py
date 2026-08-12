@@ -55,3 +55,10 @@ def test_openapi_inventory_includes_wave13_read_only_discovery_projection(wave13
     assert len(paths) == 32
     assert '/api/v1/analyst/query/stream' in paths
     assert operations == 33
+
+
+def test_decision_card_action_uses_a_separate_grid_row() -> None:
+    css = (ROOT / "apps/web/src/styles.css").read_text(encoding="utf-8")
+    assert ".decision-card .score-top > .pill" in css
+    assert "grid-column: 2" in css
+    assert "justify-self: start" in css
