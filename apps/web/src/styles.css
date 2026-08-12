@@ -218,10 +218,10 @@ svg { flex: 0 0 auto; stroke-width: 1.85; }
 .list-row:last-of-type { border-bottom: 0; }
 .list-row > div { min-width: 0; display: grid; }.list-row b { font-size: .68rem; }.list-row small { color: var(--muted); font-size: .58rem; }
 .ranked-action { padding: 12px; border: 1px solid #a9d5b7; border-radius: 8px; display: grid; grid-template-columns: 28px 1fr; gap: 10px; }
-.ranked-action > span { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; background: var(--brand); color: white; font-weight: 800; }
+.ranked-action > span:first-child { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; background: var(--brand); color: white; font-weight: 800; }
 .ranked-action b { font-size: .72rem; }.ranked-action p { margin: 4px 0; font-size: .64rem; }.ranked-action small { color: var(--muted); font-size: .58rem; }
 .ranked-action.compact { padding: 9px 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; grid-template-columns: 25px 1fr auto; }
-.ranked-action.compact > span { width: 24px; height: 24px; font-size: .62rem; }
+.ranked-action.compact > span:first-child { width: 24px; height: 24px; font-size: .62rem; }
 .ranked-action.compact { grid-template-columns: 25px minmax(0, 1fr) max-content; align-items: start; }
 .ranked-action.compact > .pill { align-self: start; margin-top: 1px; }
 .ranked-action.compact > div { min-width: 0; }
@@ -466,6 +466,8 @@ pre { max-height: 280px; overflow: auto; margin: 9px 0 0; padding: 11px; border-
   .shortcut-grid { grid-template-columns: 1fr; }
   .score-band, .score-band.four { grid-template-columns: 1fr 1fr; }
   .score-top { grid-template-columns: 34px 1fr; }.score-top > b { grid-column: 2; }
+  .ranked-action.compact { grid-template-columns: 25px minmax(0, 1fr); }
+  .ranked-action.compact > .pill { grid-column: 2; justify-self: start; margin-top: 3px; }
   .command-score-row { grid-template-columns: 1fr; }.command-score-row .reasons { grid-column: auto; }
   .opportunity-title { grid-template-columns: auto 1fr; }.opportunity-title .pill { grid-column: 1/-1; }
   .three-column-grid { grid-template-columns: 1fr; }.three-column-grid > :nth-child(3), .three-column-grid .span-2 { grid-column: auto; }
@@ -489,8 +491,6 @@ pre { max-height: 280px; overflow: auto; margin: 9px 0 0; padding: 11px; border-
   html, body, #root, .app-shell, .workspace { max-width: 100%; overflow-x: clip; }
   .content { padding-inline: 10px; }
   .score-band, .score-band.four { grid-template-columns: 1fr; }
-  .ranked-action.compact { grid-template-columns: 25px minmax(0, 1fr); }
-  .ranked-action.compact > .pill { grid-column: 2; justify-self: start; margin-top: 3px; }
   .utility-actions .account-button { display: none; }
   .page-header { min-height: 64px; }
   .guided-copy h1 { font-size: 2.18rem; }

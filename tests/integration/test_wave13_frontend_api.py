@@ -62,3 +62,13 @@ def test_decision_card_action_uses_a_separate_grid_row() -> None:
     assert ".decision-card .score-top > .pill" in css
     assert "grid-column: 2" in css
     assert "justify-self: start" in css
+
+
+def test_compact_action_status_stacks_at_the_mobile_layout_breakpoint() -> None:
+    css = (ROOT / "apps/web/src/styles.css").read_text(encoding="utf-8")
+    mobile = css.split("@media (max-width: 600px)", 1)[1].split("@media (max-width: 410px)", 1)[0]
+    assert ".ranked-action.compact { grid-template-columns: 25px minmax(0, 1fr); }" in mobile
+    assert ".ranked-action.compact > .pill { grid-column: 2; justify-self: start; margin-top: 3px; }" in mobile
+    assert ".ranked-action > span:first-child" in css
+    assert ".ranked-action.compact > span:first-child" in css
+    assert ".ranked-action.compact > span {" not in css
