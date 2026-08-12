@@ -8,6 +8,6 @@ export type DashboardData = {
   project: ApiRecord; assessment: ApiRecord; signals: ApiRecord[]; evidence: Evidence[]; quality: ApiRecord[];
   projectOrganizations: ApiRecord; organization: ApiRecord | null; organizationProjects: ApiRecord | null;
   organizationContacts: ApiRecord | null; candidates: ApiRecord; actions: ApiRecord; motions: ApiRecord;
-  crm: ApiRecord; readiness: ApiRecord; metrics: ApiRecord; monday: ApiRecord; exceptions: ApiRecord; sensitivity: ApiRecord;
+  crm: ApiRecord; readiness: ApiRecord; systemReadiness: ApiRecord; metrics: ApiRecord; monday: ApiRecord; exceptions: ApiRecord; sensitivity: ApiRecord;
 };
 export type AnalystResponse = ApiRecord;

@@ -31,12 +31,21 @@ def test_frontend_consumes_api_instead_of_copying_business_rules():
         "/actions",
         "/crm-preview",
         "/crm-readiness",
+        'get<any>("/readiness")',
         "/sensitivity",
         "/metrics",
         "/monday-brief",
     ]:
         assert path in API
     assert "80.00" not in APP and "69.25" not in APP and "qualification.yaml" not in APP and "crm-sync" not in API
+
+
+def test_commercial_analyst_status_comes_from_backend_readiness():
+    assert "OpenAI configured" not in APP
+    assert "d.systemReadiness?.integrations?.openai" in APP
+    for label in ["OpenAI enabled", "OpenAI disabled", "OpenAI unavailable"]:
+        assert label in APP
+    assert 'get<any>("/readiness")' in API
 
 
 def test_wave13_employer_experiences_are_present():
