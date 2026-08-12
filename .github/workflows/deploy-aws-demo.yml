@@ -121,6 +121,18 @@ jobs:
               AccessSecretArn='${{ steps.foundation.outputs.access_secret_arn }}' \
               OpenAISecretArn='${{ steps.foundation.outputs.openai_secret_arn }}' \
               LogGroupName='${{ steps.foundation.outputs.log_group_name }}'
+      - name: Verify protected public endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          ENDPOINT="$(aws cloudformation describe-stacks \
+            --stack-name "$SERVICE_STACK" \
+            --query "Stacks[0].Outputs[?OutputKey=='Endpoint'].OutputValue" \
+            --output text)"
+          python scripts/verify_aws_endpoint.py \
+            --endpoint "$ENDPOINT" \
+            --secret-id '${{ steps.foundation.outputs.access_secret_arn }}' \
+            --region "$AWS_REGION"
       - name: Show protected demo endpoint
         shell: bash
         run: |

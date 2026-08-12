@@ -20,6 +20,15 @@ def _verifier():
     return module
 
 
+def _endpoint_verifier():
+    path = ROOT / "scripts/verify_aws_endpoint.py"
+    spec = importlib.util.spec_from_file_location("aws_endpoint_verifier", path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_aws_stack_output_parser_ignores_malformed_rows() -> None:
     verifier = _verifier()
     assert verifier.ROOT == ROOT
@@ -89,3 +98,53 @@ def test_http_error_returns_only_status_and_never_reads_body(monkeypatch) -> Non
 
     monkeypatch.setattr(verifier.urllib.request, "urlopen", fail_request)
     assert verifier.request_status("https://example.test/") == (401, None)
+
+
+def test_endpoint_smoke_keeps_secret_out_of_result(monkeypatch) -> None:
+    verifier = _endpoint_verifier()
+    monkeypatch.setattr(verifier, "retrieve_secret", lambda *_: "super-secret")
+
+    def fake_request(url: str, *, authorization=None, expect_json=False):
+        if url.endswith("/health"):
+            return 200, {"status": "ok"}
+        if url.endswith("/readiness"):
+            assert authorization and "super-secret" not in authorization
+            return 200, {"status": "ready"}
+        return (200, None) if authorization else (401, None)
+
+    monkeypatch.setattr(verifier, "request", fake_request)
+    result = verifier.verify("https://example.test", "secret-arn", "us-east-1")
+    assert result["result"] == "PASS"
+    assert result["credentials_exposed"] is False
+    assert "super-secret" not in repr(result)
+
+
+def test_endpoint_smoke_rejects_http_before_secret_access(monkeypatch) -> None:
+    verifier = _endpoint_verifier()
+    monkeypatch.setattr(
+        verifier,
+        "retrieve_secret",
+        lambda *_: pytest.fail("secret must not be read for an HTTP endpoint"),
+    )
+    with pytest.raises(verifier.SmokeError, match="HTTPS"):
+        verifier.verify("http://example.test", "secret-arn", "us-east-1")
+
+
+def test_endpoint_secret_failure_never_reflects_process_output(monkeypatch) -> None:
+    verifier = _endpoint_verifier()
+    fake_result = SimpleNamespace(
+        returncode=1,
+        stdout="do-not-reflect-secret",
+        stderr="do-not-reflect-secret-error",
+    )
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: fake_result)
+    with pytest.raises(verifier.SmokeError) as exc:
+        verifier.retrieve_secret("secret-id", "us-east-1")
+    assert str(exc.value) == "access-secret retrieval failed"
+
+
+def test_deploy_workflow_runs_protected_endpoint_smoke() -> None:
+    workflow = (ROOT / ".github/workflows/deploy-aws-demo.yml").read_text(encoding="utf-8")
+    assert "name: Verify protected public endpoint" in workflow
+    assert "python scripts/verify_aws_endpoint.py" in workflow
+    assert "--secret-id '${{ steps.foundation.outputs.access_secret_arn }}'" in workflow
