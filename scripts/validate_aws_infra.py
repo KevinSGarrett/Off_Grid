@@ -132,6 +132,14 @@ def main() -> int:
     policies_text = str(role.get("Policies", []))
     if "FoundationStackRead" not in policies_text or "offgrid-commercial-intelligence-demo-foundation" not in policies_text:
         errors.append("GitHub deploy role cannot read the prepared foundation stack outputs")
+    if (
+        "ReadDemoAccessPasswordForPostDeploySmoke" not in policies_text
+        or "secretsmanager:GetSecretValue" not in policies_text
+        or "offgrid-commercial-intelligence/demo/access-password-*" not in policies_text
+    ):
+        errors.append("GitHub deploy role cannot read only the demo access password for protected smoke")
+    if "offgrid-commercial-intelligence/demo/openai-api-key-*" in policies_text:
+        errors.append("GitHub deploy role must not read the OpenAI API key secret")
     for action in (
         "ecs:RegisterTaskDefinition",
         "ecs:DeregisterTaskDefinition",

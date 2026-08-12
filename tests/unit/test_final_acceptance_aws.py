@@ -167,3 +167,11 @@ def test_deploy_workflow_runs_protected_endpoint_smoke() -> None:
     assert "name: Verify protected public endpoint" in workflow
     assert "python scripts/verify_aws_endpoint.py" in workflow
     assert "--secret-id '${{ steps.foundation.outputs.access_secret_arn }}'" in workflow
+
+
+def test_deploy_role_secret_access_is_limited_to_demo_access_password() -> None:
+    role = (ROOT / "infra/aws/github-deploy-role.yaml").read_text(encoding="utf-8")
+    assert "ReadDemoAccessPasswordForPostDeploySmoke" in role
+    assert "secretsmanager:GetSecretValue" in role
+    assert "secret:offgrid-commercial-intelligence/demo/access-password-*" in role
+    assert "secret:offgrid-commercial-intelligence/demo/openai-api-key-*" not in role
