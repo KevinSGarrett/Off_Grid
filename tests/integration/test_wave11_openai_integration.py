@@ -6,8 +6,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Session
-
 from app.ai.config import load_openai_config
 from app.ai.service import OpenAIIntelligenceService
 from app.ai.types import AIRunStatus, FunctionCall, OpenAIResponseEnvelope, UsageMetrics
@@ -15,10 +13,19 @@ from app.commercial_workflow.service import Wave09CommercialWorkflowService
 from app.contact_resolution.service import Wave08ContactResolutionService
 from app.crm.service import Wave10IntegrationService
 from app.ingestion.service import ConstructConnectIngestionService
-from app.models import AIClaim, AIUsage, Base, OpportunityAssessment, Project, PromptRun
+from app.models import (
+    AIClaim,
+    AIClaimEvidence,
+    AIUsage,
+    Base,
+    OpportunityAssessment,
+    Project,
+    PromptRun,
+)
 from app.persistence.database import build_engine
 from app.resolution.service import Wave07ResolutionService
 from app.scoring.qualification import QualificationService
+from sqlalchemy.orm import Session
 
 ROOT = Path(__file__).resolve().parents[2]
 STAFFORD = ROOT / "context/private_source_documents/Stafford-Technology-Campus-Phases-3-4.pdf"
@@ -138,6 +145,15 @@ class AnalystToolLoopFakeTransport:
         )
 
 
+class DuplicateEvidenceFakeTransport(ProjectAnalysisFakeTransport):
+    def create_response(self, request):
+        envelope = super().create_response(request)
+        output = json.loads(envelope.output_text)
+        evidence_ref = output["claims"][0]["evidence_ids"][0]
+        output["claims"][0]["evidence_ids"] = [evidence_ref, evidence_ref]
+        return replace(envelope, output_text=json.dumps(output))
+
+
 def _session() -> Session:
     engine = build_engine("sqlite+pysqlite:///:memory:")
     Base.metadata.create_all(engine)
@@ -194,6 +210,56 @@ def test_wave11_project_analysis_uses_real_stafford_evidence_and_persists_proven
     claims = session.scalars(sa.select(AIClaim).where(AIClaim.prompt_run_id == run.id)).all()
     assert len(claims) == 3
     assert all(row.status.value == "GROUNDED" for row in claims)
+    session.close()
+
+
+def test_duplicate_model_evidence_references_persist_once_without_http_failure() -> None:
+    session = _session()
+    stafford = _build(session)
+    result = OpenAIIntelligenceService(
+        session,
+        config=_enabled_config(),
+        transport=DuplicateEvidenceFakeTransport(),
+    ).analyze_project(stafford.id)
+    assert result.status is AIRunStatus.SUCCEEDED
+    first_claim = session.scalar(
+        sa.select(AIClaim)
+        .where(
+            AIClaim.prompt_run_id == result.prompt_run_id,
+            AIClaim.claim_type == "project_character",
+        )
+    )
+    assert first_claim is not None
+    links = session.scalars(
+        sa.select(AIClaimEvidence).where(AIClaimEvidence.ai_claim_id == first_claim.id)
+    ).all()
+    assert len(links) == 1
+    session.close()
+
+
+def test_claim_persistence_failure_rolls_back_and_returns_safe_result() -> None:
+    session = _session()
+    stafford = _build(session)
+    service = OpenAIIntelligenceService(
+        session,
+        config=_enabled_config(),
+        transport=ProjectAnalysisFakeTransport(),
+    )
+
+    def fail_persistence(**_kwargs) -> None:
+        raise ValueError("forced claim persistence failure")
+
+    service._persist_claims = fail_persistence  # type: ignore[method-assign]
+    result = service.analyze_project(stafford.id)
+    assert result.status is AIRunStatus.FAILED
+    assert result.fallback_reason == (
+        "OpenAI capability failed safely (ValueError); deterministic core remains available."
+    )
+    run = session.get(PromptRun, result.prompt_run_id)
+    assert run is not None
+    assert run.status.value == "FAILED"
+    assert run.error_code == "ValueError"
+    assert "forced claim persistence failure" in (run.error_detail or "")
     session.close()
 
 

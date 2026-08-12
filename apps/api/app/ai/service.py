@@ -347,6 +347,7 @@ class OpenAIIntelligenceService:
         input_hash = hashlib.sha256(
             json.dumps(request, sort_keys=True, default=str, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
+        run_started_at = datetime.now(UTC)
         run = PromptRun(
             task=task,
             prompt_name=prompt.name,
@@ -354,7 +355,7 @@ class OpenAIIntelligenceService:
             model_id=route.model_id,
             input_hash=input_hash,
             status=RunStatus.RUNNING,
-            started_at=datetime.now(UTC),
+            started_at=run_started_at,
         )
         self.session.add(run)
         self.session.flush()
@@ -489,14 +490,32 @@ class OpenAIIntelligenceService:
                 tool_rounds=tool_rounds,
                 usage=total_usage,
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - fail closed at the provider/persistence boundary
             # The broad catch is intentional at the provider boundary: the deterministic core degrades
             # gracefully. Domain code never treats a provider failure as a reason to corrupt state.
-            run.status = RunStatus.FAILED
-            run.error_code = type(exc).__name__
-            run.error_detail = str(exc)[:2000]
-            run.latency_ms = int((time.perf_counter() - started) * 1000)
-            run.completed_at = datetime.now(UTC)
+            error_code = type(exc).__name__
+            error_detail = str(exc)[:2000]
+            latency_ms = int((time.perf_counter() - started) * 1000)
+            completed_at = datetime.now(UTC)
+            # A persistence error leaves SQLAlchemy in a failed transaction. Roll back before
+            # recording the safe failure, otherwise the fallback itself raises PendingRollbackError
+            # and turns a bounded provider/persistence failure into an HTTP 500.
+            self.session.rollback()
+            run = PromptRun(
+                id=run.id,
+                task=task,
+                prompt_name=prompt.name,
+                prompt_version=prompt.version,
+                model_id=route.model_id,
+                input_hash=input_hash,
+                status=RunStatus.FAILED,
+                started_at=run_started_at,
+                completed_at=completed_at,
+                latency_ms=latency_ms,
+                error_code=error_code,
+                error_detail=error_detail,
+            )
+            self.session.add(run)
             self.session.commit()
             return AIRunResult(
                 status=AIRunStatus.FAILED,
@@ -506,7 +525,9 @@ class OpenAIIntelligenceService:
                 parsed=None,
                 grounding=None,
                 estimated_cost_usd=Decimal(0),
-                fallback_reason=f"OpenAI capability failed safely: {type(exc).__name__}: {exc}",
+                fallback_reason=(
+                    f"OpenAI capability failed safely ({error_code}); deterministic core remains available."
+                ),
                 external_request_executed=isinstance(self.transport, OfficialOpenAITransport),
             )
 
@@ -653,7 +674,10 @@ class OpenAIIntelligenceService:
             self.session.flush()
             if not supported:
                 continue
-            for evidence_ref in claim.evidence_ids:
+            # Structured model output can repeat an otherwise valid evidence reference. The
+            # relationship is a set by schema, so preserve the first occurrence and never try to
+            # insert the same (claim, evidence) pair twice.
+            for evidence_ref in dict.fromkeys(claim.evidence_ids):
                 if not evidence_ref.startswith("src:"):
                     continue
                 evidence_id = UUID(evidence_ref.split(":", 1)[1])
