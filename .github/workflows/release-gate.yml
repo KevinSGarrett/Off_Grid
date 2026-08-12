@@ -31,8 +31,8 @@ jobs:
         run: |
           python scripts/validate_github_config.py
           python scripts/validate_git_privacy.py --require-git
-      - name: Backend complete test matrix
-        run: bash scripts/run_wave19_test_matrix.sh
+      - name: Backend public release matrix
+        run: python scripts/run_public_test_matrix.py
       - name: Frontend install/typecheck/build
         working-directory: apps/web
         run: |
