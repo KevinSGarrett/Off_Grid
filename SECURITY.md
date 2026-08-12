@@ -22,8 +22,9 @@ Do not place sensitive material in a public GitHub issue. Report a security conc
 - Hosted access must fail closed when access control is required but no password is configured.
 - Health may remain unauthenticated for container/load-balancer probes; application and UI routes require the configured Basic access control.
 - External-system writes remain off/dry-run unless an explicitly authorized live path passes deterministic gates.
-- OpenAI is optional, server-side, budgeted, and not a source of deterministic truth or a direct CRM writer.
+- OpenAI is optional, server-side, budgeted, and not a source of deterministic truth or a direct CRM writer. The authorized AWS demo enables only the bounded read-only analyst path; the deterministic fallback remains available.
 - Provider outages must not make the deterministic core unavailable.
-- No AWS deployment or billable infrastructure is claimed by the public release.
+- The authorized demo is deployed to AWS account `257851647752` in `us-east-1` through GitHub Actions OIDC. Cloud credentials and application passwords remain server-side; the public repository contains only reproducible IaC and workflow definitions.
+- The protected HTTPS application requires Basic access control. Only the health probe is intentionally unauthenticated.
 
 If a credential may have entered Git history, revoke it first, then privately coordinate history remediation and a clean privacy revalidation.

@@ -1,6 +1,6 @@
-# API Starter — Wave 03
+# Off Grid FastAPI application
 
-Wave 3 establishes a runnable FastAPI boundary, pure domain state/port contracts, deterministic transition policy, and a server-side external-write gate. It intentionally does **not** fake the later PDF parser, database schema, scoring engine or integration behavior.
+This is the implemented backend for the Off Grid Commercial Intelligence Engine. It contains the relational persistence and migration path, deterministic ingestion and scoring, source evidence and trust controls, account/contact resolution, commercial workflow, CRM preview/safety gates, operational metrics, and optional server-side OpenAI analysis.
 
 Run after installing Python dependencies:
 
@@ -8,4 +8,13 @@ Run after installing Python dependencies:
 PYTHONPATH=apps/api uvicorn app.main:app --reload
 ```
 
-Current implemented routes are platform-only (`/api/v1/health`, `/api/v1/readiness`). Planned business routes are documented in `docs/API_SURFACE_BLUEPRINT.md` and are implemented in their owner waves.
+The application mounts all routes under `/api/v1`, including:
+
+- platform health and readiness;
+- ingestion, projects, organizations, evidence, quality, assessment, and sensitivity;
+- contacts and verification;
+- exceptions, actions, commercial motions, pipeline runs, outcomes, metrics, and Monday Brief;
+- CRM readiness, preview, and deterministically gated sync;
+- Commercial Analyst queries and executive-brief generation.
+
+Health is available for runtime probes. When access control is enabled, browser and application routes require Basic authentication. External writes remain off or dry-run unless their deterministic authorization gates explicitly permit them; OpenAI failure or disablement falls back without disabling the deterministic core.
