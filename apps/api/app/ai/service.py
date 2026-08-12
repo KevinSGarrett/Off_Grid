@@ -118,6 +118,7 @@ class OpenAIIntelligenceService:
         mode: str = "STANDARD",
         conversation_context: tuple[Mapping[str, Any], ...] = (),
     ) -> AIRunResult:
+        request_started = time.perf_counter()
         task_cfg, route = self.config.route_for_task("commercial_analyst")
         route = self.config.analyst_route(mode)
         prompt = load_prompt(task_cfg.prompt_name, task_cfg.prompt_version)
@@ -140,7 +141,16 @@ class OpenAIIntelligenceService:
         cache_key = hashlib.sha256(cache_material.encode("utf-8")).hexdigest()
         cached = self._validated_answer_cache.get(cache_key)
         if cached is not None:
-            return replace(cached, cache_hit=True, external_request_executed=False)
+            return replace(
+                cached,
+                estimated_cost_usd=Decimal(0),
+                external_request_executed=False,
+                repair_attempted=False,
+                latency_ms=int((time.perf_counter() - request_started) * 1000),
+                tool_rounds=0,
+                cache_hit=True,
+                usage=UsageMetrics(),
+            )
         request = self._base_request(
             route=route,
             prompt_text=prompt.text,
@@ -354,6 +364,7 @@ class OpenAIIntelligenceService:
         final_envelope: OpenAIResponseEnvelope | None = None
         current_request = dict(request)
         tool_calls_used: list[str] = []
+        tool_rounds = 0
         try:
             for round_index in range(self.config.max_tool_rounds + 1):
                 envelope = self.transport.create_response(current_request)
@@ -367,6 +378,7 @@ class OpenAIIntelligenceService:
                 if not envelope.function_calls:
                     final_envelope = envelope
                     break
+                tool_rounds += 1
                 if tool_registry is None:
                     raise ValueError("Model requested tools but no read-only tool registry was supplied")
                 if round_index >= self.config.max_tool_rounds:
@@ -474,7 +486,8 @@ class OpenAIIntelligenceService:
                 external_request_executed=isinstance(self.transport, OfficialOpenAITransport),
                 repair_attempted=repair_attempted,
                 latency_ms=run.latency_ms,
-                tool_rounds=len(tool_calls_used),
+                tool_rounds=tool_rounds,
+                usage=total_usage,
             )
         except Exception as exc:
             # The broad catch is intentional at the provider boundary: the deterministic core degrades
@@ -515,6 +528,25 @@ class OpenAIIntelligenceService:
         """Construct displayed prose only from claim text and its concise rationale."""
         supported = [claim for claim in claims if claim.classification != "UNKNOWN"]
         unknown_claims = [claim for claim in claims if claim.classification == "UNKNOWN"]
+        caveat_markers = (
+            "UNKNOWN",
+            "UNVERIFIED",
+            "MISSING",
+            "LIMITATION",
+            "CAVEAT",
+            "CONFLICT",
+            "GAP",
+        )
+        caveat_claims = [
+            claim
+            for claim in claims
+            if claim.classification in {"UNKNOWN", "CONFLICTED"}
+            or any(marker in claim.claim_type.upper() for marker in caveat_markers)
+            or any(
+                marker in claim.claim_text.upper()
+                for marker in (" IS UNKNOWN", " REMAINS UNKNOWN", " UNVERIFIED", " NOT CONFIRMED")
+            )
+        ]
         if supported:
             paragraphs = [
                 f"{claim.claim_text}\nWhy: {claim.rationale}"
@@ -527,19 +559,70 @@ class OpenAIIntelligenceService:
             conclusion = answer
         if withheld:
             answer += "\n\nSome model-generated material was withheld because it did not pass grounding validation."
+        explicitly_supported_next_action = parsed.next_action.strip()
+        action_type_markers = (
+            "NEXT_ACTION",
+            "ACTION_SEQUENCE",
+            "CALL_OBJECTIVE",
+            "PROCESS_PRIORITY",
+            "ADVANCEMENT_TRIGGER",
+            "DEPRIORITIZATION_TRIGGER",
+            "DEMO_TRIGGER",
+            "INVESTIGATION_ROUTE",
+        )
+        action_claim = next(
+            (
+                claim
+                for claim in supported
+                if (
+                    claim.claim_text.strip() == explicitly_supported_next_action
+                    and any(token in claim.claim_type.upper() for token in action_type_markers)
+                )
+            ),
+            None,
+        )
+        if action_claim is None:
+            action_claim = next(
+                (
+                    claim
+                    for claim in supported
+                    if any(token in claim.claim_type.upper() for token in action_type_markers)
+                ),
+                None,
+            )
+        next_action = action_claim.claim_text if action_claim is not None else conclusion
+        trigger_claims = [
+            claim
+            for claim in claims
+            if any(
+                token in claim.claim_type.upper()
+                for token in (
+                    "ACTION",
+                    "CALL_",
+                    "GATE",
+                    "RECOMMENDATION",
+                    "REQUIREMENT",
+                    "TRIGGER",
+                )
+            )
+        ]
         return parsed.model_copy(
             update={
                 "answer": answer,
                 "direct_conclusion": conclusion,
                 "why": [claim.rationale for claim in supported],
                 "supporting_evidence": [ref for claim in supported for ref in claim.evidence_ids],
-                "caveats": [claim.claim_text for claim in unknown_claims],
+                "caveats": list(dict.fromkeys(claim.claim_text for claim in caveat_claims)),
                 "counterevidence_and_conflicts": [
                     claim.claim_text for claim in claims if claim.classification == "CONFLICTED"
                 ],
-                "decision_changing_unknowns": [claim.claim_text for claim in unknown_claims],
-                "recommendation_triggers": [claim.rationale for claim in unknown_claims],
-                "next_action": supported[-1].claim_text if supported else conclusion,
+                "decision_changing_unknowns": list(
+                    dict.fromkeys(claim.claim_text for claim in caveat_claims)
+                ),
+                "recommendation_triggers": list(
+                    dict.fromkeys(claim.claim_text for claim in trigger_claims)
+                ),
+                "next_action": next_action,
                 "claims": claims,
                 "unknowns": list(dict.fromkeys(parsed.unknowns + [claim.claim_text for claim in unknown_claims])),
             }

@@ -90,3 +90,4 @@ class AIRunResult:
     latency_ms: int | None = None
     tool_rounds: int = 0
     cache_hit: bool = False
+    usage: UsageMetrics = field(default_factory=UsageMetrics)

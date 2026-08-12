@@ -55,6 +55,7 @@ def analyst_query(payload: AnalystQuery, session: Session = Depends(get_session)
         "latency_ms": result.latency_ms,
         "tool_rounds": result.tool_rounds,
         "cache_hit": result.cache_hit,
+        "usage": jsonable(result.usage),
     }
 
 
@@ -84,6 +85,7 @@ def analyst_query_stream(payload: AnalystQuery, session: Session = Depends(get_s
             "latency_ms": result.latency_ms,
             "tool_rounds": result.tool_rounds,
             "cache_hit": result.cache_hit,
+            "usage": jsonable(result.usage),
         }
         yield "event: validated\ndata: " + json.dumps(safe_payload, default=str) + "\n\n"
         yield "event: done\ndata: {}\n\n"

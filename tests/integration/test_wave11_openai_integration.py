@@ -209,9 +209,70 @@ def test_commercial_analyst_executes_only_approved_read_only_tool_loop() -> None
     assert result.status is AIRunStatus.SUCCEEDED
     assert result.parsed.tool_calls_used == ["get_project_evidence"]
     assert result.parsed.unknowns == ["verified rental authority"]
+    assert result.tool_rounds == 1
+    assert result.usage == UsageMetrics(input_tokens=800, output_tokens=220)
+    assert result.parsed.next_action == result.parsed.direct_conclusion
     assert transport.calls == 2
     assert result.external_request_executed is False
+    cached = service.answer_commercial_question(
+        project_id=stafford.id,
+        question="What is the biggest unresolved issue before commercial progression?",
+    )
+    assert transport.calls == 2
+    assert cached.cache_hit is True
+    assert cached.external_request_executed is False
+    assert cached.estimated_cost_usd == 0
+    assert cached.latency_ms is not None and cached.latency_ms < 100
+    assert cached.tool_rounds == 0
+    assert cached.usage == UsageMetrics()
     session.close()
+
+
+def test_safe_projection_uses_supported_gap_and_action_claims_for_display_sections() -> None:
+    from app.ai.schemas import CommercialAnalystAnswer, GroundedClaim
+
+    claims = [
+        GroundedClaim(
+            claim_id="gap",
+            claim_type="AUTHORITY_GAP",
+            claim_text="Rental authority remains UNKNOWN.",
+            classification="DERIVED",
+            evidence_ids=["det:test:contacts"],
+            rationale="The deterministic contact state says UNKNOWN.",
+        ),
+        GroundedClaim(
+            claim_id="action",
+            claim_type="NEXT_ACTION",
+            claim_text="Verify equipment responsibility first.",
+            classification="DERIVED",
+            evidence_ids=["det:test:actions"],
+            rationale="The dependency order makes this the first resolvable action.",
+        ),
+    ]
+    parsed = CommercialAnalystAnswer(
+        schema_version="commercial-analyst-answer-2.0",
+        answer="Unsafe free prose is replaced.",
+        direct_conclusion="Unsafe free prose is replaced.",
+        why=[],
+        supporting_evidence=[],
+        caveats=[],
+        counterevidence_and_conflicts=[],
+        decision_changing_unknowns=[],
+        recommendation_triggers=[],
+        next_action="Untraceable action.",
+        claims=claims,
+        unknowns=[],
+        tool_calls_used=[],
+    )
+    projected = OpenAIIntelligenceService._validated_analyst_answer(
+        parsed,
+        claims,
+        withheld=False,
+    )
+    assert projected.caveats == ["Rental authority remains UNKNOWN."]
+    assert projected.decision_changing_unknowns == ["Rental authority remains UNKNOWN."]
+    assert projected.recommendation_triggers == ["Verify equipment responsibility first."]
+    assert projected.next_action == "Verify equipment responsibility first."
 
 
 def test_budget_guard_blocks_provider_call_and_preserves_deterministic_assessment() -> None:
