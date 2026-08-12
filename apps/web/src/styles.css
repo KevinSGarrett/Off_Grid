@@ -510,4 +510,4 @@ pre { max-height: 280px; overflow: auto; margin: 9px 0 0; padding: 11px; border-
 /* More-specific legacy panel selectors otherwise undercut the floor above on
    Product Fit, Contact Resolution, and Commercial Analyst at mobile widths. */
 .page .panel p, .page .panel small { font-size: .72rem; }
-.page .verification-ladder > p, .page .headline-kpi > p { font-size: .72rem; }
+.page .verification-ladder p, .page .headline-kpi > p { font-size: .72rem; }
