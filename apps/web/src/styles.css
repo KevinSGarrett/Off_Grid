@@ -369,9 +369,10 @@ pre { max-height: 280px; overflow: auto; margin: 9px 0 0; padding: 11px; border-
   justify-self: start;
   margin-top: 3px;
 }
-.applicability-row { grid-template-columns: 55px minmax(0, 1fr) auto; }
+.applicability-row { grid-template-columns: 42px minmax(0, 1fr); align-items: start; padding: 9px 0; }
 .applicability-row > span:not(.pill) { display: grid; gap: 2px; }
 .applicability-row > span:not(.pill) strong { color: var(--ink); }
+.applicability-row > .pill { grid-column: 2; justify-self: start; margin-top: 4px; }
 
 /* Readability pass: secondary text is intentionally raised by roughly one CSS pixel at 100% zoom. */
 .logo-copy small, .guide-button small, .sidebar footer small, .sidebar footer p,

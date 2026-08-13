@@ -182,6 +182,7 @@ def test_product_fit_keeps_relevance_index_separate_from_applicability():
     assert "Deterministic project-characteristic score" in APP
     assert "validated" in APP and "forecast, or probability" in APP
     assert "applicability_status" in APP
+    assert ".applicability-row > .pill { grid-column: 2" in CSS
 
 
 def test_diagnostics_are_independently_scaled_not_equal_funnel_blocks():
