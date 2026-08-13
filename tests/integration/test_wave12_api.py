@@ -2,11 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import sqlalchemy as sa
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
+import sqlalchemy as sa
 from app.commercial_workflow.service import Wave09CommercialWorkflowService
 from app.contact_resolution.service import Wave08ContactResolutionService
 from app.crm.service import Wave10IntegrationService
@@ -16,6 +13,7 @@ from app.models import Base, ContactCandidate, Organization, Project, WorkflowEx
 from app.persistence.database import build_engine, build_session_factory
 from app.resolution.service import Wave07ResolutionService
 from app.scoring.qualification import QualificationService
+from fastapi.testclient import TestClient
 
 ROOT = Path(__file__).resolve().parents[2]
 STAFFORD = ROOT / "context/private_source_documents/Stafford-Technology-Campus-Phases-3-4.pdf"
@@ -154,7 +152,19 @@ def test_commercial_motion_actions_and_crm_contracts_remain_fail_closed(api_stat
     actions = client.get(f"/api/v1/projects/{project_id}/actions")
     assert motions.status_code == actions.status_code == 200
     assert {row["motion_type"] for row in motions.json()["items"]} == {"CONTRACTOR", "RENTAL_HOUSE"}
-    assert actions.json()["items"]
+    action_payload = actions.json()
+    action_items = action_payload["items"]
+    assert action_payload["ordering"] == "DEPENDENCY_EXECUTION_ASC"
+    assert [row["priority"] for row in action_items] == [10, 20, 30, 40, 45, 50]
+    positions = {row["action_type"]: index for index, row in enumerate(action_items)}
+    for index, row in enumerate(action_items):
+        dependency = row["dependency_action_type"]
+        if dependency:
+            assert positions[dependency] < index
+    kit = action_payload["first_call_kit"]
+    assert kit["version"] == "stafford-first-call-kit-1.0"
+    assert len(kit["questions"]) >= 6
+    assert "rental_authority=UNKNOWN" in kit["target_status"]
 
     readiness = client.get(f"/api/v1/projects/{project_id}/crm-readiness")
     assert readiness.status_code == 200
@@ -227,7 +237,7 @@ def test_analyst_omitted_mode_defaults_to_gateway_safe_fast(api_state, monkeypat
             prompt_run_id=None,
             parsed=None,
             grounding=None,
-            estimated_cost_usd=Decimal("0"),
+            estimated_cost_usd=Decimal(0),
             fallback_reason="test",
         )
 

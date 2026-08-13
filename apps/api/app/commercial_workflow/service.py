@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from decimal import Decimal
 import re
+from datetime import UTC, datetime
+from decimal import Decimal
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -29,6 +29,7 @@ from app.domain.states import (
     VerificationState,
 )
 from app.models import (
+    CommercialMotion,
     ConfigVersion,
     ContactAssessment,
     ContactCandidate,
@@ -39,7 +40,6 @@ from app.models import (
     ProductFitAssessment,
     Project,
     ProjectOrganization,
-    CommercialMotion,
 )
 
 
@@ -192,12 +192,17 @@ class Wave09CommercialWorkflowService:
         if not actor.strip() or not reason.strip():
             raise ValueError("actor and reason are required")
         row.status = ActionStatus.COMPLETE
-        row.completed_at = datetime.now(timezone.utc)
+        row.completed_at = datetime.now(UTC)
         row.reason = f"{row.reason}\nCompletion evidence note: {reason.strip()} (recorded by {actor.strip()})"
         self.session.flush()
         self._refresh_dependency_statuses(project_id)
         self.session.commit()
         return row
+
+    def current_first_call_kit(self, project_id: UUID) -> FirstCallKit:
+        """Return the canonical, versioned kit without mutating workflow state."""
+        top_candidate, top_assessment = self._top_contact(project_id)
+        return self._first_call_kit(top_candidate, top_assessment)
 
     def _persist_config_version(self) -> ConfigVersion:
         existing = self.session.scalar(
@@ -223,7 +228,7 @@ class Wave09CommercialWorkflowService:
             content_sha256=self.config.loaded.sha256,
             source_path=str(self.config.loaded.path),
             content_text=self.config.loaded.text,
-            activated_at=datetime.now(timezone.utc),
+            activated_at=datetime.now(UTC),
             is_active=True,
         )
         self.session.add(row)
@@ -353,7 +358,7 @@ class Wave09CommercialWorkflowService:
                 continue
             if key == "VERIFY_SITE_EQUIPMENT_RESPONSIBILITY" and self._authority_verified(top_assessment):
                 row.status = ActionStatus.COMPLETE
-                row.completed_at = row.completed_at or datetime.now(timezone.utc)
+                row.completed_at = row.completed_at or datetime.now(UTC)
                 continue
             if dependency:
                 row.status = (
