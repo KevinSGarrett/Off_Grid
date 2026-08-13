@@ -3348,28 +3348,17 @@ export function App() {
   }
 
   if (error) {
-    const unauthorized = error.status === 401;
     return (
       <main className="boot-state">
         <div className="boot-logo">
           <Logo />
         </div>
-        <span className={`boot-icon ${unauthorized ? "warn" : "bad"}`}>
-          {unauthorized ? <LockKeyhole /> : <TriangleAlert />}
+        <span className="boot-icon bad">
+          <TriangleAlert />
         </span>
-        <p className="eyebrow">
-          {unauthorized ? "Authentication required" : "Backend unavailable"}
-        </p>
-        <h1>
-          {unauthorized
-            ? "Sign in to open the protected demo."
-            : "The application will not invent replacement data."}
-        </h1>
-        <p>
-          {unauthorized
-            ? "Use the authorized Off Grid demo credentials in your browser, then reload."
-            : "Core project intelligence could not be loaded. Retry when the service is available."}
-        </p>
+        <p className="eyebrow">Backend unavailable</p>
+        <h1>The application will not invent replacement data.</h1>
+        <p>Core project intelligence could not be loaded. Retry when the service is available.</p>
         {error.requestId && <small>Request ID: {error.requestId}</small>}
         <button
           className="button primary"

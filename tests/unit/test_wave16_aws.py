@@ -1,14 +1,8 @@
 from __future__ import annotations
 
-import base64
 import importlib.util
 import json
 from pathlib import Path
-
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-
-from app.security.basic_auth import install_basic_access_control
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -40,7 +34,6 @@ def test_aws_demo_modes_are_fail_closed() -> None:
     text = (ROOT / "infra" / "aws" / "service.yaml").read_text()
     for pair in (
         ("DEMO_MODE", "'true'"),
-        ("REQUIRE_ACCESS_CONTROL", "'true'"),
         ("OPENAI_ENABLED", "'true'"),
         ("OPENAI_RESEARCH_ENABLED", "'false'"),
         ("OPENAI_RAW_DOCUMENTS", "'false'"),
@@ -51,6 +44,8 @@ def test_aws_demo_modes_are_fail_closed() -> None:
     ):
         assert f"Name: {pair[0]}" in text
         assert f"Value: {pair[1]}" in text
+    assert "REQUIRE_ACCESS_CONTROL" not in text
+    assert "APP_ACCESS_PASSWORD" not in text
 
 
 def test_private_source_material_cannot_enter_container_context() -> None:
@@ -123,30 +118,11 @@ def test_cost_model_matches_documented_fixed_subtotal() -> None:
     assert data["monthly_estimate"]["deployed_budget_resource_present"] is False
 
 
-def test_basic_access_gate_protects_app_but_exempts_health() -> None:
-    app = FastAPI()
-
-    @app.get("/")
-    def root() -> dict[str, bool]:
-        return {"ok": True}
-
-    @app.get("/api/v1/health")
-    def health() -> dict[str, bool]:
-        return {"ok": True}
-
-    install_basic_access_control(app, password="correct-horse", required=True)
-    client = TestClient(app)
-    assert client.get("/api/v1/health").status_code == 200
-    assert client.get("/").status_code == 401
-    token = base64.b64encode(b"offgrid:correct-horse").decode()
-    assert client.get("/", headers={"Authorization": f"Basic {token}"}).status_code == 200
-
-
-def test_access_gate_fails_startup_when_required_without_password() -> None:
-    app = FastAPI()
-    try:
-        install_basic_access_control(app, password=None, required=True)
-    except RuntimeError as exc:
-        assert "APP_ACCESS_PASSWORD" in str(exc)
-    else:
-        raise AssertionError("required access control must fail closed without a password")
+def test_dashboard_view_authentication_is_absent_from_runtime_and_service() -> None:
+    assert not (ROOT / "apps" / "api" / "app" / "security" / "basic_auth.py").exists()
+    runtime = (ROOT / "apps" / "api" / "app" / "main.py").read_text()
+    settings = (ROOT / "apps" / "api" / "app" / "core" / "settings.py").read_text()
+    service = (ROOT / "infra" / "aws" / "service.yaml").read_text()
+    combined = runtime + settings + service
+    for forbidden in ("basic_auth", "REQUIRE_ACCESS_CONTROL", "APP_ACCESS_PASSWORD"):
+        assert forbidden not in combined

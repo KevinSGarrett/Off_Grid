@@ -48,13 +48,6 @@ class Settings:
     web_static_dir: str = field(
         default_factory=lambda: os.getenv("WEB_STATIC_DIR", "apps/web/dist")
     )
-    require_access_control: bool = field(
-        default_factory=lambda: _bool("REQUIRE_ACCESS_CONTROL", False)
-    )
-    app_access_password: str | None = field(
-        default_factory=lambda: os.getenv("APP_ACCESS_PASSWORD") or None
-    )
-
     # OpenAI is an optional server-side intelligence layer. The deterministic core must work
     # with this disabled and without an API key.
     openai_enabled: bool = field(default_factory=lambda: _bool("OPENAI_ENABLED", False))

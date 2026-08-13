@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
-"""Independently verify the authorized Off Grid AWS demo deployment state.
-
-The verifier may retrieve the application password into process memory for an
-authenticated smoke test, but it never emits the value or places it in a child
-process argument, environment variable, evidence file, or error message.
-"""
+"""Independently verify the authorized public Off Grid AWS demo deployment."""
 
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import subprocess
 import urllib.error
@@ -77,60 +71,25 @@ def stack_outputs(stack: dict[str, Any]) -> dict[str, str]:
 def request_status(
     url: str,
     *,
-    authorization: str | None = None,
     expect_json: bool = False,
-) -> tuple[int, Any | None]:
+) -> tuple[int, Any | None, dict[str, str]]:
     headers = {"User-Agent": "offgrid-release-verifier/1.0"}
-    if authorization:
-        headers["Authorization"] = authorization
     request = urllib.request.Request(url, headers=headers, method="GET")
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             payload = response.read()
             parsed = json.loads(payload) if expect_json else None
-            return response.status, parsed
+            return response.status, parsed, {
+                key.lower(): value for key, value in response.headers.items()
+            }
     except urllib.error.HTTPError as exc:
         # Do not include response bodies because an upstream error page may
         # echo request context. Status is sufficient for this smoke gate.
-        return exc.code, None
+        return exc.code, None, {
+            key.lower(): value for key, value in (exc.headers or {}).items()
+        }
     except (OSError, json.JSONDecodeError) as exc:
         raise VerificationError(f"public request failed for {url}: {type(exc).__name__}") from exc
-
-
-def retrieve_secret(profile: str, region: str, secret_id: str) -> str:
-    try:
-        result = subprocess.run(
-            [
-                "aws",
-                "secretsmanager",
-                "get-secret-value",
-                "--secret-id",
-                secret_id,
-                "--query",
-                "SecretString",
-                "--output",
-                "text",
-                "--profile",
-                profile,
-                "--region",
-                region,
-            ],
-            cwd=ROOT,
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=60,
-        )
-    except subprocess.TimeoutExpired as exc:
-        raise VerificationError("access-secret retrieval timed out") from exc
-    if result.returncode != 0:
-        # Deliberately omit stdout/stderr; the secret command is the only
-        # command whose output must never be reflected into evidence.
-        raise VerificationError("access-secret retrieval failed")
-    value = result.stdout.strip()
-    if not value:
-        raise VerificationError("access secret is empty")
-    return value
 
 
 def verify(candidate: str, profile: str, region: str) -> dict[str, Any]:
@@ -358,58 +317,62 @@ def verify(candidate: str, profile: str, region: str) -> dict[str, Any]:
             errors.append("Off Grid CloudWatch log group is missing")
         result["logs"] = {"log_group": log_group, "available": log_exists}
 
-        for label, secret_arn in (("access", access_secret), ("openai", openai_secret)):
-            if not secret_arn:
-                errors.append(f"{label} secret ARN output is missing")
-                continue
+        if not openai_secret:
+            errors.append("OpenAI secret ARN output is missing")
+        else:
             aws_json(
                 profile,
                 region,
-                ["secretsmanager", "describe-secret", "--secret-id", secret_arn],
-                f"{label} secret metadata",
+                ["secretsmanager", "describe-secret", "--secret-id", openai_secret],
+                "OpenAI secret metadata",
             )
         result["secrets"].update(
             {
-                "access_secret_reference_present": bool(access_secret),
+                "legacy_access_secret_present_unused": bool(access_secret),
                 "openai_secret_reference_present": bool(openai_secret),
             }
         )
 
-        health_status, health = request_status(f"{endpoint}/api/v1/health", expect_json=True)
-        unauthenticated_status, _ = request_status(f"{endpoint}/")
-        password = retrieve_secret(profile, region, access_secret)
-        token = base64.b64encode(f"offgrid:{password}".encode()).decode("ascii")
-        password = ""
-        authorization = f"Basic {token}"
-        authenticated_status, _ = request_status(endpoint, authorization=authorization)
-        readiness_status, readiness = request_status(
-            f"{endpoint}/api/v1/readiness",
-            authorization=authorization,
-            expect_json=True,
+        health_status, health, health_headers = request_status(
+            f"{endpoint}/api/v1/health", expect_json=True
         )
-        token = ""
-        authorization = ""
+        root_status, _, root_headers = request_status(f"{endpoint}/")
+        readiness_status, readiness, readiness_headers = request_status(
+            f"{endpoint}/api/v1/readiness", expect_json=True
+        )
+        projects_status, projects, projects_headers = request_status(
+            f"{endpoint}/api/v1/projects?limit=1", expect_json=True
+        )
         if health_status != 200 or not isinstance(health, dict) or health.get("status") != "ok":
             errors.append("public health check did not return 200/ok")
-        if unauthenticated_status != 401:
-            errors.append(f"public unauthenticated root did not return 401: {unauthenticated_status}")
-        if authenticated_status != 200:
-            errors.append(f"public authenticated root did not return 200: {authenticated_status}")
+        if root_status != 200:
+            errors.append(f"public root did not return 200 without login: {root_status}")
         if (
             readiness_status != 200
             or not isinstance(readiness, dict)
             or readiness.get("status") != "ready"
         ):
-            errors.append("public authenticated readiness did not return 200/ready")
+            errors.append("public readiness did not return 200/ready without login")
+        if projects_status != 200 or not isinstance(projects, dict):
+            errors.append("public demo-safe projects API did not return 200/JSON without login")
+        if any(
+            "www-authenticate" in headers
+            for headers in (health_headers, root_headers, readiness_headers, projects_headers)
+        ):
+            errors.append("public reviewer path returned a WWW-Authenticate header")
         result["endpoint"] = {
             "url": endpoint,
             "https": parsed_endpoint.scheme == "https",
             "health_status": health_status,
             "health": health.get("status") if isinstance(health, dict) else None,
-            "unauthenticated_root_status": unauthenticated_status,
-            "authenticated_root_status": authenticated_status,
+            "root_status": root_status,
             "readiness_status": readiness_status,
             "readiness": readiness.get("status") if isinstance(readiness, dict) else None,
+            "projects_status": projects_status,
+            "www_authenticate_absent": not any(
+                "www-authenticate" in headers
+                for headers in (health_headers, root_headers, readiness_headers, projects_headers)
+            ),
         }
     except (VerificationError, KeyError, IndexError, TypeError) as exc:
         errors.append(str(exc))

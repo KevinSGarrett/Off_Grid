@@ -4,8 +4,8 @@ The approved demo architecture uses **Amazon ECS Express Mode** as its hosted ta
 
 ## Templates
 
-- `foundation.yaml` — ECR, ECS cluster, generated access password, CloudWatch log group, ECS execution/infrastructure roles, optional AWS Budget.
-- `service.yaml` — one public HTTPS ECS Express Mode service, one task minimum/maximum, fail-closed demo environment, generated access password injected from Secrets Manager.
+- `foundation.yaml` — ECR, ECS cluster, CloudWatch log group, ECS execution/infrastructure roles, optional AWS Budget, and a retained-but-unused legacy access secret.
+- `service.yaml` — one publicly viewable HTTPS ECS Express Mode service, one task minimum/maximum, fail-closed external-write modes, and a server-side OpenAI secret injection.
 - `github-deploy-role.yaml` — optional GitHub OIDC deployment role for an **existing** GitHub OIDC provider, restricted to one repository + `aws-demo` environment.
 
 ## Intended deployment sequence

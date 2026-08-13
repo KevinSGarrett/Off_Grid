@@ -301,23 +301,20 @@ git clone https://github.com/KevinSGarrett/Off_Grid.git
 cd Off_Grid
 
 docker build -t offgrid-commercial-intelligence:local .
-docker run --rm -p 8080:8000 \
-  -e REQUIRE_ACCESS_CONTROL=true \
-  -e APP_ACCESS_PASSWORD='replace-with-a-strong-local-password' \
-  offgrid-commercial-intelligence:local
+docker run --rm -p 8080:8000 offgrid-commercial-intelligence:local
 ```
 
 Open `http://localhost:8080` and verify `http://localhost:8080/api/v1/health`.
 
-The username may be any non-empty value; the password is the value supplied through `APP_ACCESS_PASSWORD`. The deterministic core works without OpenAI, Apollo, or Pipedrive credentials.
+The employer demo is publicly viewable without login; external writes remain disabled or dry-run, and private/source data remains excluded. The deterministic core works without OpenAI, Apollo, or Pipedrive credentials.
 
 ### Hosted employer demo
 
-The access-controlled AWS demo is available at:
+The publicly viewable AWS employer demo is available at:
 
 **https://of-f07eea2ba1d043d6804dad505d7498ab.ecs.us-east-1.on.aws**
 
-The application and API require Basic authentication; credentials are distributed separately and are never stored in this repository. The unauthenticated `/api/v1/health` endpoint is reserved for service health checks. The hosted Commercial Analyst uses the authorized bounded server-side OpenAI path, while deterministic behavior remains available during provider disablement or failure. Apollo and consequential CRM writes remain off or dry-run.
+No dashboard login is required. The hosted Commercial Analyst uses the authorized bounded server-side OpenAI path, while deterministic behavior remains available during provider disablement or failure. Apollo and consequential CRM writes remain off or dry-run; private source documents and credentials remain excluded.
 
 <details>
 <summary><strong>Developer setup</strong></summary>

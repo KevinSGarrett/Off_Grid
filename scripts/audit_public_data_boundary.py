@@ -68,7 +68,7 @@ def tracked_file_decision(path: str) -> tuple[str, str]:
     if lower == "data/demo_seed/offgrid_demo_seed.db":
         return (
             "PUBLIC_SANITIZED_RUNTIME_FIXTURE",
-            "Required for reproducible access-controlled demo startup; contents must pass this audit.",
+            "Required for reproducible sanitized demo startup; contents must pass this audit.",
         )
     if lower == ".env.example":
         return (

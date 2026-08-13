@@ -354,7 +354,7 @@ def stamp_seed_migration_head(db_path: Path) -> str:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Build the access-controlled employer demo seed from the real golden PDFs.")
+    ap = argparse.ArgumentParser(description="Build the sanitized employer demo seed from the real golden PDFs.")
     ap.add_argument("--stafford", type=Path, default=DEFAULT_STAFFORD)
     ap.add_argument("--ee-reed", type=Path, default=DEFAULT_EE_REED)
     ap.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)

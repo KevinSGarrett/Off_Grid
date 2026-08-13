@@ -11,8 +11,6 @@ Parameters:
     Type: String
   InfrastructureRoleArn:
     Type: String
-  AccessSecretArn:
-    Type: String
   OpenAISecretArn:
     Type: String
   LogGroupName:
@@ -57,8 +55,6 @@ Resources:
             Value: 'true'
           - Name: WEB_STATIC_DIR
             Value: /app/apps/web/dist
-          - Name: REQUIRE_ACCESS_CONTROL
-            Value: 'true'
           - Name: LOG_LEVEL
             Value: INFO
           - Name: OPENAI_ENABLED
@@ -88,8 +84,6 @@ Resources:
           - Name: GOOGLE_INTEGRATION_MODE
             Value: 'off'
         Secrets:
-          - Name: APP_ACCESS_PASSWORD
-            ValueFrom: !Ref AccessSecretArn
           - Name: OPENAI_API_KEY
             ValueFrom: !Ref OpenAISecretArn
       ScalingTarget:

@@ -49,7 +49,7 @@ Resources:
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: offgrid-commercial-intelligence/demo/access-password
-      Description: Generated HTTP Basic password for the read-only employer demo.
+      Description: Legacy unused dashboard access secret retained to avoid destructive deletion.
       GenerateSecretString:
         PasswordLength: 32
         ExcludePunctuation: true
@@ -124,7 +124,6 @@ Resources:
                 Action:
                   - secretsmanager:GetSecretValue
                 Resource:
-                  - !Ref DemoAccessSecret
                   - !Ref OpenAIApiKeySecret
       Tags:
         - Key: Project

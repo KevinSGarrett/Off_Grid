@@ -1,1 +1,1 @@
-"""Application access-control helpers."""
+"""Server-side privacy and consequential-action security helpers."""

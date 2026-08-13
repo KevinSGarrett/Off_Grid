@@ -40,7 +40,7 @@ export class ApiRequestError extends Error {
   readonly requestId: string | null;
 
   constructor(status: number | null, requestId: string | null = null) {
-    super(status === 401 ? "Authentication required." : "The requested service is unavailable.");
+    super("The requested service is unavailable.");
     this.name = "ApiRequestError";
     this.status = status;
     this.requestId = safeRequestId(requestId);
