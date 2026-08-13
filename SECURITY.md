@@ -19,12 +19,12 @@ Do not place sensitive material in a public GitHub issue. Report a security conc
 ## Runtime boundaries
 
 - Employer demo mode is read-only and hides raw private source material.
-- Hosted access must fail closed when access control is required but no password is configured.
-- Health may remain unauthenticated for container/load-balancer probes; application and UI routes require the configured Basic access control.
+- Public employer-demo dashboard and demo-safe read APIs require no viewer login.
+- Health, application, assets, and demo-safe read APIs are intentionally publicly viewable.
 - External-system writes remain off/dry-run unless an explicitly authorized live path passes deterministic gates.
 - OpenAI is optional, server-side, budgeted, and not a source of deterministic truth or a direct CRM writer. The authorized AWS demo enables only the bounded read-only analyst path; the deterministic fallback remains available.
 - Provider outages must not make the deterministic core unavailable.
-- The authorized demo is deployed to AWS account `257851647752` in `us-east-1` through GitHub Actions OIDC. Cloud credentials and application passwords remain server-side; the public repository contains only reproducible IaC and workflow definitions.
-- The protected HTTPS application requires Basic access control. Only the health probe is intentionally unauthenticated.
+- The authorized demo is deployed to AWS account `257851647752` in `us-east-1` through GitHub Actions OIDC. Cloud credentials and provider secrets remain server-side; the public repository contains only reproducible IaC and workflow definitions.
+- Removing the dashboard viewing login does not weaken deterministic authorization gates for Apollo calls, CRM writes, or other consequential external actions.
 
 If a credential may have entered Git history, revoke it first, then privately coordinate history remediation and a clean privacy revalidation.

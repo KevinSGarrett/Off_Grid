@@ -79,7 +79,6 @@ def main() -> int:
     env = {item["Name"]: item["Value"] for item in primary.get("Environment", [])}
     expected_env = {
         "DEMO_MODE": "true",
-        "REQUIRE_ACCESS_CONTROL": "true",
         "OPENAI_ENABLED": "true",
         "OPENAI_RESEARCH_ENABLED": "false",
         "OPENAI_RAW_DOCUMENTS": "false",
@@ -93,8 +92,9 @@ def main() -> int:
         if env.get(name) != value:
             errors.append(f"unsafe/missing demo env {name}={value}")
     secrets = primary.get("Secrets", [])
-    if not any(s.get("Name") == "APP_ACCESS_PASSWORD" for s in secrets):
-        errors.append("APP_ACCESS_PASSWORD must come through ECS secret injection")
+    for forbidden in ("REQUIRE_ACCESS_CONTROL", "APP_ACCESS_PASSWORD"):
+        if forbidden in env or any(s.get("Name") == forbidden for s in secrets):
+            errors.append(f"viewer authentication setting must be absent: {forbidden}")
     if not any(s.get("Name") == "OPENAI_API_KEY" for s in secrets):
         errors.append("OPENAI_API_KEY must come through ECS secret injection")
 
@@ -104,6 +104,8 @@ def main() -> int:
     execution_policy = str(fres.get("TaskExecutionRole", {}).get("Properties", {}).get("Policies", []))
     if "OpenAIApiKeySecret" not in execution_policy:
         errors.append("task execution role cannot read the OpenAI secret")
+    if "DemoAccessSecret" in execution_policy:
+        errors.append("task execution role must not read the legacy dashboard access secret")
 
     tags = props.get("Tags", [])
     tag_map = {t["Key"]: t["Value"] for t in tags}
@@ -132,12 +134,8 @@ def main() -> int:
     policies_text = str(role.get("Policies", []))
     if "FoundationStackRead" not in policies_text or "offgrid-commercial-intelligence-demo-foundation" not in policies_text:
         errors.append("GitHub deploy role cannot read the prepared foundation stack outputs")
-    if (
-        "ReadDemoAccessPasswordForPostDeploySmoke" not in policies_text
-        or "secretsmanager:GetSecretValue" not in policies_text
-        or "offgrid-commercial-intelligence/demo/access-password-*" not in policies_text
-    ):
-        errors.append("GitHub deploy role cannot read only the demo access password for protected smoke")
+    if "ReadDemoAccessPasswordForPostDeploySmoke" in policies_text or "secretsmanager:GetSecretValue" in policies_text:
+        errors.append("GitHub deploy role must not retrieve viewer or provider secrets")
     if "offgrid-commercial-intelligence/demo/openai-api-key-*" in policies_text:
         errors.append("GitHub deploy role must not read the OpenAI API key secret")
     for action in (
@@ -171,6 +169,9 @@ def main() -> int:
     for needle in ("OpenAISecretArn", "openai_secret_arn"):
         if needle not in workflow:
             errors.append(f"deployment workflow missing OpenAI secret wiring {needle!r}")
+    for needle in ("access_secret_arn", "AccessSecretArn=", "--secret-id"):
+        if needle in workflow:
+            errors.append(f"deployment workflow still depends on dashboard access secret {needle!r}")
 
     dockerignore = (ROOT / ".dockerignore").read_text()
     for private in ("context/private_source_documents", "context/original_chat_logs", "data/private"):
@@ -189,9 +190,9 @@ def main() -> int:
         return 1
     print("AWS INFRA VALIDATION: PASS")
     print("- ECS Express Mode / 256 CPU / 512 MiB / one task")
-    print("- Secrets Manager access password and server-only OpenAI key")
+    print("- publicly viewable employer demo with server-only OpenAI key")
     print("- read-only fail-closed integration modes")
-    print("- OIDC/manual protected GitHub deployment")
+    print("- OIDC/manual GitHub deployment without secret retrieval")
     print("- private source files excluded from Docker context")
     return 0
 

@@ -17,4 +17,4 @@ The application mounts all routes under `/api/v1`, including:
 - CRM readiness, preview, and deterministically gated sync;
 - Commercial Analyst queries and executive-brief generation.
 
-Health is available for runtime probes. When access control is enabled, browser and application routes require Basic authentication. External writes remain off or dry-run unless their deterministic authorization gates explicitly permit them; OpenAI failure or disablement falls back without disabling the deterministic core.
+Health, the employer-demo dashboard, and demo-safe read APIs are publicly viewable without login. External writes remain off or dry-run unless their deterministic authorization gates explicitly permit them; OpenAI failure or disablement falls back without disabling the deterministic core.

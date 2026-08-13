@@ -12,7 +12,6 @@ from app.core.settings import settings
 from app.observability.logging import configure_structured_logging
 from app.observability.middleware import install_request_observability
 from app.persistence.database import build_engine, build_session_factory, create_schema
-from app.security.basic_auth import install_basic_access_control
 
 
 def create_app(
@@ -40,11 +39,6 @@ def create_app(
     app.state.demo_mode = settings.demo_mode if demo_mode is None else demo_mode
     app.state.private_upload_dir = Path(upload_dir or "data/private/inbox")
     install_request_observability(app)
-    install_basic_access_control(
-        app,
-        password=settings.app_access_password,
-        required=settings.require_access_control,
-    )
     app.include_router(api_router)
     if settings.serve_web:
         web_dir = Path(settings.web_static_dir)

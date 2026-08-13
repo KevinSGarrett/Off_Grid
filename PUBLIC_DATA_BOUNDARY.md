@@ -1,6 +1,6 @@
 # Public Data Boundary
 
-Off Grid publishes application code, reproducibility assets, sanitized tests, and one access-controlled demo database. It does not publish the supplied licensed PDFs, raw contact directories, live credentials, private research continuity, or source-derived direct contact channels.
+Off Grid publishes application code, reproducibility assets, sanitized tests, and one publicly viewable sanitized demo database. It does not publish the supplied licensed PDFs, raw contact directories, live credentials, private research continuity, or source-derived direct contact channels.
 
 The committed demo database preserves the decision-useful project and company facts needed for the employer workflow. Its data classes are:
 

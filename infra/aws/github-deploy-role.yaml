@@ -93,11 +93,6 @@ Resources:
                 Action:
                   - cloudformation:DescribeStacks
                 Resource: !Sub arn:${AWS::Partition}:cloudformation:${Region}:${AWS::AccountId}:stack/offgrid-commercial-intelligence-demo-foundation/*
-              - Sid: ReadDemoAccessPasswordForPostDeploySmoke
-                Effect: Allow
-                Action:
-                  - secretsmanager:GetSecretValue
-                Resource: !Sub arn:${AWS::Partition}:secretsmanager:${Region}:${AWS::AccountId}:secret:offgrid-commercial-intelligence/demo/access-password-*
               - Sid: ExpressServiceLifecycle
                 Effect: Allow
                 Action:

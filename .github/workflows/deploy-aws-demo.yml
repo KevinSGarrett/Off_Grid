@@ -87,7 +87,6 @@ jobs:
           echo "cluster_name=$(get_output ClusterName)" >> "$GITHUB_OUTPUT"
           echo "execution_role_arn=$(get_output ExecutionRoleArn)" >> "$GITHUB_OUTPUT"
           echo "infrastructure_role_arn=$(get_output InfrastructureRoleArn)" >> "$GITHUB_OUTPUT"
-          echo "access_secret_arn=$(get_output AccessSecretArn)" >> "$GITHUB_OUTPUT"
           echo "openai_secret_arn=$(get_output OpenAISecretArn)" >> "$GITHUB_OUTPUT"
           echo "log_group_name=$(get_output LogGroupName)" >> "$GITHUB_OUTPUT"
       - name: Log in to Amazon ECR
@@ -126,10 +125,9 @@ jobs:
               ClusterName='${{ steps.foundation.outputs.cluster_name }}' \
               ExecutionRoleArn='${{ steps.foundation.outputs.execution_role_arn }}' \
               InfrastructureRoleArn='${{ steps.foundation.outputs.infrastructure_role_arn }}' \
-              AccessSecretArn='${{ steps.foundation.outputs.access_secret_arn }}' \
               OpenAISecretArn='${{ steps.foundation.outputs.openai_secret_arn }}' \
               LogGroupName='${{ steps.foundation.outputs.log_group_name }}'
-      - name: Verify protected public endpoint
+      - name: Verify public employer-demo endpoint
         shell: bash
         run: |
           set -euo pipefail
@@ -137,11 +135,8 @@ jobs:
             --stack-name "$SERVICE_STACK" \
             --query "Stacks[0].Outputs[?OutputKey=='Endpoint'].OutputValue" \
             --output text)"
-          python scripts/verify_aws_endpoint.py \
-            --endpoint "$ENDPOINT" \
-            --secret-id '${{ steps.foundation.outputs.access_secret_arn }}' \
-            --region "$AWS_REGION"
-      - name: Show protected demo endpoint
+          python scripts/verify_aws_endpoint.py --endpoint "$ENDPOINT"
+      - name: Show public demo endpoint
         shell: bash
         run: |
           set -euo pipefail
