@@ -85,21 +85,41 @@ def test_http_error_returns_only_status_and_never_reads_body(monkeypatch) -> Non
 
 def test_endpoint_smoke_accepts_public_reviewer_path_without_auth(monkeypatch) -> None:
     verifier = _endpoint_verifier()
+    revision = "b" * 40
 
     def fake_request(url: str, *, expect_json=False):
         if url.endswith("/health"):
-            return 200, {"status": "ok"}, {}
+            return 200, {"status": "ok", "build_revision": revision}, {}
         if url.endswith("/readiness"):
-            return 200, {"status": "ready"}, {}
+            return 200, {"status": "ready", "build_revision": revision}, {}
         if "/projects?limit=1" in url:
             return 200, {"items": []}, {}
         return 200, None, {}
 
     monkeypatch.setattr(verifier, "request", fake_request)
-    result = verifier.verify("https://example.test")
+    result = verifier.verify("https://example.test", expected_build_revision=revision)
     assert result["result"] == "PASS"
     assert result["credentials_exposed"] is False
     assert result["checks"]["www_authenticate_absent"] is True
+    assert result["checks"]["health_build_revision_matches"] is True
+    assert result["checks"]["readiness_build_revision_matches"] is True
+
+
+def test_endpoint_smoke_rejects_runtime_build_revision_drift(monkeypatch) -> None:
+    verifier = _endpoint_verifier()
+
+    def fake_request(url: str, *, expect_json=False):
+        if url.endswith("/health"):
+            return 200, {"status": "ok", "build_revision": "a" * 40}, {}
+        if url.endswith("/readiness"):
+            return 200, {"status": "ready", "build_revision": "a" * 40}, {}
+        if "/projects?limit=1" in url:
+            return 200, {"items": []}, {}
+        return 200, None, {}
+
+    monkeypatch.setattr(verifier, "request", fake_request)
+    with pytest.raises(verifier.SmokeError, match="build_revision_matches"):
+        verifier.verify("https://example.test", expected_build_revision="b" * 40)
 
 
 def test_endpoint_smoke_rejects_http() -> None:
@@ -147,6 +167,7 @@ def test_deploy_workflow_runs_public_endpoint_smoke() -> None:
     workflow = (ROOT / ".github/workflows/deploy-aws-demo.yml").read_text(encoding="utf-8")
     assert "name: Verify public employer-demo endpoint" in workflow
     assert "python scripts/verify_aws_endpoint.py" in workflow
+    assert '--expected-build-revision "$GITHUB_SHA"' in workflow
     assert "--secret-id" not in workflow
     assert "access_secret_arn" not in workflow
 

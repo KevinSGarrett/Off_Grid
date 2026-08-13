@@ -46,7 +46,11 @@ def test_sanitizer_masks_nested_secret_and_contact_values() -> None:
     assert "281-933-4000" not in value["nested"]["message"]
 
 
-def test_health_and_readiness_are_correlated_and_do_not_ping_optional_providers(wave14_full_state) -> None:
+def test_health_and_readiness_are_correlated_and_do_not_ping_optional_providers(
+    wave14_full_state, monkeypatch
+) -> None:
+    revision = "b" * 40
+    monkeypatch.setenv("OFFGRID_BUILD_SHA", revision)
     client = wave14_full_state["client"]
     request_id = "wave14-health-probe"
     health = client.get("/api/v1/health", headers={"X-Request-ID": request_id})
@@ -54,17 +58,29 @@ def test_health_and_readiness_are_correlated_and_do_not_ping_optional_providers(
     assert health.headers["x-request-id"] == request_id
     assert health.json()["request_id"] == request_id
     assert health.json()["observability_version"] == "observability-1.0"
+    assert health.json()["build_revision"] == revision
 
     ready = client.get("/api/v1/readiness", headers={"X-Request-ID": request_id})
     assert ready.status_code == 200
     body = ready.json()
     assert body["status"] == "ready"
+    assert body["build_revision"] == revision
     assert body["database"]["ready"] is True
     assert all(component["hard_dependency"] is False for component in body["integrations"].values())
     rendered = json.dumps(body)
     assert "OPENAI_API_KEY" not in rendered
     assert "sqlite:///" not in rendered
     assert "/mnt/data" not in rendered
+
+
+def test_build_revision_fails_closed_for_invalid_or_missing_values(
+    wave14_full_state, monkeypatch
+) -> None:
+    client = wave14_full_state["client"]
+    monkeypatch.delenv("OFFGRID_BUILD_SHA", raising=False)
+    assert client.get("/api/v1/health").json()["build_revision"] == "unknown"
+    monkeypatch.setenv("OFFGRID_BUILD_SHA", "not-a-secret-or-a-sha")
+    assert client.get("/api/v1/readiness").json()["build_revision"] == "unknown"
 
 
 def test_openapi_has_no_raw_private_pdf_download_route(wave14_full_state) -> None:

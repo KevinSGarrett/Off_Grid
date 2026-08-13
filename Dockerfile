@@ -9,6 +9,7 @@ COPY apps/web ./
 RUN npm run build
 
 FROM python:3.12-alpine AS runtime
+ARG OFFGRID_BUILD_SHA=unknown
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -16,7 +17,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     RUNTIME_DB_PATH=/app/data/private/offgrid.db \
     DEMO_SEED_DB=/app/data/demo_seed/offgrid_demo_seed.db \
     DEMO_RESET_ON_START=true \
-    SERVE_WEB=true
+    SERVE_WEB=true \
+    OFFGRID_BUILD_SHA=${OFFGRID_BUILD_SHA}
 WORKDIR /app
 RUN apk add --no-cache libstdc++
 COPY requirements.lock ./requirements.lock

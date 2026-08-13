@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import urllib.error
 import urllib.request
 from typing import Any
@@ -46,8 +47,12 @@ def normalize_https_endpoint(endpoint: str) -> str:
     return endpoint
 
 
-def verify(endpoint: str) -> dict[str, Any]:
+def verify(endpoint: str, *, expected_build_revision: str | None = None) -> dict[str, Any]:
     endpoint = normalize_https_endpoint(endpoint)
+    if expected_build_revision is not None and not re.fullmatch(
+        r"[0-9a-f]{40}", expected_build_revision
+    ):
+        raise SmokeError("expected build revision must be a lowercase 40-character Git SHA")
     health_status, health, health_headers = request(
         f"{endpoint}/api/v1/health", expect_json=True
     )
@@ -70,6 +75,15 @@ def verify(endpoint: str) -> dict[str, Any]:
         "demo_api_200": projects_status == 200 and isinstance(projects, dict),
         "www_authenticate_absent": all("www-authenticate" not in headers for headers in response_headers),
     }
+    if expected_build_revision is not None:
+        checks["health_build_revision_matches"] = (
+            isinstance(health, dict)
+            and health.get("build_revision") == expected_build_revision
+        )
+        checks["readiness_build_revision_matches"] = (
+            isinstance(readiness, dict)
+            and readiness.get("build_revision") == expected_build_revision
+        )
     result = {
         "endpoint": endpoint,
         "checks": checks,
@@ -84,9 +98,18 @@ def verify(endpoint: str) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--endpoint", required=True)
+    parser.add_argument("--expected-build-revision")
     args = parser.parse_args()
     try:
-        print(json.dumps(verify(args.endpoint), indent=2))
+        print(
+            json.dumps(
+                verify(
+                    args.endpoint,
+                    expected_build_revision=args.expected_build_revision,
+                ),
+                indent=2,
+            )
+        )
     except SmokeError as exc:
         print(json.dumps({"result": "FAIL", "error": str(exc), "credentials_exposed": False}))
         return 1
