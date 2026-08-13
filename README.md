@@ -166,7 +166,7 @@ add duplicate product points. Direct lighting or power evidence remains an indep
 |---|---|
 | Move from a live project to the people experiencing the site need | Translate demonstrated demand into a partner, branch, fleet, or channel opportunity |
 | Goal: product demonstration request | Goal: demo, fleet placement, or channel sale |
-| Current path: highest probability | Current path: dependent on partner identification |
+| Current path: highest investigation priority | Current path: dependent on partner identification |
 
 > [!WARNING]
 > If Stafford's rental provider is not identified, that node remains **UNRESOLVED**. The engine does not invent an answer to complete the workflow.
