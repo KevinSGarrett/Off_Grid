@@ -247,7 +247,8 @@ def test_emergency_portfolio_and_source_views_preserve_coverage_boundaries():
 def test_long_table_statuses_remain_inside_their_columns():
     assert "grid-template-columns: minmax(210px, 1.3fr)" in CSS
     assert ".portfolio-grid > div:nth-child(6) .pill" in CSS
-    assert ".source-contact-grid > div .pill" in CSS
+    assert "grid-template-columns: minmax(175px, 1fr) 135px" in CSS
+    assert ".source-contact-grid > .pill, .source-contact-grid > div .pill" in CSS
     for rule in ("max-width: 100%", "white-space: normal", "overflow-wrap: anywhere"):
         assert rule in CSS
 
