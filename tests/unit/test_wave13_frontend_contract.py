@@ -38,6 +38,9 @@ def test_frontend_consumes_api_instead_of_copying_business_rules():
     ]:
         assert path in API
     assert "80.00" not in APP and "69.25" not in APP and "qualification.yaml" not in APP and "crm-sync" not in API
+    assert APP.count("d.actions.first_call_kit.questions.map") == 3
+    assert "Who owns temporary lighting and portable power decisions?" not in APP
+    assert "Can you confirm your current role and Stafford responsibilities?" not in APP
 
 
 def test_commercial_analyst_status_comes_from_backend_readiness():

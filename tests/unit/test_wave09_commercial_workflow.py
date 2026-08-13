@@ -5,12 +5,15 @@ import shutil
 import tempfile
 import uuid
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
 import sqlalchemy as sa
-from sqlalchemy.orm import Session
-
+from app.commercial_workflow.config import (
+    CommercialWorkflowConfigurationError,
+    load_commercial_workflow_config,
+)
 from app.commercial_workflow.outcomes import CommercialOutcomeService
 from app.commercial_workflow.service import Wave09CommercialWorkflowService
 from app.contact_resolution.service import Wave08ContactResolutionService
@@ -24,10 +27,11 @@ from app.domain.states import (
     VerificationState,
 )
 from app.ingestion.service import ConstructConnectIngestionService
-from app.models import Base, CommercialMotion, CommercialOutcome, NextAction, Organization, Project
+from app.models import Base, CommercialMotion, CommercialOutcome, NextAction, Project
 from app.persistence.database import build_engine
 from app.resolution.service import Wave07ResolutionService
 from app.scoring.qualification import QualificationService
+from sqlalchemy.orm import Session
 
 ROOT = Path(__file__).resolve().parents[2]
 STAFFORD = ROOT / "context/private_source_documents/Stafford-Technology-Campus-Phases-3-4.pdf"
@@ -37,6 +41,24 @@ EXPECTED = json.loads((ROOT / "tests/golden/stafford_wave09_expected.json").read
 
 _BASELINE_DIR = Path(tempfile.mkdtemp(prefix="offgrid-wave09-tests-"))
 _BASELINE_DB = _BASELINE_DIR / "ingested.db"
+
+
+def test_workflow_config_rejects_a_dependent_scheduled_before_its_prerequisite(
+    tmp_path: Path,
+) -> None:
+    source = (ROOT / "config/commercial_workflow.yaml").read_text(encoding="utf-8")
+    invalid = source.replace(
+        "    - key: VALIDATE_TEMP_LIGHTING_POWER_NEED\n"
+        "      motion: CONTRACTOR\n"
+        "      priority: 20",
+        "    - key: VALIDATE_TEMP_LIGHTING_POWER_NEED\n"
+        "      motion: CONTRACTOR\n"
+        "      priority: 5",
+    )
+    path = tmp_path / "invalid-commercial-workflow.yaml"
+    path.write_text(invalid, encoding="utf-8")
+    with pytest.raises(CommercialWorkflowConfigurationError, match="must precede"):
+        load_commercial_workflow_config(path)
 
 
 def _ensure_ingested_baseline() -> None:
@@ -144,7 +166,8 @@ def test_next_best_action_is_dependency_aware_and_human_bounded() -> None:
         _, _, _, result = _build_through_wave09(session)
         assert result.next_best_action.action_type == EXPECTED["next_best_action"]
         assert result.next_best_action.status.value == EXPECTED["next_best_action_status"]
-        assert set(row.action_type for row in result.next_actions) == set(EXPECTED["required_action_types"])
+        assert {row.action_type for row in result.next_actions} == set(EXPECTED["required_action_types"])
+        assert [row.priority for row in result.next_actions] == [10, 20, 30, 40, 45, 50]
         by_type = {row.action_type: row for row in result.next_actions}
         assert by_type["VERIFY_SITE_EQUIPMENT_RESPONSIBILITY"].status is ActionStatus.OPEN
         assert by_type["VALIDATE_TEMP_LIGHTING_POWER_NEED"].status is ActionStatus.BLOCKED
@@ -157,6 +180,12 @@ def test_next_best_action_is_dependency_aware_and_human_bounded() -> None:
         )
         assert result.external_writes_executed == 0
         assert result.outreach_messages_sent == 0
+        positions = {row.action_type: index for index, row in enumerate(result.next_actions)}
+        assert all(
+            row.dependency_action_type is None
+            or positions[row.dependency_action_type] < positions[row.action_type]
+            for row in result.next_actions
+        )
 
 
 def test_first_call_kit_operationalizes_decision_changing_unknowns() -> None:
@@ -171,6 +200,7 @@ def test_first_call_kit_operationalizes_decision_changing_unknowns() -> None:
         capture = set(kit.after_call_capture)
         assert {"rental_provider_identified", "rental_authority_status", "demo_interest"} <= capture
         assert "rental_authority=UNKNOWN" in kit.target_status
+        assert Wave09CommercialWorkflowService(session).current_first_call_kit(result.project_id) == kit
 
 
 def test_wave09_is_idempotent_for_motions_actions_and_base_outcomes() -> None:
@@ -217,7 +247,7 @@ def test_outcome_feedback_records_real_observations_only_and_supports_future_ana
             contact_candidate_id=contacts.candidates[0].candidate_id,
             outcome_type=CommercialOutcomeType.RIGHT_PERSON,
             source="authorized_test_observation",
-            observed_at=datetime.now(timezone.utc),
+            observed_at=datetime.now(UTC),
             notes="Test fixture only.",
         )
         commercial = service.record(
@@ -226,7 +256,7 @@ def test_outcome_feedback_records_real_observations_only_and_supports_future_ana
             outcome_type=CommercialOutcomeType.LOST,
             loss_reason=LossReason.INCUMBENT_SUPPLIER,
             source="authorized_test_observation",
-            observed_at=datetime.now(timezone.utc),
+            observed_at=datetime.now(UTC),
             notes="Test fixture only.",
         )
         session.commit()

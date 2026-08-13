@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping
+from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -290,12 +291,16 @@ class ReadOnlyCommercialToolRegistry:
         }
 
     def _get_next_actions(self, args: dict[str, Any]) -> Mapping[str, Any]:
+        project_id = self._uuid(args["project_id"])
         rows = self.session.scalars(
             sa.select(NextAction)
-            .where(NextAction.project_id == self._uuid(args["project_id"]))
+            .where(NextAction.project_id == project_id)
             .order_by(NextAction.priority.asc(), NextAction.created_at.asc())
         ).all()
         by_id = {row.id: row.action_type for row in rows}
+        from app.commercial_workflow.service import Wave09CommercialWorkflowService
+
+        kit = Wave09CommercialWorkflowService(self.session).current_first_call_kit(project_id)
         return {
             "actions": [
                 {
@@ -307,7 +312,16 @@ class ReadOnlyCommercialToolRegistry:
                     "dependency": by_id.get(row.dependency_action_id),
                 }
                 for row in rows
-            ]
+            ],
+            "first_call_kit": {
+                "version": kit.version,
+                "target_person_name": kit.target_person_name,
+                "target_status": kit.target_status,
+                "objective": kit.objective,
+                "questions": list(kit.questions),
+                "after_call_capture": list(kit.after_call_capture),
+                "safeguards": list(kit.safeguards),
+            },
         }
 
     def _get_crm_readiness(self, args: dict[str, Any]) -> Mapping[str, Any]:
