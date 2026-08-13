@@ -70,6 +70,7 @@ Resources:
                   - ecr:PutImage
                   - ecr:UploadLayerPart
                   - ecr:BatchGetImage
+                  - ecr:DescribeImages
                 Resource: !Sub arn:${AWS::Partition}:ecr:${Region}:${AWS::AccountId}:repository/offgrid-commercial-intelligence
               - Sid: ServiceStack
                 Effect: Allow
