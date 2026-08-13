@@ -1,0 +1,27 @@
+{
+  "report_type": "PROJECT",
+  "project_name": "Stafford Technology Campus Phases 3 & 4",
+  "project_id": "1007341663",
+  "category": "Offices",
+  "city": "Fredericksburg",
+  "region": "VA",
+  "reported_value_usd": 7500000000,
+  "stage": "POST BID - General Contractor Award",
+  "report_date": "2026-07-08",
+  "start_date": "2026-10-05",
+  "start_date_label": "Actual Start Date",
+  "work_type": "New",
+  "scope_signals": ["site work", "paving", "new construction", "data center"],
+  "general_contractor": "EE Reed Construction - Houston (HQ)",
+  "owner": "Stack Infrastructure - Denver (HQ)",
+  "developer": "The Peterson Companies",
+  "currently_tracked": false,
+  "required_quality_flags": [
+    "PROJECT_VALUE_UNCERTAINTY",
+    "FUTURE_ACTUAL_DATE",
+    "MISSING_PROJECT_GC_CONTACT",
+    "VIEWED_NOT_TRACKED"
+  ],
+  "value_confidence": "LOW",
+  "value_scoring_treatment": "CAPPED"
+}

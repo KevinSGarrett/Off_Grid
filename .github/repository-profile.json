@@ -1,0 +1,22 @@
+{
+  "description": "Evidence-backed commercial intelligence engine that turns construction project data into qualified, CRM-ready sales opportunities for Off Grid Innovation.",
+  "homepage": "https://of-f07eea2ba1d043d6804dad505d7498ab.ecs.us-east-1.on.aws",
+  "topics": [
+    "applied-ai",
+    "commercial-intelligence",
+    "sales-intelligence",
+    "revenue-intelligence",
+    "lead-qualification",
+    "crm-automation",
+    "construction-tech",
+    "llm-grounding",
+    "data-provenance",
+    "fastapi",
+    "react",
+    "typescript",
+    "openai",
+    "aws",
+    "docker"
+  ],
+  "social_preview": "assets/readme/social-preview.png"
+}

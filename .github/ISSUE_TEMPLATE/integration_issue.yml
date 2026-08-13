@@ -1,0 +1,32 @@
+name: Integration issue
+description: Track Apollo, Pipedrive, Google, Trello, OpenAI, GitHub, or AWS integration work/failure.
+title: "integration: "
+labels: ["type:integration", "status:triage"]
+body:
+  - type: input
+    id: system
+    attributes:
+      label: External system
+      placeholder: Pipedrive / Apollo / OpenAI / GitHub / AWS / Google / Trello
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options: [off, preview, dry-run, live, not-applicable]
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / requested change
+    validations:
+      required: true
+  - type: checkboxes
+    id: mutation
+    attributes:
+      label: External-write safety
+      options:
+        - label: Any proposed live mutation has an explicit authorization/readiness/idempotency plan.
+          required: true

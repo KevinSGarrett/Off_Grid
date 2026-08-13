@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="360" viewBox="0 0 1440 360" role="img" aria-labelledby="title desc">
+  <title id="title">Off Grid Commercial Intelligence Engine</title>
+  <desc id="desc">A simple dark green banner for the Off Grid Commercial Intelligence Engine.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#06120d"/>
+      <stop offset="1" stop-color="#103923"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" x2="1">
+      <stop stop-color="#75f28f"/>
+      <stop offset="1" stop-color="#1fca68"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#7cf39a" stroke-opacity=".055"/>
+    </pattern>
+  </defs>
+  <rect width="1440" height="360" rx="28" fill="url(#bg)"/>
+  <rect width="1440" height="360" rx="28" fill="url(#grid)"/>
+  <circle cx="1230" cy="75" r="220" fill="#1cce68" opacity=".06"/>
+  <circle cx="180" cy="340" r="250" fill="#1cce68" opacity=".035"/>
+  <g text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif">
+    <text x="720" y="67" fill="#80ac94" font-size="16" font-weight="750" letter-spacing="5">OFF GRID</text>
+    <text x="720" y="142" fill="#ffffff" font-size="58" font-weight="800" letter-spacing="-2">Commercial Intelligence Engine</text>
+    <text x="720" y="205" fill="url(#accent)" font-size="38" font-weight="750">Construction data → qualified action.</text>
+    <text x="720" y="252" fill="#b4ccbe" font-size="18">Evidence-aware qualification · conservative identity resolution · explainable next action</text>
+    <g transform="translate(394 286)" font-size="13" font-weight="700">
+      <rect width="200" height="42" rx="21" fill="#0a2419" stroke="#397c57"/><text x="100" y="27" fill="#d8f7e1">TRACEABLE EVIDENCE</text>
+      <rect x="220" width="200" height="42" rx="21" fill="#0a2419" stroke="#397c57"/><text x="320" y="27" fill="#d8f7e1">EXPLAINABLE LOGIC</text>
+      <rect x="440" width="212" height="42" rx="21" fill="#0a2419" stroke="#397c57"/><text x="546" y="27" fill="#d8f7e1">SAFE CRM HANDOFF</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,33 @@
+name: Feature / improvement
+description: Propose a scoped capability tied to a commercial or reliability outcome.
+title: "feat: "
+labels: ["type:feature", "status:triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / outcome
+      description: What business, employer-question, reliability, or developer outcome does this change improve?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Proposed scope
+      description: Describe the smallest coherent implementation and explicit non-goals.
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options: [P0, P1, P2, P3]
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance evidence
+      description: Name the test, artifact, UI proof, or measurable result that closes the issue.
+    validations:
+      required: true

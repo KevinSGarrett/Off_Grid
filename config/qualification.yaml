@@ -1,0 +1,181 @@
+schema_version: 2
+model:
+  name: offgrid_project_qualification
+  version: qualification-2.0
+  score_min: 0
+  score_max: 100
+  score_presentation: internal_ordering_only
+  bands:
+    strong_candidate: 75
+    promising_candidate: 50
+    needs_investigation: 25
+  policy:
+    - Commercial Fit and Data Confidence are independent decision-support assessments.
+    - Internal scores support deterministic ordering; they are not probabilities or forecasts.
+    - Missing evidence contributes no positive points and is never converted to a negative zero-value fact.
+    - Reported project value does not contribute qualification points.
+    - Confirmed product need requires direct lighting or power evidence.
+
+dimensions:
+  - key: project_relevance
+    label: Project / use-case relevance
+    max_points: 30
+    rules:
+      - key: data_center_context
+        signal: data_center
+        points: 12
+      - key: new_construction_context
+        signal: new_construction
+        points: 6
+      - key: bounded_site_activity_context
+        signal: site_activity_context
+        points: 7
+      - key: multi_phase_context
+        signal: multi_phase
+        points: 5
+    missing_when_absent:
+      - signal: data_center
+        label: Direct project/use-case classification
+
+  - key: timing_actionability
+    label: Timing and actionability
+    max_points: 25
+    rules:
+      - key: gc_awarded_timing
+        signal: gc_awarded
+        points: 12
+      - key: related_phases_underway
+        signal: related_phases_underway
+        points: 7
+      - key: trusted_start_timing
+        signal: trusted_start_timing
+        points: 6
+    missing_when_absent:
+      - signal: trusted_start_timing
+        label: Trusted current phase/start timing
+
+  - key: account_access
+    label: Account access / contactability
+    max_points: 20
+    rules:
+      - key: contractor_identified
+        signal: general_contractor_identified
+        points: 8
+      - key: named_project_contact
+        signal: named_gc_project_contact
+        points: 8
+      - key: verified_project_channel
+        signal: gc_contact_channel
+        points: 4
+    missing_when_absent:
+      - signal: named_gc_project_contact
+        label: Named GC project contact
+      - signal: gc_contact_channel
+        label: Verified project-person contact channel
+
+  - key: confirmed_product_need
+    label: Confirmed product need
+    max_points: 25
+    rules:
+      - key: confirmed_lighting_need
+        signal: temporary_lighting_need_confirmed
+        points: 12.5
+      - key: confirmed_mobile_power_need
+        signal: temporary_power_need_confirmed
+        points: 12.5
+    missing_when_absent:
+      - signal: temporary_lighting_need_confirmed
+        label: Direct temporary/distributed lighting requirement
+      - signal: temporary_power_need_confirmed
+        label: Direct temporary/mobile power requirement
+
+counterfactuals:
+  - key: without_reported_value
+    label: Remove the source-reported project value
+    set_absent: [large_project_value]
+  - key: without_gc_awarded
+    label: Treat GC-awarded stage as unconfirmed
+    set_absent: [gc_awarded]
+  - key: without_site_work_paving
+    label: Remove the combined site-work / paving context
+    set_absent: [site_activity_context]
+  - key: without_multi_phase
+    label: Treat multi-phase status as unconfirmed
+    set_absent: [multi_phase]
+  - key: without_contractor_identification
+    label: Treat contractor identification as unresolved
+    set_absent: [general_contractor_identified]
+  - key: with_trusted_timing
+    label: Confirm current actionable phase timing
+    set_present: [trusted_start_timing]
+  - key: with_direct_lighting_need
+    label: Confirm a direct temporary-lighting requirement
+    set_present: [temporary_lighting_need_confirmed]
+  - key: with_direct_power_need
+    label: Confirm a direct temporary/mobile-power requirement
+    set_present: [temporary_power_need_confirmed]
+
+next_information:
+  method:
+    version: value-of-next-information-1.0
+    formula: decision_impact * 12.5 + evidence_gap * 10 + resolvability * 6.25
+    note: Ordinal decision-support priority only; not probability or financial expected value.
+  items:
+    - key: temporary_lighting_power_responsibility
+      label: Who controls temporary lighting and mobile power on site
+      trigger_signal_absent: temporary_lighting_power_authority_verified
+      decision_impact: 4
+      evidence_gap: 4
+      resolvability: 4
+      validation: Confirm whether the GC project team, procurement, equipment team, or rental partner owns the decision.
+    - key: actual_lighting_need
+      label: Actual temporary/distributed lighting requirement
+      trigger_signal_absent: temporary_lighting_need_confirmed
+      decision_impact: 4
+      evidence_gap: 4
+      resolvability: 3
+      validation: Confirm night work, distributed work zones, existing lighting, and whether temporary light towers are used or planned.
+    - key: actual_mobile_power_need
+      label: Actual mobile/temporary power requirement
+      trigger_signal_absent: temporary_power_need_confirmed
+      decision_impact: 4
+      evidence_gap: 4
+      resolvability: 3
+      validation: Confirm the power use case and target load before any KVP applicability or sizing claim.
+    - key: named_gc_project_leadership
+      label: Named project leadership at the general contractor
+      trigger_signal_absent: named_gc_project_contact
+      decision_impact: 4
+      evidence_gap: 4
+      resolvability: 3
+      validation: Identify and verify project-level superintendent, PM, or project executive evidence.
+    - key: actionable_timing
+      label: Current actionable construction timing
+      trigger_signal_absent: trusted_start_timing
+      decision_impact: 3
+      evidence_gap: 4
+      resolvability: 3
+      validation: Verify current phase/timing using a newer project-specific source because the supplied future date is labeled actual.
+    - key: incumbent_rental_supplier
+      label: Rental supplier currently serving the site
+      trigger_signal_absent: rental_supplier_identified
+      decision_impact: 3
+      evidence_gap: 4
+      resolvability: 2
+      validation: Identify the incumbent branch/provider after contractor-side demand is validated.
+    - key: exact_phase_value
+      label: Exact Phase 3 & 4 construction value
+      trigger_signal_absent: project_value_verified
+      decision_impact: 1
+      evidence_gap: 1
+      resolvability: 2
+      validation: Validate only if useful; reported value carries no qualification points in qualification-2.0.
+
+comparison:
+  version: comparison-cohort-1.0
+  fields:
+    - key: reported_value
+      label: Source-reported project value
+      minimum_coverage_fraction: 0.8
+      direction: descending
+      note: Values are compared only when present and in the same currency; source uncertainty is preserved.

@@ -1,0 +1,81 @@
+crm:
+  name: offgrid-pipedrive-commercial-gate
+  version: pipedrive-1.0
+  default_mode: dry_run
+  demo_mode_external_writes: false
+  readiness:
+    minimum_data_confidence_for_lead: 50
+    lead_requires:
+      - qualified_project
+      - canonical_project_identifier
+      - source_backed_general_contractor
+      - data_confidence_threshold
+      - deterministic_dedupe_key
+    deal_requires:
+      - all_lead_requirements
+      - rental_authority_verified
+      - site_need_verified
+      - rental_provider_resolved
+      - rental_branch_or_fleet_buyer_resolved
+  pipedrive:
+    base_url_template: "https://{company_domain}.pipedrive.com"
+    endpoints:
+      organization_create: {method: POST, path: /api/v2/organizations}
+      person_create: {method: POST, path: /api/v2/persons}
+      lead_create: {method: POST, path: /api/v1/leads}
+      deal_create: {method: POST, path: /api/v2/deals}
+    mapping_policy:
+      project_value: "omit when source value is not decision-trusted; do not send Stafford $7.5B as a CRM deal value"
+      contact: "do not create a Pipedrive person merely because a research candidate ranks first"
+      lead: "qualified intelligence may enter Leads Inbox once organization and dedupe gates pass"
+      deal: "block until stronger commercial validation gates pass"
+    idempotency:
+      project_key_template: "constructconnect:{external_project_id}"
+      organization_key_template: "organization:{canonical_key}"
+      lead_key_template: "pipedrive:lead:constructconnect:{external_project_id}"
+      deal_key_template: "pipedrive:deal:constructconnect:{external_project_id}"
+
+reporting:
+  name: offgrid-existing-stack-reporting-contracts
+  version: reporting-integrations-1.0
+  default_mode: off
+  sheets:
+    append_method: POST
+    append_path_template: "/v4/spreadsheets/{spreadsheet_id}/values/{range}:append"
+    range: "Commercial Intelligence!A:J"
+    value_input_option: RAW
+    insert_data_option: INSERT_ROWS
+    columns:
+      - snapshot_at_utc
+      - constructconnect_project_id
+      - project_name
+      - commercial_fit
+      - data_confidence
+      - lead_ready
+      - deal_ready
+      - top_next_action
+      - system_sourced_demos_rolling_30d
+      - outcome_data_status
+  forms:
+    create_method: POST
+    create_path: /v1/forms
+    batch_update_method: POST
+    batch_update_path_template: "/v1/forms/{form_id}:batchUpdate"
+    response_list_method: GET
+    response_list_path_template: "/v1/forms/{form_id}/responses"
+    response_submission_api_supported: false
+    response_capture_note: "Sales submits through the Form UI; the integration reads responses and maps them into CommercialOutcome records."
+    questions:
+      - {key: constructconnect_project_id, title: ConstructConnect Project ID, required: true}
+      - {key: contact_result, title: Contact result, required: false}
+      - {key: project_result, title: Project result, required: false}
+      - {key: commercial_result, title: Commercial result, required: true}
+      - {key: loss_reason, title: Loss reason, required: false}
+      - {key: rental_partner, title: Rental partner identified, required: false}
+      - {key: notes, title: Notes, required: false}
+  trello:
+    create_method: POST
+    create_path: /1/cards
+    list_id_placeholder: "{{TRELLO_REVIEW_LIST_ID}}"
+    card_name_template: "Verify Stafford site equipment/rental responsibility"
+    pii_policy: "Do not put raw source-contact phone/email data in task descriptions."

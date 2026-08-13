@@ -1,0 +1,45 @@
+# Send only the files consumed by Dockerfile. This is a separate privacy boundary
+# from Git and intentionally excludes local control, evidence, source, and design
+# material even when a future Dockerfile continues to use explicit COPY commands.
+**
+
+# Explicit high-risk exclusions are retained alongside the allowlist so policy
+# validators and human reviewers can verify the privacy boundary directly.
+Chat_Logs/
+context/private_source_documents/
+context/original_chat_logs/
+data/private/
+data/raw/
+
+!Dockerfile
+!.dockerignore
+!requirements.lock
+
+!apps/
+!apps/api/
+!apps/api/**
+!apps/web/
+!apps/web/**
+
+!config/
+!config/**
+!prompts/
+!prompts/**
+
+!data/
+!data/demo_seed/
+!data/demo_seed/offgrid_demo_seed.db
+
+!docker/
+!docker/entrypoint.sh
+
+# Re-exclude generated and machine-local content nested inside allowed trees.
+**/__pycache__/
+**/*.py[cod]
+apps/web/node_modules/
+apps/web/dist/
+**/.env
+**/.env.*
+**/*.log
+**/*.sqlite-shm
+**/*.sqlite-wal

@@ -1,0 +1,229 @@
+from __future__ import annotations
+
+from enum import StrEnum
+
+
+class EvidenceClassification(StrEnum):
+    EXPLICIT = "EXPLICIT"
+    DERIVED = "DERIVED"
+    INFERRED = "INFERRED"
+    VERIFIED = "VERIFIED"
+    CONFLICTED = "CONFLICTED"
+    UNKNOWN = "UNKNOWN"
+
+
+class ConfidenceState(StrEnum):
+    UNKNOWN = "UNKNOWN"
+    VERY_LOW = "VERY_LOW"
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    VERY_HIGH = "VERY_HIGH"
+    CONFLICTED = "CONFLICTED"
+
+
+class ValidationState(StrEnum):
+    UNVALIDATED = "UNVALIDATED"
+    VALID = "VALID"
+    INVALID = "INVALID"
+    CONFLICTED = "CONFLICTED"
+    REQUIRES_REVIEW = "REQUIRES_REVIEW"
+    QUARANTINED = "QUARANTINED"
+
+
+class ScoringTreatment(StrEnum):
+    FULL = "FULL"
+    CAPPED = "CAPPED"
+    EXCLUDED = "EXCLUDED"
+    REVIEW = "REVIEW"
+
+
+class ValueType(StrEnum):
+    TEXT = "TEXT"
+    INTEGER = "INTEGER"
+    DECIMAL = "DECIMAL"
+    BOOLEAN = "BOOLEAN"
+    DATE = "DATE"
+    DATETIME = "DATETIME"
+    MONEY = "MONEY"
+    ENUM = "ENUM"
+    IDENTIFIER = "IDENTIFIER"
+
+
+class QualitySeverity(StrEnum):
+    INFO = "INFO"
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class QualityFlagState(StrEnum):
+    OPEN = "OPEN"
+    ACKNOWLEDGED = "ACKNOWLEDGED"
+    RESOLVED = "RESOLVED"
+    WAIVED = "WAIVED"
+
+
+class PIIClass(StrEnum):
+    NONE = "NONE"
+    PUBLIC_BUSINESS = "PUBLIC_BUSINESS"
+    BUSINESS_CONTACT = "BUSINESS_CONTACT"
+    PERSONAL_CONTACT = "PERSONAL_CONTACT"
+    SENSITIVE = "SENSITIVE"
+    SECRET = "SECRET"
+
+
+class MaskingPolicy(StrEnum):
+    NONE = "NONE"
+    PARTIAL = "PARTIAL"
+    FULL = "FULL"
+    HIDDEN = "HIDDEN"
+
+
+class ContactPointType(StrEnum):
+    EMAIL = "EMAIL"
+    PHONE = "PHONE"
+    FAX = "FAX"
+    URL = "URL"
+    OTHER = "OTHER"
+
+
+class VerificationState(StrEnum):
+    UNKNOWN = "UNKNOWN"
+    SUPPORTED = "SUPPORTED"
+    VERIFIED = "VERIFIED"
+    CONFLICTED = "CONFLICTED"
+    REJECTED = "REJECTED"
+
+
+class ProjectState(StrEnum):
+    INGESTED = "INGESTED"
+    PARSED = "PARSED"
+    VALIDATED = "VALIDATED"
+    QUALIFIED = "QUALIFIED"
+    ACCOUNT_RESOLVED = "ACCOUNT_RESOLVED"
+    CONTACT_RESOLUTION = "CONTACT_RESOLUTION"
+    CRM_READY = "CRM_READY"
+    ACTIVE_LEAD = "ACTIVE_LEAD"
+    DEMO = "DEMO"
+    WON = "WON"
+    LOST = "LOST"
+
+
+class ContactState(StrEnum):
+    DISCOVERED = "DISCOVERED"
+    EMPLOYMENT_VERIFIED = "EMPLOYMENT_VERIFIED"
+    PROJECT_ASSOCIATION_VERIFIED = "PROJECT_ASSOCIATION_VERIFIED"
+    ROLE_RELEVANT = "ROLE_RELEVANT"
+    AUTHORITY_VERIFIED = "AUTHORITY_VERIFIED"
+
+
+class CRMPromotionState(StrEnum):
+    INTELLIGENCE = "INTELLIGENCE"
+    LEAD = "LEAD"
+    DEAL = "DEAL"
+
+
+class IntegrationMode(StrEnum):
+    OFF = "off"
+    PREVIEW = "preview"
+    DRY_RUN = "dry_run"
+    LIVE = "live"
+
+
+class ExceptionStatus(StrEnum):
+    OPEN = "OPEN"
+    IN_REVIEW = "IN_REVIEW"
+    RESOLVED = "RESOLVED"
+    CLOSED = "CLOSED"
+
+
+class ExceptionResolutionAction(StrEnum):
+    VERIFY = "VERIFY"
+    CORRECT = "CORRECT"
+    IGNORE = "IGNORE"
+    DEFER = "DEFER"
+    RETRY = "RETRY"
+    ESCALATE = "ESCALATE"
+
+
+class RunStatus(StrEnum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    PARTIAL = "PARTIAL"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
+class MotionType(StrEnum):
+    CONTRACTOR = "CONTRACTOR"
+    RENTAL_HOUSE = "RENTAL_HOUSE"
+
+
+class MotionStatus(StrEnum):
+    UNRESOLVED = "UNRESOLVED"
+    DISCOVERY = "DISCOVERY"
+    VALIDATING = "VALIDATING"
+    READY = "READY"
+    ACTIVE = "ACTIVE"
+    CLOSED = "CLOSED"
+
+
+class ActionStatus(StrEnum):
+    OPEN = "OPEN"
+    BLOCKED = "BLOCKED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETE = "COMPLETE"
+    CANCELLED = "CANCELLED"
+
+
+class CRMObjectType(StrEnum):
+    ORGANIZATION = "ORGANIZATION"
+    PERSON = "PERSON"
+    LEAD = "LEAD"
+    DEAL = "DEAL"
+
+
+class SyncStatus(StrEnum):
+    PENDING = "PENDING"
+    PREVIEWED = "PREVIEWED"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    BLOCKED = "BLOCKED"
+
+
+class AIClaimStatus(StrEnum):
+    PROPOSED = "PROPOSED"
+    GROUNDED = "GROUNDED"
+    REJECTED = "REJECTED"
+    ACCEPTED = "ACCEPTED"
+
+
+class CommercialOutcomeType(StrEnum):
+    NO_RESPONSE = "NO_RESPONSE"
+    RESPONDED = "RESPONDED"
+    INTERESTED = "INTERESTED"
+    DEMO_BOOKED = "DEMO_BOOKED"
+    DEMO_COMPLETED = "DEMO_COMPLETED"
+    RENTAL_PARTNER_IDENTIFIED = "RENTAL_PARTNER_IDENTIFIED"
+    WON = "WON"
+    LOST = "LOST"
+    GOOD_FIT = "GOOD_FIT"
+    POOR_FIT = "POOR_FIT"
+    NO_NEED = "NO_NEED"
+    NOT_NOW = "NOT_NOW"
+    RIGHT_PERSON = "RIGHT_PERSON"
+    WRONG_PERSON = "WRONG_PERSON"
+    LEFT_COMPANY = "LEFT_COMPANY"
+
+
+class LossReason(StrEnum):
+    INCUMBENT_SUPPLIER = "INCUMBENT_SUPPLIER"
+    TIMING = "TIMING"
+    PRICE = "PRICE"
+    PRODUCT_FIT = "PRODUCT_FIT"
+    BUDGET = "BUDGET"
+    AUTHORITY = "AUTHORITY"
+    OTHER = "OTHER"

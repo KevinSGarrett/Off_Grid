@@ -1,0 +1,47 @@
+schema_version: 1
+policy:
+  version: source-precedence-1.0
+  principle: Source authority is attribute-specific; no global source ranking applies to every claim.
+  stale_after_days: 365
+
+attributes:
+  employment:
+    sources:
+      EMPLOYER_OFFICIAL_PROFILE: {priority: 100, max_state: VERIFIED}
+      EMPLOYER_OFFICIAL_LEADERSHIP: {priority: 98, max_state: VERIFIED}
+      AUTHORIZED_APOLLO_ENRICHMENT: {priority: 75, max_state: SUPPORTED}
+      FIRST_PARTY_PROJECT_POST: {priority: 60, max_state: SUPPORTED}
+      CONSTRUCTCONNECT_COMPANY_EXPORT: {priority: 50, max_state: SUPPORTED}
+      PROFESSIONAL_PUBLIC_PROFILE: {priority: 45, max_state: SUPPORTED}
+  project_association:
+    sources:
+      PROJECT_OWNER_OFFICIAL_PAGE: {priority: 100, max_state: VERIFIED}
+      PROJECT_OWNER_OFFICIAL_RELEASE: {priority: 100, max_state: VERIFIED}
+      FIRST_PARTY_PROJECT_POST: {priority: 95, max_state: VERIFIED}
+      GENERAL_CONTRACTOR_PROJECT_PAGE: {priority: 90, max_state: VERIFIED}
+      CONSTRUCTCONNECT_PROJECT_CONTACT: {priority: 85, max_state: SUPPORTED}
+      AUTHORIZED_APOLLO_ENRICHMENT: {priority: 35, max_state: UNKNOWN}
+      EMPLOYER_OFFICIAL_PROFILE: {priority: 25, max_state: UNKNOWN}
+  role_relevance:
+    sources:
+      EMPLOYER_OFFICIAL_PROFILE: {priority: 100, max_state: VERIFIED}
+      EMPLOYER_OFFICIAL_LEADERSHIP: {priority: 90, max_state: SUPPORTED}
+      GENERAL_CONTRACTOR_PROJECT_PAGE: {priority: 90, max_state: VERIFIED}
+      AUTHORIZED_APOLLO_ENRICHMENT: {priority: 70, max_state: SUPPORTED}
+      PROFESSIONAL_PUBLIC_PROFILE: {priority: 45, max_state: SUPPORTED}
+  rental_authority:
+    sources:
+      DIRECT_PHONE_CONFIRMATION: {priority: 100, max_state: VERIFIED}
+      DIRECT_EMAIL_CONFIRMATION: {priority: 100, max_state: VERIFIED}
+      PROJECT_PROCUREMENT_ASSIGNMENT: {priority: 98, max_state: VERIFIED}
+      GENERAL_CONTRACTOR_PROJECT_PAGE: {priority: 70, max_state: SUPPORTED}
+      EMPLOYER_OFFICIAL_PROFILE: {priority: 40, max_state: SUPPORTED}
+      FIRST_PARTY_PROJECT_POST: {priority: 20, max_state: UNKNOWN}
+      AUTHORIZED_APOLLO_ENRICHMENT: {priority: 20, max_state: UNKNOWN}
+      CONSTRUCTCONNECT_COMPANY_EXPORT: {priority: 10, max_state: UNKNOWN}
+  organization_identity:
+    sources:
+      EMPLOYER_OFFICIAL_COMPANY_PAGE: {priority: 100, max_state: VERIFIED}
+      EMPLOYER_OFFICIAL_PROFILE: {priority: 95, max_state: VERIFIED}
+      CONSTRUCTCONNECT_COMPANY_EXPORT: {priority: 70, max_state: SUPPORTED}
+      AUTHORIZED_APOLLO_ENRICHMENT: {priority: 60, max_state: SUPPORTED}

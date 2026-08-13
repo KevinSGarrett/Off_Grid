@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Amazon ECS Express Mode service for the Off Grid Commercial Intelligence interview demo.
+
+Parameters:
+  ImageUri:
+    Type: String
+    Description: Immutable ECR image URI including a tag or digest.
+  ClusterName:
+    Type: String
+  ExecutionRoleArn:
+    Type: String
+  InfrastructureRoleArn:
+    Type: String
+  AccessSecretArn:
+    Type: String
+  OpenAISecretArn:
+    Type: String
+  LogGroupName:
+    Type: String
+  ServiceName:
+    Type: String
+    Default: offgrid-commercial-intelligence-demo
+
+Resources:
+  DemoService:
+    Type: AWS::ECS::ExpressGatewayService
+    Properties:
+      ServiceName: !Ref ServiceName
+      Cluster: !Ref ClusterName
+      Cpu: '256'
+      Memory: '512'
+      ExecutionRoleArn: !Ref ExecutionRoleArn
+      InfrastructureRoleArn: !Ref InfrastructureRoleArn
+      HealthCheckPath: /api/v1/health
+      PrimaryContainer:
+        Image: !Ref ImageUri
+        ContainerPort: 8000
+        AwsLogsConfiguration:
+          LogGroup: !Ref LogGroupName
+          LogStreamPrefix: ecs
+        Environment:
+          - Name: APP_ENV
+            Value: aws-demo
+          - Name: DEMO_MODE
+            Value: 'true'
+          - Name: DATABASE_URL
+            Value: sqlite:////app/data/private/offgrid.db
+          - Name: RUNTIME_DB_PATH
+            Value: /app/data/private/offgrid.db
+          - Name: DEMO_SEED_DB
+            Value: /app/data/demo_seed/offgrid_demo_seed.db
+          - Name: DEMO_RESET_ON_START
+            Value: 'true'
+          - Name: AUTO_CREATE_SCHEMA
+            Value: 'true'
+          - Name: SERVE_WEB
+            Value: 'true'
+          - Name: WEB_STATIC_DIR
+            Value: /app/apps/web/dist
+          - Name: REQUIRE_ACCESS_CONTROL
+            Value: 'true'
+          - Name: LOG_LEVEL
+            Value: INFO
+          - Name: OPENAI_ENABLED
+            Value: 'true'
+          - Name: OPENAI_MODEL_FAST
+            Value: gpt-5.6-luna
+          - Name: OPENAI_MODEL_REASONING
+            Value: gpt-5.6-sol
+          - Name: OPENAI_MODEL_RESEARCH
+            Value: gpt-5.6-terra
+          - Name: OPENAI_DAILY_BUDGET
+            Value: '2.00'
+          - Name: OPENAI_MAX_RETRIES
+            Value: '2'
+          - Name: OPENAI_TIMEOUT_SECONDS
+            Value: '180'
+          - Name: OPENAI_RESEARCH_ENABLED
+            Value: 'false'
+          - Name: OPENAI_RAW_DOCUMENTS
+            Value: 'false'
+          - Name: APOLLO_MODE
+            Value: 'off'
+          - Name: PIPEDRIVE_MODE
+            Value: 'dry_run'
+          - Name: TRELLO_MODE
+            Value: 'off'
+          - Name: GOOGLE_INTEGRATION_MODE
+            Value: 'off'
+        Secrets:
+          - Name: APP_ACCESS_PASSWORD
+            ValueFrom: !Ref AccessSecretArn
+          - Name: OPENAI_API_KEY
+            ValueFrom: !Ref OpenAISecretArn
+      ScalingTarget:
+        AutoScalingMetric: AVERAGE_CPU
+        AutoScalingTargetValue: 60
+        MinTaskCount: 1
+        MaxTaskCount: 1
+      Tags:
+        - Key: Project
+          Value: OffGridCommercialIntelligence
+        - Key: Environment
+          Value: demo
+        - Key: Purpose
+          Value: Interview
+
+Outputs:
+  Endpoint:
+    Description: AWS-managed HTTPS endpoint for the employer demo.
+    Value: !GetAtt DemoService.Endpoint
+  ServiceArn:
+    Value: !GetAtt DemoService.ServiceArn

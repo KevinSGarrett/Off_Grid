@@ -1,0 +1,45 @@
+schema_version: 1
+registry:
+  version: personas-1.0
+  purpose: Stafford contractor-side contact investigation
+  rule: Personas identify who to investigate; persona match alone never verifies project association or rental authority.
+
+personas:
+  - key: project_executive
+    priority: HIGH
+    titles:
+      - Project Executive
+      - Vice President Base Building Operations
+      - Senior Vice President Base Building Operations
+      - Chief Operating Officer
+    relevance: Executive oversight, cost, subcontractor and client responsibility can make this role a strong routing or validation point.
+  - key: superintendent
+    priority: HIGH
+    titles:
+      - Superintendent
+      - General Superintendent
+      - Project Superintendent
+      - Vice President Field Operations
+    relevance: Field operations leadership is likely to understand site equipment use and who owns the rental workflow, but authority must still be verified.
+  - key: project_manager
+    priority: HIGH
+    titles:
+      - Project Manager
+      - Senior Project Manager
+      - Construction Manager
+    relevance: Project-management roles can coordinate costs, procurement and execution; project-specific evidence is required.
+  - key: mission_critical_operations
+    priority: HIGH
+    titles:
+      - Senior Vice President Mission Critical
+      - Vice President Mission Critical
+      - Mission Critical Operations
+    relevance: Stafford is a data-center campus, so mission-critical operations leadership is commercially relevant if project association can be established.
+  - key: equipment_procurement_operations
+    priority: SECONDARY
+    titles:
+      - Equipment Manager
+      - Procurement Manager
+      - Operations Manager
+      - Field Operations
+    relevance: Potential direct influence on equipment sourcing; actual authority must be explicitly verified.

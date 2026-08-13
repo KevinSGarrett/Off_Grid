@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="310" viewBox="0 0 1440 310" role="img" aria-labelledby="title desc">
+  <title id="title">Off Grid evidence-aware commercial pipeline</title>
+  <desc id="desc">Six connected stages from source records through trust and qualification to CRM readiness.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07140f"/><stop offset="1" stop-color="#0e2d1e"/></linearGradient>
+    <linearGradient id="node" x1="0" x2="1"><stop stop-color="#0b3a25"/><stop offset="1" stop-color="#125331"/></linearGradient>
+  </defs>
+  <rect width="1440" height="310" rx="28" fill="url(#bg)"/>
+  <text x="720" y="43" text-anchor="middle" fill="#86ad97" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="750" letter-spacing="2.5">SOURCE → EVIDENCE → JUDGMENT → ACTION</text>
+  <path d="M155 150H1285" stroke="#2d6748" stroke-width="5" stroke-linecap="round"/>
+  <g font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">
+    <g transform="translate(155 150)">
+      <circle r="53" fill="url(#node)" stroke="#42d477" stroke-width="3"/><path d="M-20-16h40v32h-40zM-11-25h22M-10-4h20M-10 7h14" fill="none" stroke="#8ff3a8" stroke-width="3" stroke-linecap="round"/>
+      <text y="84" fill="#ffffff" font-size="16" font-weight="800">SOURCE</text><text y="106" fill="#9fbaaa" font-size="12">project records</text>
+    </g>
+    <g transform="translate(381 150)">
+      <circle r="53" fill="url(#node)" stroke="#42d477" stroke-width="3"/><path d="M0-26 23-16v17c0 15-10 24-23 30C-13 25-23 16-23 1v-17Z" fill="none" stroke="#8ff3a8" stroke-width="3"/><path d="m-10 1 7 7 14-17" fill="none" stroke="#8ff3a8" stroke-width="3" stroke-linecap="round"/>
+      <text y="84" fill="#ffffff" font-size="16" font-weight="800">TRUST</text><text y="106" fill="#9fbaaa" font-size="12">provenance + quality</text>
+    </g>
+    <g transform="translate(607 150)">
+      <circle r="53" fill="url(#node)" stroke="#42d477" stroke-width="3"/><circle r="24" fill="none" stroke="#8ff3a8" stroke-width="3"/><path d="M0-34v10M0 24v10M-34 0h10M24 0h10M-8 3l6 6 13-17" fill="none" stroke="#8ff3a8" stroke-width="3" stroke-linecap="round"/>
+      <text y="84" fill="#ffffff" font-size="16" font-weight="800">QUALIFY</text><text y="106" fill="#9fbaaa" font-size="12">fit + product signal</text>
+    </g>
+    <g transform="translate(833 150)">
+      <circle r="53" fill="url(#node)" stroke="#42d477" stroke-width="3"/><circle cx="-11" cy="-9" r="11" fill="none" stroke="#8ff3a8" stroke-width="3"/><path d="M-30 24c3-16 12-23 19-23S5 8 8 24M14-9h17M22-17v17" fill="none" stroke="#8ff3a8" stroke-width="3" stroke-linecap="round"/>
+      <text y="84" fill="#ffffff" font-size="16" font-weight="800">RESOLVE</text><text y="106" fill="#9fbaaa" font-size="12">account + contact</text>
+    </g>
+    <g transform="translate(1059 150)">
+      <circle r="53" fill="url(#node)" stroke="#42d477" stroke-width="3"/><path d="M-28 10h13l9-26 12 42 9-28h13" fill="none" stroke="#8ff3a8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <text y="84" fill="#ffffff" font-size="16" font-weight="800">ACT</text><text y="106" fill="#9fbaaa" font-size="12">next best action</text>
+    </g>
+    <g transform="translate(1285 150)">
+      <circle r="53" fill="url(#node)" stroke="#42d477" stroke-width="3"/><path d="M-26-20h52v40h-52zM-17-9h34M-17 1h23M-17 11h15" fill="none" stroke="#8ff3a8" stroke-width="3" stroke-linecap="round"/>
+      <text y="84" fill="#ffffff" font-size="16" font-weight="800">CRM READY</text><text y="106" fill="#9fbaaa" font-size="12">lead / deal gates</text>
+    </g>
+  </g>
+  <g fill="#6bea8e"><path d="m271 143 14 7-14 7z"/><path d="m497 143 14 7-14 7z"/><path d="m723 143 14 7-14 7z"/><path d="m949 143 14 7-14 7z"/><path d="m1175 143 14 7-14 7z"/></g>
+</svg>

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Off Grid Commercial Intelligence Engine</title>
+  <desc id="desc">Evidence-backed project to opportunity to CRM intelligence.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#04110c"/>
+      <stop offset="1" stop-color="#103c25"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" x2="1">
+      <stop stop-color="#81f39b"/>
+      <stop offset="1" stop-color="#22ca69"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#7cf39a" stroke-opacity=".055"/>
+    </pattern>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000" flood-opacity=".3"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="640" fill="url(#background)"/>
+  <rect width="1280" height="640" fill="url(#grid)"/>
+  <circle cx="1120" cy="55" r="270" fill="#20ce68" opacity=".07"/>
+  <circle cx="80" cy="620" r="260" fill="#20ce68" opacity=".05"/>
+
+  <g transform="translate(74 62)">
+    <path d="M36 0 67 18v36L36 72 5 54V18Z" fill="#1fd06a"/>
+    <path d="M36 15 54 25v21L36 57 18 46V25Z" fill="#072218"/>
+    <circle cx="36" cy="36" r="8" fill="#78f294"/>
+    <text x="91" y="31" fill="#fff" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="26" font-weight="800" letter-spacing="3.5">OFF GRID</text>
+    <text x="91" y="56" fill="#8fd8a5" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="650" letter-spacing="1.2">COMMERCIAL INTELLIGENCE</text>
+  </g>
+
+  <g font-family="Inter,Segoe UI,Arial,sans-serif">
+    <text x="74" y="212" fill="#fff" font-size="55" font-weight="820" letter-spacing="-1.5">Commercial Intelligence Engine</text>
+    <text x="74" y="266" fill="url(#accent)" font-size="27" font-weight="720">Evidence-backed project → opportunity → CRM intelligence</text>
+    <text x="74" y="307" fill="#b8d0c1" font-size="18">Grounded decisions. Explicit unknowns. Safe commercial action.</text>
+  </g>
+
+  <g transform="translate(74 373)" filter="url(#shadow)" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">
+    <rect width="1132" height="164" rx="24" fill="#071c13" stroke="#2a6a47" stroke-width="2"/>
+    <path d="M132 78H1000" stroke="#347d54" stroke-width="4" stroke-linecap="round"/>
+    <g fill="#79ef98">
+      <path d="m244 70 16 8-16 8z"/><path d="m464 70 16 8-16 8z"/><path d="m684 70 16 8-16 8z"/><path d="m904 70 16 8-16 8z"/>
+    </g>
+    <g font-size="15" font-weight="800" letter-spacing="1">
+      <g transform="translate(132 78)"><circle r="38" fill="#0e4329" stroke="#38d878" stroke-width="2"/><text y="6" fill="#fff">PROJECT</text></g>
+      <g transform="translate(352 78)"><circle r="38" fill="#0e4329" stroke="#38d878" stroke-width="2"/><text y="6" fill="#fff">EVIDENCE</text></g>
+      <g transform="translate(572 78)"><circle r="43" fill="#0e4329" stroke="#38d878" stroke-width="2"/><text y="6" fill="#fff" font-size="13">QUALIFICATION</text></g>
+      <g transform="translate(792 78)"><circle r="38" fill="#0e4329" stroke="#38d878" stroke-width="2"/><text y="6" fill="#fff">CONTACT</text></g>
+      <g transform="translate(1012 78)"><circle r="38" fill="#0e4329" stroke="#38d878" stroke-width="2"/><text y="6" fill="#fff">CRM</text></g>
+    </g>
+  </g>
+
+  <text x="640" y="595" text-anchor="middle" fill="#83a894" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700" letter-spacing="2">FASTAPI · REACT · OPENAI · AWS · DOCKER</text>
+</svg>

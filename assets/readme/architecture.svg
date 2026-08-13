@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="520" viewBox="0 0 1440 520" role="img" aria-labelledby="title desc">
+  <title id="title">Off Grid application architecture</title>
+  <desc id="desc">A simple layered architecture showing the React interface, FastAPI boundary, three business engines, and relational data layer.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#06120d"/><stop offset="1" stop-color="#0e2d1e"/></linearGradient>
+    <linearGradient id="primary" x1="0" x2="1"><stop stop-color="#155e38"/><stop offset="1" stop-color="#1a8047"/></linearGradient>
+  </defs>
+  <rect width="1440" height="520" rx="28" fill="url(#bg)"/>
+  <g font-family="Inter,Segoe UI,Arial,sans-serif">
+    <text x="70" y="48" fill="#78e795" font-size="15" font-weight="800" letter-spacing="2">ONE APPLICATION · CLEAR RESPONSIBILITIES</text>
+    <text x="70" y="78" fill="#a9c2b3" font-size="16">The interface explains decisions. Deterministic services retain authority over business truth.</text>
+
+    <g transform="translate(420 102)">
+      <rect width="600" height="66" rx="17" fill="url(#primary)" stroke="#55dd7d"/>
+      <text x="300" y="29" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="800">React + TypeScript interface</text>
+      <text x="300" y="51" text-anchor="middle" fill="#c5f4d3" font-size="14">employer review · guided analysis · evidence inspection</text>
+    </g>
+
+    <path d="M720 168v31" stroke="#65e48a" stroke-width="3"/><path d="m712 192 8 14 8-14z" fill="#65e48a"/>
+
+    <g transform="translate(420 206)">
+      <rect width="600" height="62" rx="17" fill="#0e3423" stroke="#3e8b60"/>
+      <text x="300" y="39" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="800">FastAPI application boundary</text>
+    </g>
+
+    <path d="M720 268v30M220 298H1220M220 298v25M720 298v25M1220 298v25" fill="none" stroke="#428361" stroke-width="3"/>
+
+    <g transform="translate(60 323)">
+      <rect width="320" height="92" rx="18" fill="#0d2b1f" stroke="#377b57"/>
+      <text x="160" y="38" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="800">Data + Trust</text>
+      <text x="160" y="65" text-anchor="middle" fill="#9fc3ad" font-size="14">ingest · provenance · quality · identity</text>
+    </g>
+    <g transform="translate(560 323)">
+      <rect width="320" height="92" rx="18" fill="url(#primary)" stroke="#55dd7d"/>
+      <text x="160" y="38" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="800">Commercial Logic</text>
+      <text x="160" y="65" text-anchor="middle" fill="#c5f4d3" font-size="14">qualification · product fit · action · CRM</text>
+    </g>
+    <g transform="translate(1060 323)">
+      <rect width="320" height="92" rx="18" fill="#0d2b1f" stroke="#377b57"/>
+      <text x="160" y="38" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="800">Optional AI</text>
+      <text x="160" y="65" text-anchor="middle" fill="#9fc3ad" font-size="14">controlled tools · grounding · safe fallback</text>
+    </g>
+
+    <path d="M220 415v28M720 415v28M1220 415v28M220 443H1220" fill="none" stroke="#428361" stroke-width="3"/>
+
+    <g transform="translate(390 443)">
+      <rect width="660" height="54" rx="16" fill="#071812" stroke="#3d8a60"/>
+      <text x="330" y="34" text-anchor="middle" fill="#ffffff" font-size="19" font-weight="800">SQLAlchemy · SQLite demo runtime · Alembic migrations</text>
+    </g>
+  </g>
+</svg>

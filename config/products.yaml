@@ -1,0 +1,153 @@
+schema_version: 1
+registry:
+  version: products-2.0
+  source_basis: context/master_prompt/MASTER_INITIAL_PROMPT.md lines 159-171
+  policy: Product facts are limited to employer-supplied facts unless a governed research process adds verified external evidence.
+  forbidden_inventions:
+    - capacity
+    - runtime
+    - pricing
+    - roi
+    - quantity_required
+    - savings
+    - power_rating
+    - energy_output
+    - fuel_savings
+    - fleet_sizing
+  scoring_policy:
+    - Internal points provide deterministic ordering only; the UI presents applicability states.
+    - Project characteristics are counted once as bounded context, never as confirmed demand.
+    - Direct need and product-specific evidence are separate gates.
+    - CONFIRMED_FIT requires both confirmed need and the product-specific confirmation signal.
+
+products:
+  - code: KVT
+    name: KVT Power Tower
+    approved_facts:
+      - statement: Replaces a diesel light tower.
+        classification: EXPLICIT
+        source: employer_assignment
+    unknown_specifications:
+      - runtime
+      - power_output
+      - pricing
+      - fleet_sizing
+      - site_quantity
+      - savings_or_roi
+    fit_rules:
+      - signal: site_activity_context
+        points: 15
+      - signal: new_construction
+        points: 10
+      - signal: multi_phase
+        points: 5
+      - signal: temporary_lighting_need_confirmed
+        points: 45
+      - signal: diesel_light_towers_confirmed
+        points: 25
+    validation_gate:
+      context_signals: [site_activity_context, new_construction, multi_phase]
+      need_signals: [temporary_lighting_need_confirmed]
+      confirmation_signals: [diesel_light_towers_confirmed]
+      not_indicated_status: NOT_INDICATED
+      unconfirmed_status: UNVERIFIED_APPLICABILITY
+      confirmed_status: SUPPORTED_CANDIDATE
+      validated_status: CONFIRMED_FIT
+      until_any_signal:
+        - diesel_light_towers_confirmed
+        - temporary_lighting_need_confirmed
+    required_evidence:
+      - key: diesel_light_towers_confirmed
+        label: Whether diesel light towers are currently used or planned
+      - key: temporary_lighting_need_confirmed
+        label: Whether the site actually requires temporary lighting
+      - key: night_work_confirmed
+        label: Night-work / after-dark operating requirement
+      - key: incumbent_lighting_supplier_identified
+        label: Existing lighting/rental supplier
+
+  - code: KV6
+    name: KV6
+    approved_facts:
+      - statement: Portable off-grid light.
+        classification: EXPLICIT
+        source: employer_assignment
+    unknown_specifications:
+      - runtime
+      - lumen_output
+      - pricing
+      - quantity_required
+      - savings_or_roi
+    fit_rules:
+      - signal: site_activity_context
+        points: 15
+      - signal: new_construction
+        points: 10
+      - signal: multi_phase
+        points: 5
+      - signal: temporary_lighting_need_confirmed
+        points: 45
+      - signal: portable_lighting_need_confirmed
+        points: 25
+    validation_gate:
+      context_signals: [site_activity_context, new_construction, multi_phase]
+      need_signals: [temporary_lighting_need_confirmed]
+      confirmation_signals: [portable_lighting_need_confirmed]
+      not_indicated_status: NOT_INDICATED
+      unconfirmed_status: UNVERIFIED_APPLICABILITY
+      confirmed_status: SUPPORTED_CANDIDATE
+      validated_status: CONFIRMED_FIT
+      until_any_signal:
+        - portable_lighting_need_confirmed
+        - temporary_lighting_need_confirmed
+    required_evidence:
+      - key: portable_lighting_need_confirmed
+        label: Distributed/portable lighting requirement
+      - key: night_work_confirmed
+        label: Night-work / after-dark operating requirement
+      - key: existing_lighting_arrangement_identified
+        label: Existing lighting arrangement and supplier
+
+  - code: KVP
+    name: KVP
+    approved_facts:
+      - statement: Mobile sodium-ion battery energy storage system on a trailer.
+        classification: EXPLICIT
+        source: employer_assignment
+    unknown_specifications:
+      - energy_capacity
+      - power_rating
+      - runtime
+      - pricing
+      - application_envelope
+      - quantity_required
+      - savings_or_roi
+    fit_rules:
+      - signal: site_activity_context
+        points: 15
+      - signal: new_construction
+        points: 10
+      - signal: multi_phase
+        points: 5
+      - signal: temporary_power_need_confirmed
+        points: 45
+      - signal: mobile_power_need_confirmed
+        points: 25
+    validation_gate:
+      context_signals: [site_activity_context, new_construction, multi_phase]
+      need_signals: [temporary_power_need_confirmed]
+      confirmation_signals: [mobile_power_need_confirmed]
+      not_indicated_status: NOT_INDICATED
+      unconfirmed_status: UNVERIFIED_APPLICABILITY
+      confirmed_status: SUPPORTED_CANDIDATE
+      validated_status: CONFIRMED_FIT
+      until_any_signal:
+        - temporary_power_need_confirmed
+        - mobile_power_need_confirmed
+    required_evidence:
+      - key: temporary_power_need_confirmed
+        label: Actual temporary/mobile power requirement
+      - key: target_load_known
+        label: Target load/application
+      - key: incumbent_power_solution_identified
+        label: Existing temporary power solution/provider

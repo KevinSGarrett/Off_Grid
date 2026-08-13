@@ -1,0 +1,13 @@
+# Default owner for this public release repository.
+* @KevinSGarrett
+
+# Protect repository-control files with an explicit owner.
+/.github/ @KevinSGarrett
+
+/apps/api/ @KevinSGarrett
+/apps/web/ @KevinSGarrett
+/config/ @KevinSGarrett
+/prompts/ @KevinSGarrett
+/scripts/ @KevinSGarrett
+/tests/ @KevinSGarrett
+/infra/ @KevinSGarrett

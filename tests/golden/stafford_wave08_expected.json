@@ -1,0 +1,21 @@
+{
+  "contact_resolution_version": "contact-resolution-1.0",
+  "persona_version": "personas-1.0",
+  "source_precedence_version": "source-precedence-1.0",
+  "top_candidate": "Doug Meadows",
+  "top_candidate_expected_state": "ROLE_RELEVANT",
+  "top_candidate_project_association": "VERIFIED",
+  "top_candidate_rental_authority": "UNKNOWN",
+  "authority_verified_count": 0,
+  "required_candidates": [
+    "Doug Meadows",
+    "Alex Gutenson",
+    "Josh Reinhold",
+    "Shannon Kuali'i",
+    "Bobby Cady",
+    "Rick Hebert"
+  ],
+  "east_coast_canonical_key": "public:eereed-east-coast",
+  "apollo_search_endpoint": "https://api.apollo.io/api/v1/mixed_people/api_search",
+  "apollo_enrichment_endpoint": "https://api.apollo.io/api/v1/people/match"
+}

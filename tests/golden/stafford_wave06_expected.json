@@ -1,0 +1,14 @@
+{
+  "qualification_model_version": "qualification-2.0",
+  "confidence_model_version": "confidence-1.0",
+  "product_registry_version": "products-2.0",
+  "stafford_internal_ordering_score": 57.0,
+  "stafford_band": "Promising candidate",
+  "stafford_action": "VERIFY",
+  "reported_value_max_points": 0,
+  "required_explicit_signals": ["data_center", "new_construction", "site_work", "paving", "multi_phase", "gc_awarded"],
+  "required_inferred_non_decision_signals": ["temporary_lighting_relevance", "temporary_power_relevance"],
+  "required_products": ["KVT", "KV6", "KVP"],
+  "required_high_impact_unknowns": ["temporary_lighting_power_responsibility", "actual_lighting_need", "actual_mobile_power_need", "named_gc_project_leadership"],
+  "required_low_impact_unknown": "exact_phase_value"
+}
