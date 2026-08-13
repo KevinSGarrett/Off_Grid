@@ -244,6 +244,14 @@ def test_emergency_portfolio_and_source_views_preserve_coverage_boundaries():
     assert "UnavailableProjectLayer" in APP
 
 
+def test_long_table_statuses_remain_inside_their_columns():
+    assert "grid-template-columns: minmax(210px, 1.3fr)" in CSS
+    assert ".portfolio-grid > div:nth-child(6) .pill" in CSS
+    assert ".source-contact-grid > div .pill" in CSS
+    for rule in ("max-width: 100%", "white-space: normal", "overflow-wrap: anywhere"):
+        assert rule in CSS
+
+
 def test_commercial_preview_actions_are_explicit_and_fail_closed():
     for text in [
         "Preview Apollo Search",
