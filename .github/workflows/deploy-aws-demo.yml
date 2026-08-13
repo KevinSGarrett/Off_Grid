@@ -102,8 +102,16 @@ jobs:
           set -euo pipefail
           TAG="${REQUESTED_TAG:-${GITHUB_SHA}}"
           IMAGE_URI="${REPOSITORY_URI}:${TAG}"
-          docker build --pull -t "$IMAGE_URI" .
-          docker push "$IMAGE_URI"
+          REPOSITORY_NAME="${REPOSITORY_URI##*/}"
+          if aws ecr describe-images \
+            --repository-name "$REPOSITORY_NAME" \
+            --image-ids "imageTag=$TAG" \
+            >/dev/null 2>&1; then
+            echo "Reusing existing immutable image: $IMAGE_URI"
+          else
+            docker build --pull -t "$IMAGE_URI" .
+            docker push "$IMAGE_URI"
+          fi
           echo "uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
       - name: Deploy ECS Express Mode service through CloudFormation
         shell: bash
