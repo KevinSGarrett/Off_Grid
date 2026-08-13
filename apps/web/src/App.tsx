@@ -242,6 +242,14 @@ function relevanceIndex(value: unknown): string {
   return Number.isFinite(numeric) ? String(Math.round(numeric)) : "N/A";
 }
 
+function relevanceBand(value: unknown): string {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return "Not indicated";
+  if (numeric >= 70) return "Strong context";
+  if (numeric >= 45) return "Moderate context";
+  return "Limited context";
+}
+
 function pillText(value: unknown): string {
   if (Array.isArray(value)) return value.map(pillText).join("");
   return String(value ?? "");
@@ -714,6 +722,16 @@ function CommandCenter({
 }) {
   const a = d.assessment.assessment;
   const metrics = d.metrics;
+  const diagnosticEntries = metrics
+    ? Object.entries(metrics.diagnostics).map(([key, value]) => ({
+        key,
+        value: Number(value) || 0,
+      }))
+    : [];
+  const maxDiagnosticValue = Math.max(
+    1,
+    ...diagnosticEntries.map((item) => item.value),
+  );
   const action =
     d.actions.items.find((item: any) => item.status === "OPEN") ||
     d.actions.items[0];
@@ -794,17 +812,26 @@ function CommandCenter({
           <SectionHead title="Current system diagnostics" icon={BarChart3} />
           {metrics ? (
             <>
-              <div className="funnel-bars">
-                {Object.entries(metrics.diagnostics).map(([key, value]) => (
-                  <div key={key}>
-                    <b>{String(value)}</b>
+              <div className="diagnostic-bars">
+                {diagnosticEntries.map(({ key, value }) => (
+                  <div className="diagnostic-row" key={key}>
                     <span>{metricLabel(metrics.definitions, key)}</span>
+                    <div className="diagnostic-track" aria-hidden="true">
+                      <i
+                        style={{
+                          width: value
+                            ? `${Math.max(3, (value / maxDiagnosticValue) * 100)}%`
+                            : "0%",
+                        }}
+                      />
+                    </div>
+                    <b>{value}</b>
                   </div>
                 ))}
               </div>
               <p className="note">
-                Operational diagnostics only; not production funnel conversion
-                data.
+                Independently scaled inventory diagnostics; not funnel stages,
+                conversion rates, or production outcomes.
               </p>
             </>
           ) : (
@@ -1090,7 +1117,7 @@ function ProjectPortfolio({
   const [query, setQuery] = useState("");
   const [coverage, setCoverage] = useState("ALL");
   const [section, setSection] = useState("ALL");
-  const [dataSet, setDataSet] = useState<"detailed" | "history">("detailed");
+  const [dataSet, setDataSet] = useState<"detailed" | "history">("history");
   const items = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return g.portfolio.items.filter((project) => {
@@ -1120,7 +1147,7 @@ function ProjectPortfolio({
       <PageHeader
         eyebrow="Data / Project Data"
         title="Detailed qualification and company history"
-        subtitle="The supplied files include one detailed Stafford project report and a broader EE Reed company history. Full qualification is applied only when project-level evidence supports it."
+        subtitle="The broader EE Reed company history is shown first. Stafford remains the one source record with enough project-level evidence for full qualification."
       />
       <section className="score-band portfolio-summary eight">
         <Metric label="Source documents" value={summary.source_documents} note={`${summary.detailed_project_documents} project · ${summary.company_documents} company`} icon={Database} />
@@ -1134,8 +1161,8 @@ function ProjectPortfolio({
       </section>
       <div className="objective-banner"><Workflow /><span><b>Generic batch triage:</b> {g.triage.full_eligible} FULL record assessed; {g.triage.source_only} SOURCE_ONLY records routed without scores; {g.triage.external_writes_executed} external writes. {g.triage.semantics}</span></div>
       <div className="tab-list" role="tablist" aria-label="Project data type">
-        <button role="tab" aria-selected={dataSet === "detailed"} className={dataSet === "detailed" ? "active" : ""} onClick={() => { setDataSet("detailed"); setCoverage("ALL"); }}>Detailed assessment queue ({summary.detailed_project_records})</button>
-        <button role="tab" aria-selected={dataSet === "history"} className={dataSet === "history" ? "active" : ""} onClick={() => { setDataSet("history"); setCoverage("ALL"); }}>EE Reed project history ({summary.company_history_projects})</button>
+        <button role="tab" aria-selected={dataSet === "history"} className={dataSet === "history" ? "active" : ""} onClick={() => { setDataSet("history"); setCoverage("ALL"); }}>EE Reed project history ({summary.company_history_projects} source records)</button>
+        <button role="tab" aria-selected={dataSet === "detailed"} className={dataSet === "detailed" ? "active" : ""} onClick={() => { setDataSet("detailed"); setCoverage("ALL"); }}>Detailed assessment queue ({summary.detailed_project_records} eligible)</button>
       </div>
       <section className="panel portfolio-table-panel">
         <SectionHead
@@ -1748,6 +1775,9 @@ function ProductFit({ d }: { d: DashboardData }) {
       <section className="product-cards">
         {d.assessment.product_fits.map((fit: any) => {
           const questions = stringList(fit.missing_evidence);
+          const supportingSignals = stringList(
+            fit.matched_signals || fit.supporting_evidence,
+          );
           return (
             <article className="panel" key={fit.product_code}>
               <div className="product-heading">
@@ -1756,6 +1786,9 @@ function ProductFit({ d }: { d: DashboardData }) {
                 </span>
                 <div>
                   <h2>{fit.product_code}</h2>
+                  {fit.product_name && fit.product_name !== fit.product_code && (
+                    <small className="product-name">{fit.product_name}</small>
+                  )}
                   <Pill>{fit.applicability_status}</Pill>
                 </div>
                 <div className="product-relevance">
@@ -1763,14 +1796,28 @@ function ProductFit({ d }: { d: DashboardData }) {
                     {relevanceIndex(fit.characteristic_relevance_score)}
                     <small>/100</small>
                   </strong>
-                  <span>Relevance index</span>
+                  <span>Characteristic relevance</span>
+                  <em>{relevanceBand(fit.characteristic_relevance_score)}</em>
                 </div>
               </div>
               <p>{fit.explanation}</p>
               <small className="relevance-note">
-                Deterministic project-characteristic ordering aid; not
-                validated product fit, demand, or a probability.
+                Deterministic project-characteristic score; not validated
+                product fit, demand, forecast, or probability. Applicability
+                remains a separate evidence gate.
               </small>
+              <div className="context-evidence">
+                <b>Project context counted once</b>
+                {supportingSignals.length ? (
+                  <div>
+                    {supportingSignals.map((item) => (
+                      <span key={item}>{titleCase(item)}</span>
+                    ))}
+                  </div>
+                ) : (
+                  <small>No decision-eligible context signal was counted.</small>
+                )}
+              </div>
               <div className="question-box">
                 <b>Evidence required before fit can be supported</b>
                 {questions.length ? (
@@ -1824,7 +1871,7 @@ function ProductFit({ d }: { d: DashboardData }) {
               <span>
                 Direct need unconfirmed
                 <strong>
-                  {relevanceIndex(fit.characteristic_relevance_score)}/100 relevance
+                  {relevanceIndex(fit.characteristic_relevance_score)}/100 · {relevanceBand(fit.characteristic_relevance_score)}
                 </strong>
               </span>
               <Pill>{fit.applicability_status}</Pill>

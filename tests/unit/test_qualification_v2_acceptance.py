@@ -54,9 +54,19 @@ def test_stafford_v2_is_deterministic_and_need_is_not_confirmed(golden_state) ->
     assert need.internal_score == 0
     assert need.band == "NOT_CONFIRMED"
     assert all(item.applicability_status == "UNVERIFIED_APPLICABILITY" for item in first.product_fits)
-    assert {item.fit_score for item in first.product_fits} == {Decimal("30.00")}
-    forbidden_legacy_scores = {Decimal("59"), Decimal("70"), Decimal("75"), Decimal("80")}
-    assert all(item.fit_score not in forbidden_legacy_scores for item in first.product_fits)
+    scores = {item.product_code: item.fit_score for item in first.product_fits}
+    assert scores == {"KVT": Decimal("75.00"), "KV6": Decimal("75.00"), "KVP": Decimal("59.00")}
+    assert all("validated product" in item.explanation for item in first.product_fits)
+
+
+def test_product_relevance_counts_bounded_context_once_and_never_claims_demand() -> None:
+    registry = yaml.safe_load(Path("config/products.yaml").read_text(encoding="utf-8"))
+    forbidden_context_duplicates = {"site_work", "paving", "gc_awarded", "reported_value", "large_development"}
+    for product in registry["products"]:
+        scored_signals = [rule["signal"] for rule in product["fit_rules"]]
+        assert len(scored_signals) == len(set(scored_signals))
+        assert forbidden_context_duplicates.isdisjoint(scored_signals)
+        assert scored_signals.count("site_activity_context") == 1
 
 
 def test_uncertain_reported_value_cannot_change_disposition(golden_state) -> None:

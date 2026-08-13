@@ -1,7 +1,7 @@
 {
   "qualification_model_version": "qualification-2.0",
   "confidence_model_version": "confidence-1.0",
-  "product_registry_version": "products-2.0",
+  "product_registry_version": "products-2.1",
   "stafford_internal_ordering_score": 57.0,
   "stafford_band": "Promising candidate",
   "stafford_action": "VERIFY",

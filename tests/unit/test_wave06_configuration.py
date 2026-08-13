@@ -33,7 +33,7 @@ def test_qualification_and_confidence_configs_are_versioned_and_weighted() -> No
 
 def test_product_registry_contains_only_controlled_products_and_fact_boundaries() -> None:
     registry = load_product_registry()
-    assert registry.version == "products-2.0"
+    assert registry.version == "products-2.1"
     assert {p.code for p in registry.products} == {"KVT", "KV6", "KVP"}
     for product in registry.products:
         assert product.approved_facts

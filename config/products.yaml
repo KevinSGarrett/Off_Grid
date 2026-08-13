@@ -1,6 +1,6 @@
 schema_version: 1
 registry:
-  version: products-2.0
+  version: products-2.1
   source_basis: context/master_prompt/MASTER_INITIAL_PROMPT.md lines 159-171
   policy: Product facts are limited to employer-supplied facts unless a governed research process adds verified external evidence.
   forbidden_inventions:
@@ -15,8 +15,11 @@ registry:
     - fuel_savings
     - fleet_sizing
   scoring_policy:
-    - Internal points provide deterministic ordering only; the UI presents applicability states.
+    - Internal points provide a deterministic project-characteristic relevance index; the UI presents both the index and the independent applicability state.
     - Project characteristics are counted once as bounded context, never as confirmed demand.
+    - The combined site_activity_context signal is the only site-work context contribution; site_work and paving never add points independently.
+    - Reported project value and GC-awarded stage never contribute to product relevance.
+    - Product-specific context weights express relative use-case proximity, not validated demand or empirical probability.
     - Direct need and product-specific evidence are separate gates.
     - CONFIRMED_FIT requires both confirmed need and the product-specific confirmation signal.
 
@@ -36,15 +39,15 @@ products:
       - savings_or_roi
     fit_rules:
       - signal: site_activity_context
-        points: 15
+        points: 35
       - signal: new_construction
-        points: 10
-      - signal: multi_phase
-        points: 5
-      - signal: temporary_lighting_need_confirmed
-        points: 45
-      - signal: diesel_light_towers_confirmed
         points: 25
+      - signal: multi_phase
+        points: 15
+      - signal: temporary_lighting_need_confirmed
+        points: 15
+      - signal: diesel_light_towers_confirmed
+        points: 10
     validation_gate:
       context_signals: [site_activity_context, new_construction, multi_phase]
       need_signals: [temporary_lighting_need_confirmed]
@@ -80,15 +83,15 @@ products:
       - savings_or_roi
     fit_rules:
       - signal: site_activity_context
-        points: 15
+        points: 35
       - signal: new_construction
-        points: 10
-      - signal: multi_phase
-        points: 5
-      - signal: temporary_lighting_need_confirmed
-        points: 45
-      - signal: portable_lighting_need_confirmed
         points: 25
+      - signal: multi_phase
+        points: 15
+      - signal: temporary_lighting_need_confirmed
+        points: 15
+      - signal: portable_lighting_need_confirmed
+        points: 10
     validation_gate:
       context_signals: [site_activity_context, new_construction, multi_phase]
       need_signals: [temporary_lighting_need_confirmed]
@@ -124,15 +127,15 @@ products:
       - savings_or_roi
     fit_rules:
       - signal: site_activity_context
-        points: 15
-      - signal: new_construction
-        points: 10
-      - signal: multi_phase
-        points: 5
-      - signal: temporary_power_need_confirmed
-        points: 45
-      - signal: mobile_power_need_confirmed
         points: 25
+      - signal: new_construction
+        points: 20
+      - signal: multi_phase
+        points: 14
+      - signal: temporary_power_need_confirmed
+        points: 26
+      - signal: mobile_power_need_confirmed
+        points: 15
     validation_gate:
       context_signals: [site_activity_context, new_construction, multi_phase]
       need_signals: [temporary_power_need_confirmed]

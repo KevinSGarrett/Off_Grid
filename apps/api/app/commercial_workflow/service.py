@@ -244,7 +244,7 @@ class CommercialWorkflowService:
                 confidence_state=ConfidenceState.UNKNOWN,
                 strongest_product_code=None,
                 strongest_product_fit=None,
-                rationale="No product-fit assessments are available; site demand remains unproven.",
+                rationale="No product applicability assessments are available; site demand remains unproven.",
                 missing_evidence=("verified lighting need", "verified mobile-power need"),
             )
         top = max(product_fits, key=lambda row: (Decimal(row.fit_score), row.product_code))
@@ -266,8 +266,10 @@ class CommercialWorkflowService:
             strongest_product_code=top.product_code,
             strongest_product_fit=score,
             rationale=(
-                f"Strongest current product fit is {top.product_code} at {score:.3f}/100. "
-                "That supports prioritizing validation, not claiming proven site demand."
+                f"Strongest current project-characteristic relevance is {top.product_code} "
+                f"at {score:.0f}/100. Applicability is {top.fit_band}; direct product need "
+                "remains independently gated. This supports prioritizing validation, not "
+                "claiming proven site demand."
             ),
             missing_evidence=tuple(dict.fromkeys(missing)),
         )

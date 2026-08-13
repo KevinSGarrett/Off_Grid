@@ -12,10 +12,11 @@ def _d(value: object) -> Decimal:
 
 
 class ProductFitEngine:
-    """Evidence-constrained commercial product fit.
+    """Evidence-constrained product applicability and characteristic relevance.
 
-    The resulting recommendation is INFERRED even when every input signal is explicit. The engine
-    never converts an application hypothesis into an approved product specification.
+    The numeric result is a deterministic project-characteristic ordering index, while the
+    applicability status is independently gated by direct need and product-specific evidence.
+    The engine never converts an application hypothesis into approved demand or a specification.
     """
 
     def __init__(self, registry: ProductRegistry):

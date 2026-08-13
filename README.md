@@ -127,6 +127,13 @@ The internal qualification-2.0 ordering score is 57, but the UI presents the def
 action—not false decimal precision or a success probability. KVT, KV6, and KVP remain
 `UNVERIFIED_APPLICABILITY` until direct lighting or power need is confirmed.
 
+Product applicability is separate from the deterministic products-2.1 characteristic-relevance
+index. Stafford currently produces KVT `75/100` (strong context), KV6 `75/100` (strong context),
+and KVP `59/100` (moderate context). These values are ordering aids, not fit percentages or demand.
+Each product counts one bounded `site_activity_context` signal plus new-construction and multi-phase
+context; `site_work`, `paving`, GC-awarded stage, reported value, and large-development scale cannot
+add duplicate product points. Direct lighting or power evidence remains an independent gate.
+
 > [!TIP]
 > The backend can remove the reported value from scoring and recalculate the recommendation. The result explains what drives the decision instead of hiding judgment inside one AI score.
 

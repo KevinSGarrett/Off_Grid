@@ -178,10 +178,24 @@ def test_desktop_navigation_is_viewport_fixed_and_scroll_contained():
 
 def test_product_fit_keeps_relevance_index_separate_from_applicability():
     assert "characteristic_relevance_score" in APP
-    assert "Relevance index" in APP
-    assert "Deterministic project-characteristic ordering aid" in APP
-    assert "validated product fit, demand, or a probability" in APP
+    assert "Characteristic relevance" in APP
+    assert "Deterministic project-characteristic score" in APP
+    assert "validated" in APP and "forecast, or probability" in APP
     assert "applicability_status" in APP
+
+
+def test_diagnostics_are_independently_scaled_not_equal_funnel_blocks():
+    assert "diagnosticEntries" in APP
+    assert "value / maxDiagnosticValue" in APP
+    assert "Independently scaled inventory diagnostics" in APP
+    assert ".diagnostic-track i" in CSS
+    assert ".funnel-bars div" not in CSS
+
+
+def test_project_data_opens_on_the_broad_company_history_not_the_single_record():
+    assert 'useState<"detailed" | "history">("history")' in APP
+    assert "EE Reed project history ({summary.company_history_projects} source records)" in APP
+    assert "Detailed assessment queue ({summary.detailed_project_records} eligible)" in APP
 
 
 def test_reference_aligned_views_are_url_addressable_and_fluid():

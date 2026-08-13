@@ -173,7 +173,7 @@ def test_persistence_versions_configuration_and_current_assessment_state() -> No
         assert {(x.config_kind, x.version) for x in configs} >= {
             ("qualification", "qualification-2.0"),
             ("confidence", "confidence-1.0"),
-            ("products", "products-2.0"),
+            ("products", "products-2.1"),
         }
         assessments = session.scalars(
             sa.select(OpportunityAssessment).where(OpportunityAssessment.project_id == project.id).order_by(OpportunityAssessment.computed_at)

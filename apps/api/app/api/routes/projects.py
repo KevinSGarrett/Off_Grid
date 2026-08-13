@@ -603,6 +603,7 @@ def get_project_assessment(
         "product_fits": [
             {
                 "product_code": row.product_code,
+                "product_name": row.product_name,
                 "characteristic_relevance_score": str(row.fit_score),
                 "fit_band": row.applicability_status,
                 "applicability_status": row.applicability_status,
@@ -610,6 +611,7 @@ def get_project_assessment(
                 "confidence_state": row.confidence_state.value,
                 "explanation": row.explanation,
                 "supporting_evidence": list(row.supporting_evidence),
+                "matched_signals": list(row.matched_signals),
                 "contradicting_evidence": list(row.contradicting_evidence),
                 "missing_evidence": list(row.missing_evidence),
             }

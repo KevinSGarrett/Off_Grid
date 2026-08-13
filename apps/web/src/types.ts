@@ -82,8 +82,9 @@ export type Assessment = {
 };
 export type AssessmentDimension = { key: string; label: string; band: string };
 export type ProductFit = {
-  product_code: string; applicability_status: string; explanation: string;
+  product_code: string; product_name?: string; applicability_status: string; explanation: string;
   characteristic_relevance_score: string | number;
+  supporting_evidence?: string[]; matched_signals?: string[];
   missing_evidence: string | string[] | null;
 };
 export type AssessmentResponse = {
