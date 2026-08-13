@@ -900,10 +900,12 @@ function IntegrationStatus({ d }: { d: DashboardData }) {
     ["ConstructConnect", integrations.constructconnect, "Supplied reports ingested; recurring production feed NOT CONNECTED"],
     ["Apollo", integrations.apollo, "Preview request construction only; no employer-demo network call"],
     ["Pipedrive", integrations.pipedrive, "Dry-run request construction only; employer-demo writes disabled"],
+    ["Google Sheets", integrations.google, "Preview-only reporting output; no live write"],
+    ["Google Forms", integrations.google, "Preview-only intake contract; no live submission"],
+    ["Trello", integrations.google, "Preview-only workflow handoff; no live card creation"],
     ["OpenAI", integrations.openai, "Optional grounded Commercial Analyst runtime"],
-    ["Google / Trello", integrations.google, "Preview contracts only"],
   ] as const;
-  return <article className="panel integration-status"><SectionHead title="Integration readiness" icon={Network} aside="Configuration state; not a live connection claim" />{rows.map(([label, state, note]) => <div className="integration-row" key={label}><div><b>{label}</b><small>{note}</small></div><Pill>{state?.status || state?.mode || "OFF"}</Pill><span>{state?.credentials_present === true ? "Credentials configured" : state?.credentials_present === false ? "Credentials missing" : "No credential required"}</span></div>)}</article>;
+  return <article className="panel integration-status"><SectionHead title="Integration / Downstream Outputs" icon={Network} aside="Configuration and preview state; never a live-connection claim" />{rows.map(([label, state, note]) => <div className="integration-row" key={label}><div><b>{label}</b><small>{note}</small></div><Pill>{state?.status || state?.mode || "OFF"}</Pill><span>{state?.credentials_present === true ? "Credentials configured" : state?.credentials_present === false ? "Credentials missing" : "No credential required"}</span></div>)}</article>;
 }
 
 function ProjectIntelligence({
@@ -1517,7 +1519,7 @@ function ContactResolution({ d, g, setView }: { d: DashboardData; g: Generalizat
       <section className="panel contact-actions">
         <SectionHead title="Contact investigation actions" icon={Workflow} aside="Preview paths execute no external request" />
         <div className="button-row"><button className="button primary" onClick={() => setApolloPreview("search")} disabled={!d.apollo.eligible}><Search size={16} /> Preview Apollo Search</button><button className="button secondary" onClick={() => setApolloPreview("enrichment")} disabled={!d.apollo.enrichment}><UserRound size={16} /> Preview Enrichment</button><button className="button secondary" onClick={() => setView("crm")}><PackageCheck size={16} /> Preview CRM Person</button></div>
-        <p className="assessment-disclaimer">Apollo is an evidence source, not an authority source. Search or enrichment cannot independently establish Stafford association, rental responsibility, or purchasing authority.</p>
+        <p className="assessment-disclaimer">Apollo People Search is discovery, not enrichment: it returns no direct email or phone in this demo. Search or enrichment cannot independently establish Stafford association, rental responsibility, or purchasing authority.</p>
       </section>
       <section className="panel candidate-table">
         <SectionHead
@@ -2826,14 +2828,15 @@ function First14Days() {
     <div className="page" data-view="roadmap">
       <PageHeader
         eyebrow="First 14 Days"
-        title="No-help, existing-tools plan"
-        subtitle="Connect qualification, contact resolution, CRM readiness, and review cadence without inventing new production capability."
+        title="No-new-budget, existing-stack plan"
+        subtitle="Operate independently with the approved stack while connecting qualification, contact resolution, CRM readiness, and a human review cadence."
       />
       <div className="objective-banner">
         <Target />
         <span>
           <b>Objective:</b> fix the handoffs first, preserve truth boundaries,
-          and use existing approved tools.
+          use existing approved tools without new budget, and leave a workflow
+          another operator can run independently.
         </span>
       </div>
       <section className="roadmap-layout">
