@@ -1,69 +1,30 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_session
-from app.domain.states import CommercialOutcomeType, ContactState, ExceptionStatus, SyncStatus, CRMObjectType
-from app.models import (
-    CommercialOutcome,
-    ContactCandidate,
-    CRMRecord,
-    OpportunityAssessment,
-    PipelineRun,
-    Project,
-    WorkflowException,
-)
+from app.domain.states import ExceptionStatus
+from app.models import OpportunityAssessment, PipelineRun, Project, WorkflowException
+from app.reporting.metrics import build_employer_metrics
 
 router = APIRouter(tags=["metrics"])
 
 
 def _metrics(session: Session) -> dict[str, object]:
-    now = datetime.now(timezone.utc)
-    cutoff = now - timedelta(days=30)
-    projects = session.scalar(sa.select(sa.func.count()).select_from(Project).where(Project.is_synthetic.is_(False))) or 0
-    qualified = session.scalar(
-        sa.select(sa.func.count(sa.distinct(OpportunityAssessment.project_id))).where(OpportunityAssessment.is_current.is_(True))
-    ) or 0
-    authority_verified = session.scalar(
-        sa.select(sa.func.count()).select_from(ContactCandidate).where(ContactCandidate.state == ContactState.AUTHORITY_VERIFIED, ContactCandidate.is_current.is_(True))
-    ) or 0
-    leads_previewed = session.scalar(
-        sa.select(sa.func.count()).select_from(CRMRecord).where(CRMRecord.object_type == CRMObjectType.LEAD, CRMRecord.sync_status == SyncStatus.PREVIEWED)
-    ) or 0
-    open_exceptions = session.scalar(
-        sa.select(sa.func.count()).select_from(WorkflowException).where(WorkflowException.status.in_([ExceptionStatus.OPEN, ExceptionStatus.IN_REVIEW]))
-    ) or 0
-    demos_30d = session.scalar(
-        sa.select(sa.func.count()).select_from(CommercialOutcome).where(
-            CommercialOutcome.outcome_type == CommercialOutcomeType.DEMO_BOOKED,
-            CommercialOutcome.observed_at >= cutoff,
-        )
-    ) or 0
-    total_outcomes = session.scalar(sa.select(sa.func.count()).select_from(CommercialOutcome)) or 0
+    metrics = build_employer_metrics(session)
     latest_run = session.scalar(sa.select(PipelineRun).order_by(PipelineRun.started_at.desc(), PipelineRun.created_at.desc()).limit(1))
-    return {
-        "primary_kpi": {
-            "name": "system_sourced_demos_booked_rolling_30_days",
-            "value": int(demos_30d) if total_outcomes else None,
-            "display": str(int(demos_30d)) if total_outcomes else "N/A",
-            "status": "AVAILABLE" if total_outcomes else "PRODUCTION_OUTCOME_HISTORY_NOT_CONNECTED",
-        },
-        "diagnostics": {
-            "projects_ingested": int(projects),
-            "projects_qualified": int(qualified),
-            "authority_verified_contacts": int(authority_verified),
-            "pipedrive_leads_previewed": int(leads_previewed),
-            "open_exceptions": int(open_exceptions),
-            "commercial_outcomes": int(total_outcomes),
-        },
-        "latest_pipeline_run": None
+    metrics["latest_pipeline_run"] = (
+        None
         if latest_run is None
-        else {"id": str(latest_run.id), "status": latest_run.status.value, "run_type": latest_run.run_type},
-    }
+        else {
+            "id": str(latest_run.id),
+            "status": latest_run.status.value,
+            "run_type": latest_run.run_type,
+        }
+    )
+    return metrics
 
 
 @router.get("/metrics")
@@ -101,8 +62,18 @@ def get_monday_brief(session: Session = Depends(get_session)) -> dict[str, objec
             "disposition": top[1].disposition,
         },
         "pipeline": metrics["diagnostics"],
+        "metric_definitions": metrics["definitions"],
+        "pipeline_semantics": "Current demo snapshot; these diagnostics are not production funnel conversion data.",
         "attention_required": [
-            {"id": str(row.id), "priority": row.priority, "summary": row.summary, "status": row.status.value}
+            {
+                "id": str(row.id),
+                "item_type": "WORKFLOW_EXCEPTION",
+                "priority": row.priority,
+                "summary": row.summary,
+                "detail": row.detail,
+                "status": row.status.value,
+                "recommended_action": row.recommended_action.value,
+            }
             for row in attention
         ],
     }

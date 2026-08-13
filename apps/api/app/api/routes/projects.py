@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_runtime_policy, get_session
 from app.api.serialization import jsonable
+from app.domain.states import QualityFlagState, QualitySeverity
 from app.models import (
     AssessmentFactor,
     OpportunityAssessment,
@@ -24,6 +25,21 @@ from app.scoring.qualification import QualificationService
 from app.services.privacy import render_demo_value
 
 router = APIRouter(tags=["projects"])
+
+
+QUALITY_WARNING_ACTIONS = {
+    "VIEWED_NOT_TRACKED": "Confirm whether this project should be added to active tracking and assign an owner.",
+    "MISSING_PROJECT_GC_CONTACT": "Identify and verify project leadership and equipment responsibility.",
+    "PROJECT_VALUE_UNCERTAINTY": "Retain the value as source-reported context; validate it only if phase value becomes commercially necessary.",
+    "FUTURE_ACTUAL_DATE": "Verify current phase and start timing using a newer project-specific source.",
+}
+
+
+def quality_warning_action(rule_code: str) -> str:
+    return QUALITY_WARNING_ACTIONS.get(
+        rule_code,
+        "Review the cited evidence, record the disposition, and assign an owner if follow-up is required.",
+    )
 
 
 def _project_or_404(session: Session, project_id: UUID) -> Project:
@@ -189,8 +205,17 @@ def get_project_evidence(
 @router.get("/projects/{project_id}/quality")
 def get_project_quality(project_id: UUID, session: Session = Depends(get_session)) -> dict[str, object]:
     _project_or_404(session, project_id)
+    severity_rank = sa.case(
+        (QualityFlag.severity == QualitySeverity.CRITICAL, 5),
+        (QualityFlag.severity == QualitySeverity.HIGH, 4),
+        (QualityFlag.severity == QualitySeverity.MEDIUM, 3),
+        (QualityFlag.severity == QualitySeverity.LOW, 2),
+        else_=1,
+    )
     rows = session.scalars(
-        sa.select(QualityFlag).where(QualityFlag.project_id == project_id).order_by(QualityFlag.severity.desc(), QualityFlag.created_at)
+        sa.select(QualityFlag)
+        .where(QualityFlag.project_id == project_id)
+        .order_by(QualityFlag.blocks_progression.desc(), severity_rank.desc(), QualityFlag.created_at)
     ).all()
     return {
         "project_id": str(project_id),
@@ -200,10 +225,16 @@ def get_project_quality(project_id: UUID, session: Session = Depends(get_session
                 "rule_code": row.rule_code,
                 "severity": row.severity.value,
                 "state": row.state.value,
+                "review_status": (
+                    "NEEDS_REVIEW"
+                    if row.state in {QualityFlagState.OPEN, QualityFlagState.ACKNOWLEDGED}
+                    else row.state.value
+                ),
                 "title": row.title,
                 "detail": row.detail,
                 "decision_impact": row.decision_impact,
                 "blocks_progression": row.blocks_progression,
+                "recommended_action": quality_warning_action(row.rule_code),
             }
             for row in rows
         ],

@@ -5,6 +5,7 @@ APP = (ROOT / "apps/web/src/App.tsx").read_text(encoding="utf-8")
 API = (ROOT / "apps/web/src/api.ts").read_text(encoding="utf-8")
 CSS = (ROOT / "apps/web/src/styles.css").read_text(encoding="utf-8")
 TYPES = (ROOT / "apps/web/src/types.ts").read_text(encoding="utf-8")
+METRICS = (ROOT / "apps/api/app/reporting/metrics.py").read_text(encoding="utf-8")
 
 
 def test_guided_ceo_review_covers_all_six_questions():
@@ -42,6 +43,42 @@ def test_frontend_consumes_api_instead_of_copying_business_rules():
     assert APP.count("d.actions.first_call_kit.questions.map") == 3
     assert "Who owns temporary lighting and portable power decisions?" not in APP
     assert "Can you confirm your current role and Stafford responsibilities?" not in APP
+
+
+def test_employer_ui_uses_discrete_confidence_and_backend_workflow_semantics():
+    for unsupported in ['`${n} percent`', "score(confidence)}%", "? 64 : 24", "index < (contractor"]:
+        assert unsupported not in APP
+    assert "Evidence quality / completeness" in APP
+    assert "not a probability or Commercial Fit score" in APP
+    assert "motion.dependency_map.map" in APP
+    assert "motion.demand_display" in APP
+    assert "Why contractor-side validation comes first" in APP
+    assert "Product-fit signals" not in APP
+
+
+def test_exception_and_metric_labels_do_not_conflate_database_concepts():
+    for label in [
+        "Open workflow exceptions",
+        "Quality warnings requiring review",
+        "Progression-blocking quality warnings",
+        "Quality review items",
+        "Projects assessed",
+        "Investigation priority",
+    ]:
+        assert label in APP or label in TYPES or label in METRICS
+    assert "metricLabel(d, key)" in APP
+    assert "item.review_status" in APP
+    assert "item.recommended_action" in APP
+
+
+def test_utility_controls_and_combined_status_badges_are_truthful():
+    assert 'placeholder="Search application views…"' in APP
+    assert "Search projects, accounts, contacts…" not in APP
+    assert 'aria-label="Notifications unavailable"' in APP
+    assert 'title="No live notification service" disabled' in APP
+    assert 'onClick={() => navigate("guided")}' in APP
+    assert '<div className="account-button" aria-label="Demo account identity">' in APP
+    assert 'value.map(pillText).join("")' in APP
 
 
 def test_crm_preview_uses_the_backend_contract_and_type_critical_boundaries():

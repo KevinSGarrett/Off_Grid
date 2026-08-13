@@ -28,7 +28,8 @@ export type Evidence = {
 };
 export type QualityWarning = {
   id: string; title: string; detail?: string | null; decision_impact?: string | null;
-  severity: string; state?: string; blocks_progression: boolean;
+  rule_code: string; severity: string; state: string; review_status: string;
+  blocks_progression: boolean; recommended_action: string;
 };
 export type ProjectOrganization = { organization_id: string; role: string };
 export type RelatedProject = {
@@ -75,7 +76,8 @@ export type ActionsResponse = {
 export type CommercialMotion = {
   id: string; motion_type: "CONTRACTOR" | "RENTAL_HOUSE"; organization_id?: string | null;
   status: string; demand_strength?: string | null; confidence_state: string;
-  owner?: string | null; summary: string;
+  demand_display: string; owner?: string | null; summary: string;
+  dependency_map: Array<{ label: string; state: string; source: string }>;
 };
 export type CommercialMotionsResponse = { project_id: string; items: CommercialMotion[] };
 export type CRMReadiness = {
@@ -102,11 +104,20 @@ export type CRMPreview = {
 export type SystemReadiness = {
   integrations?: { openai?: { enabled: boolean; credentials_present: boolean; reason?: string | null } };
 };
-export type Metrics = { generated_at?: string; primary_kpi?: { display: string } };
+export type MetricDefinition = {
+  key: string; label: string; definition: string; interpretation: string;
+};
+export type Metrics = {
+  generated_at: string;
+  primary_kpi: { key: string; name: string; display: string; status: string; definition: string; interpretation: string };
+  diagnostics: Record<string, number>;
+  definitions: Record<string, MetricDefinition>;
+};
 export type MondayBrief = {
-  primary_kpi: { display: string }; pipeline: Record<string, number | string>;
+  primary_kpi: Metrics["primary_kpi"]; pipeline: Record<string, number>;
+  metric_definitions: Record<string, MetricDefinition>; pipeline_semantics: string;
   top_opportunity?: { name: string } | null;
-  attention_required: Array<{ id: string; summary: string; detail?: string | null; status: string; priority: number }>;
+  attention_required: Array<{ id: string; item_type: "WORKFLOW_EXCEPTION"; summary: string; detail?: string | null; status: string; priority: number; recommended_action: string }>;
 };
 export type WorkflowException = {
   id: string; summary: string; detail?: string | null; decision_impact?: string | null;

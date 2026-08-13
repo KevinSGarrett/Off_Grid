@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -7,10 +8,20 @@ import sqlalchemy as sa
 from app.commercial_workflow.service import Wave09CommercialWorkflowService
 from app.contact_resolution.service import Wave08ContactResolutionService
 from app.crm.service import Wave10IntegrationService
+from app.domain.states import CommercialOutcomeType
 from app.ingestion.service import ConstructConnectIngestionService
 from app.main import create_app
-from app.models import Base, ContactCandidate, Organization, Project, WorkflowException
+from app.models import (
+    Base,
+    CommercialMotion,
+    CommercialOutcome,
+    ContactCandidate,
+    Organization,
+    Project,
+    WorkflowException,
+)
 from app.persistence.database import build_engine, build_session_factory
+from app.reporting.metrics import build_employer_metrics
 from app.resolution.service import Wave07ResolutionService
 from app.scoring.qualification import QualificationService
 from fastapi.testclient import TestClient
@@ -110,6 +121,8 @@ def test_project_assessment_signals_quality_and_evidence(api_state) -> None:
     codes = {row["rule_code"] for row in quality.json()["items"]}
     assert "FUTURE_ACTUAL_DATE" in codes
     assert "PROJECT_VALUE_UNCERTAINTY" in codes
+    assert all(row["review_status"] == "NEEDS_REVIEW" for row in quality.json()["items"])
+    assert all(row["recommended_action"] for row in quality.json()["items"])
 
     evidence = client.get(f"/api/v1/projects/{project_id}/evidence")
     assert evidence.status_code == 200
@@ -152,6 +165,19 @@ def test_commercial_motion_actions_and_crm_contracts_remain_fail_closed(api_stat
     actions = client.get(f"/api/v1/projects/{project_id}/actions")
     assert motions.status_code == actions.status_code == 200
     assert {row["motion_type"] for row in motions.json()["items"]} == {"CONTRACTOR", "RENTAL_HOUSE"}
+    motion_rows = {row["motion_type"]: row for row in motions.json()["items"]}
+    assert [row["label"] for row in motion_rows["CONTRACTOR"]["dependency_map"]] == [
+        "Project identified",
+        "GC relationship identified",
+        "Project-associated contact",
+        "Equipment / rental authority",
+        "Current lighting / power need",
+        "Demo path",
+    ]
+    assert motion_rows["CONTRACTOR"]["dependency_map"][3]["state"] == "OPEN"
+    assert motion_rows["CONTRACTOR"]["dependency_map"][4]["state"] == "BLOCKED"
+    assert "not yet verified" in motion_rows["CONTRACTOR"]["demand_display"]
+    assert motion_rows["RENTAL_HOUSE"]["dependency_map"][0]["state"] == "BLOCKED"
     action_payload = actions.json()
     action_items = action_payload["items"]
     assert action_payload["ordering"] == "DEPENDENCY_EXECUTION_ASC"
@@ -209,13 +235,55 @@ def test_pipeline_runs_metrics_and_monday_brief(api_state) -> None:
 
     metrics = client.get("/api/v1/metrics")
     assert metrics.status_code == 200
-    assert metrics.json()["primary_kpi"]["display"] == "N/A"
-    assert metrics.json()["diagnostics"]["projects_qualified"] >= 1
+    payload = metrics.json()
+    assert payload["primary_kpi"]["display"] == "N/A"
+    assert payload["diagnostics"]["canonical_projects_resolved"] == 165
+    assert payload["diagnostics"]["source_project_rows"] == 167
+    assert payload["diagnostics"]["projects_assessed"] == 1
+    assert payload["diagnostics"]["authority_verified_contacts"] == 0
+    assert payload["diagnostics"]["open_workflow_exceptions"] == 0
+    assert payload["diagnostics"]["quality_warnings_requiring_review"] >= 4
+    assert set(payload["diagnostics"]) == set(payload["definitions"])
+    assert payload["definitions"]["projects_assessed"]["label"] == "Projects assessed"
 
     brief = client.get("/api/v1/monday-brief")
     assert brief.status_code == 200
     assert brief.json()["top_opportunity"]["external_id"] == "1007341663"
     assert brief.json()["primary_kpi"]["display"] == "N/A"
+    assert brief.json()["pipeline"] == payload["diagnostics"]
+    assert brief.json()["metric_definitions"] == payload["definitions"]
+
+
+def test_metric_registry_uses_an_inclusive_past_window_and_excludes_future_observations(
+    api_state,
+) -> None:
+    now = datetime(2026, 8, 12, 20, 0, tzinfo=UTC)
+    with api_state["factory"]() as session:
+        project = session.get(Project, api_state["ids"]["project"])
+        assert project is not None
+        motion = session.scalar(
+            sa.select(CommercialMotion).where(CommercialMotion.project_id == project.id)
+        )
+        assert motion is not None
+        for observed_at in (
+            now - timedelta(days=31),
+            now - timedelta(days=30),
+            now,
+            now + timedelta(minutes=1),
+        ):
+            session.add(
+                CommercialOutcome(
+                    project_id=project.id,
+                    commercial_motion_id=motion.id,
+                    outcome_type=CommercialOutcomeType.DEMO_BOOKED,
+                    source="verified_pipeline_observation",
+                    observed_at=observed_at,
+                )
+            )
+        session.flush()
+        metrics = build_employer_metrics(session, now=now)
+        assert metrics["primary_kpi"]["value"] == 2
+        assert metrics["primary_kpi"]["display"] == "2"
 
 
 def test_disabled_openai_analyst_and_brief_degrade_without_breaking_api(api_state) -> None:
