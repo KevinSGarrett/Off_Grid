@@ -246,7 +246,10 @@ def test_emergency_portfolio_and_source_views_preserve_coverage_boundaries():
 
 def test_long_table_statuses_remain_inside_their_columns():
     assert "grid-template-columns: minmax(210px, 1.3fr)" in CSS
+    assert "minmax(176px, 190px) 36px" in CSS
+    assert "column-gap: 18px" in CSS
     assert ".portfolio-grid > div:nth-child(6) .pill" in CSS
+    assert ".portfolio-grid > svg { width: 18px; height: 18px; justify-self: end; margin-right: 3px" in CSS
     assert "grid-template-columns: minmax(175px, 1fr) 135px" in CSS
     assert ".source-contact-grid > .pill, .source-contact-grid > div .pill" in CSS
     for rule in ("max-width: 100%", "white-space: normal", "overflow-wrap: anywhere"):
@@ -262,7 +265,15 @@ def test_commercial_preview_actions_are_explicit_and_fail_closed():
         "EXTERNAL WRITES:",
         "Create Deal",
         "The source-reported project value is excluded from Deal value",
-        "Configuration state; not a live connection claim",
+        "Integration / Downstream Outputs",
+        "Configuration and preview state; never a live-connection claim",
+        "Apollo People Search is discovery, not enrichment",
+        "it returns no direct email or phone in this demo",
+        "Google Sheets",
+        "Google Forms",
+        "Trello",
+        "No-new-budget, existing-stack plan",
+        "another operator can run independently",
     ]:
         assert text.lower() in APP.lower()
     assert "disabled title=\"Blocked: rental authority" in APP
