@@ -173,7 +173,23 @@ def test_commercial_motion_actions_and_crm_contracts_remain_fail_closed(api_stat
 
     preview = client.get(f"/api/v1/projects/{project_id}/crm-preview")
     assert preview.status_code == 200
-    assert preview.json()["external_writes_executed"] == 0
+    preview_payload = preview.json()
+    assert preview_payload["external_writes_executed"] == 0
+    requests = {row["object_type"]: row for row in preview_payload["pipedrive"]["requests"]}
+    required = {
+        "object_type", "label", "method", "path", "body", "query", "dependencies",
+        "status", "blocked_reason", "canonical_key",
+    }
+    assert all(required <= set(row) for row in requests.values())
+    assert all(not ({"recommended_promotion", "idempotency_key", "action", "payload"} & set(row)) for row in requests.values())
+    assert requests["ORGANIZATION"]["body"]["name"] == "EE Reed Construction"
+    assert "Stafford Technology Campus" in requests["LEAD"]["body"]["title"]
+    assert requests["PERSON"]["body"]["name"]
+    assert requests["PERSON"]["status"] == "BLOCKED"
+    assert requests["PERSON"]["blocked_reason"]
+    assert "Stafford Technology Campus" in requests["DEAL"]["body"]["title"]
+    assert requests["DEAL"]["status"] == "BLOCKED"
+    assert all(row["canonical_key"] for row in requests.values())
 
     command = client.post(f"/api/v1/projects/{project_id}/crm-sync")
     assert command.status_code == 200

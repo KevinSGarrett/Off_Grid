@@ -4,6 +4,7 @@ ROOT = Path(__file__).resolve().parents[2]
 APP = (ROOT / "apps/web/src/App.tsx").read_text(encoding="utf-8")
 API = (ROOT / "apps/web/src/api.ts").read_text(encoding="utf-8")
 CSS = (ROOT / "apps/web/src/styles.css").read_text(encoding="utf-8")
+TYPES = (ROOT / "apps/web/src/types.ts").read_text(encoding="utf-8")
 
 
 def test_guided_ceo_review_covers_all_six_questions():
@@ -31,7 +32,7 @@ def test_frontend_consumes_api_instead_of_copying_business_rules():
         "/actions",
         "/crm-preview",
         "/crm-readiness",
-        'get<any>("/readiness")',
+        'get<SystemReadiness>("/readiness")',
         "/sensitivity",
         "/metrics",
         "/monday-brief",
@@ -43,12 +44,34 @@ def test_frontend_consumes_api_instead_of_copying_business_rules():
     assert "Can you confirm your current role and Stafford responsibilities?" not in APP
 
 
+def test_crm_preview_uses_the_backend_contract_and_type_critical_boundaries():
+    for legacy in ["recommended_promotion", "idempotency_key", "request.action", "request.payload"]:
+        assert legacy not in APP
+    for current in [
+        "permitted_promotion", "request.label", "request.body", "request.canonical_key",
+        "request.method", "request.path", "request.dependencies", "request.status",
+        "request.blocked_reason",
+    ]:
+        assert current in APP
+    for contract in [
+        "type Project =", "type Assessment =", "type QualityWarning =", "type Evidence =",
+        "type ContactCandidate =", "type CommercialAction =", "type CommercialMotion =",
+        "type CRMReadiness =", "type CRMRequest =", "type Metrics =", "type MondayBrief =",
+        "type SystemReadiness =",
+    ]:
+        assert contract in TYPES
+    assert "export type ApiRecord = Record<string, any>" not in TYPES
+    assert "get<CRMPreview>" in API and "get<CRMReadiness>" in API
+    assert "CRM Lead record ready" in APP
+    assert "Lead-record readiness is not outreach authority or Deal readiness" in APP
+
+
 def test_commercial_analyst_status_comes_from_backend_readiness():
     assert "OpenAI configured" not in APP
     assert "d.systemReadiness?.integrations?.openai" in APP
     for label in ["OpenAI enabled", "OpenAI disabled", "OpenAI unavailable"]:
         assert label in APP
-    assert 'get<any>("/readiness")' in API
+    assert 'get<SystemReadiness>("/readiness")' in API
 
 
 def test_wave13_employer_experiences_are_present():
