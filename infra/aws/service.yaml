@@ -5,6 +5,10 @@ Parameters:
   ImageUri:
     Type: String
     Description: Immutable ECR image URI including a tag or digest.
+  BuildRevision:
+    Type: String
+    AllowedPattern: '^[0-9a-f]{40}$'
+    Description: Exact Git source revision embedded in and reported by the runtime.
   ClusterName:
     Type: String
   ExecutionRoleArn:
@@ -37,6 +41,8 @@ Resources:
           LogGroup: !Ref LogGroupName
           LogStreamPrefix: ecs
         Environment:
+          - Name: OFFGRID_BUILD_SHA
+            Value: !Ref BuildRevision
           - Name: APP_ENV
             Value: aws-demo
           - Name: DEMO_MODE

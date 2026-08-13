@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends
@@ -15,12 +16,19 @@ from app.observability.logging import OBSERVABILITY_VERSION
 router = APIRouter(tags=["platform"])
 
 
+def _build_revision() -> str:
+    """Return a non-secret immutable source revision or an explicit local sentinel."""
+    value = os.getenv("OFFGRID_BUILD_SHA", "unknown").strip().lower()
+    return value if re.fullmatch(r"[0-9a-f]{40}", value) else "unknown"
+
+
 @router.get("/health")
 def health(policy=Depends(get_runtime_policy)) -> dict[str, object]:
     return {
         "status": "ok",
         "service": "offgrid-commercial-intelligence-api",
         "version": __version__,
+        "build_revision": _build_revision(),
         "demo_mode": policy.demo_mode,
         "api_version": "backend-api-1.0",
         "observability_version": OBSERVABILITY_VERSION,
@@ -102,6 +110,7 @@ def readiness(
     return {
         "status": "ready" if database_ready else "degraded",
         "architecture_version": "ARCH-0.3.0",
+        "build_revision": _build_revision(),
         "api_version": "backend-api-1.0",
         "pipeline_version": "pipeline-orchestration-1.0",
         "observability_version": OBSERVABILITY_VERSION,

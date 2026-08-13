@@ -108,7 +108,7 @@ jobs:
             >/dev/null 2>&1; then
             echo "Reusing existing immutable image: $IMAGE_URI"
           else
-            docker build --pull -t "$IMAGE_URI" .
+            docker build --pull --build-arg "OFFGRID_BUILD_SHA=${GITHUB_SHA}" -t "$IMAGE_URI" .
             docker push "$IMAGE_URI"
           fi
           echo "uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
@@ -122,6 +122,7 @@ jobs:
             --no-fail-on-empty-changeset \
             --parameter-overrides \
               ImageUri='${{ steps.image.outputs.uri }}' \
+              BuildRevision='${{ github.sha }}' \
               ClusterName='${{ steps.foundation.outputs.cluster_name }}' \
               ExecutionRoleArn='${{ steps.foundation.outputs.execution_role_arn }}' \
               InfrastructureRoleArn='${{ steps.foundation.outputs.infrastructure_role_arn }}' \
@@ -135,7 +136,9 @@ jobs:
             --stack-name "$SERVICE_STACK" \
             --query "Stacks[0].Outputs[?OutputKey=='Endpoint'].OutputValue" \
             --output text)"
-          python scripts/verify_aws_endpoint.py --endpoint "$ENDPOINT"
+          python scripts/verify_aws_endpoint.py \
+            --endpoint "$ENDPOINT" \
+            --expected-build-revision "$GITHUB_SHA"
       - name: Show public demo endpoint
         shell: bash
         run: |

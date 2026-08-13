@@ -26,6 +26,9 @@ def test_service_is_pinned_to_small_express_mode_task_and_health_path() -> None:
     assert "Cpu: '256'" in text
     assert "Memory: '512'" in text
     assert "HealthCheckPath: /api/v1/health" in text
+    assert "BuildRevision:" in text
+    assert "Name: OFFGRID_BUILD_SHA" in text
+    assert "Value: !Ref BuildRevision" in text
     assert "MinTaskCount: 1" in text
     assert "MaxTaskCount: 1" in text
 
@@ -68,6 +71,8 @@ def test_deploy_workflow_is_manual_oidc_and_acknowledged() -> None:
     assert "aws-actions/configure-aws-credentials@v6.2.3" in text
     assert "aws-actions/amazon-ecr-login@v2" in text
     assert "python scripts/run_public_test_matrix.py" in text
+    assert '--build-arg "OFFGRID_BUILD_SHA=${GITHUB_SHA}"' in text
+    assert "BuildRevision='${{ github.sha }}'" in text
     assert "run_wave16_test_matrix.sh" not in text
     assert "on:\n  push:" not in text
 
