@@ -62,7 +62,7 @@ jobs:
       - name: Validate AWS templates and deployment policy
         run: python scripts/validate_aws_infra.py
       - name: Configure AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v6.2.3
+        uses: aws-actions/configure-aws-credentials@v6.2.4
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
