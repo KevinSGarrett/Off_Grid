@@ -13,7 +13,7 @@ dependencies = [
   "sqlalchemy>=2.0,<3",
   "alembic>=1.18,<2",
   "uvicorn>=0.48,<1",
-  "PyMuPDF>=1.26,<2",
+  "PyMuPDF>=1.26,<3",
   "pdfplumber>=0.11,<1",
   "rapidfuzz>=3.14,<4",
   "PyYAML>=6,<7",
@@ -23,12 +23,12 @@ dependencies = [
 
 [project.optional-dependencies]
 ai = [
-  "openai>=2,<3"
+  "openai>=2,<4"
 ]
 dev = [
   "pytest>=8,<10",
   "ruff>=0.12,<1",
-  "mypy>=1.17,<2"
+  "mypy>=1.17,<3"
 ]
 
 [tool.setuptools]
